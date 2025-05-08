@@ -3,7 +3,6 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ---
-
 ## 📌 Project Description
 
 **MJENGO Connect** aims to connect people in need of construction services with skilled workers nearby — including **fundis**, **masons**, **painters**, **plumbers**, **welders**, **electricians**, and more.
@@ -18,7 +17,7 @@ To make it easy and affordable for anyone to find skilled fundis — especially 
 
 ## 🚀 Getting Started
 
-To run the development server:
+To run the development server::
 
 ```bash
 npm run dev
