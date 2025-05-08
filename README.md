@@ -6,7 +6,7 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## 📌 Project Description
 
-**MJENGO Connector** aims to connect people in need of construction services with skilled workers nearby — including **fundis**, **masons**, **painters**, **plumbers**, **welders**, **electricians**, and more.
+**MJENGO Connect** aims to connect people in need of construction services with skilled workers nearby — including **fundis**, **masons**, **painters**, **plumbers**, **welders**, **electricians**, and more.
 
 ---
 
