@@ -48,11 +48,9 @@ const Header = () => {
   };
 
   const navItems: NavItem[] = [
-    { href: "#home", label: "Home" },
-    { href: "#about", label: "About us" },
-    { href: "#services", label: "Services" },
-    { href: "#gallery", label: "Gallery" },
-    { href: "#contact", label: "Contact us" },
+    { href: "/", label: "Home" },
+    { href: "/about_us", label: "About us" },
+    { href: "/contact-us", label: "Contact us" },
   ];
 
   return (
