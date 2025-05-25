@@ -72,7 +72,7 @@ const Header = () => {
                   src="/images/logo4.png"
                   alt="MJENGO Connect Logo"
                   width={220}
-                  height={60}
+                  height={0}
                   priority
                 />
               </div>
