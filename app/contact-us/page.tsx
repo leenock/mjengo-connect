@@ -1,77 +1,89 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect, useRef } from "react"
-import { MapPin, Phone, Mail, Clock, Send, CheckCircle, User, MessageSquare } from "lucide-react"
-import Header from "@/components/landingpage/Header"
-import Footer from "@/components/landingpage/Footer"
+import { useState, useEffect, useRef } from "react";
+import {
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Send,
+  CheckCircle,
+  User,
+  MessageSquare,
+} from "lucide-react";
+import Header from "@/components/landingpage/Header";
+import Footer from "@/components/landingpage/Footer";
 
 export default function ContactUsPage() {
-  const [isVisible, setIsVisible] = useState(false)
+  const [isVisible, setIsVisible] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     subject: "",
     message: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
-  const sectionRef = useRef<HTMLElement>(null)
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
 
- useEffect(() => {
-  const sectionElement = sectionRef.current; // ✅ Save ref value
+  useEffect(() => {
+    const sectionElement = sectionRef.current; // ✅ Save ref value
 
-  if (!sectionElement) return;
+    if (!sectionElement) return;
 
-  const observer = new IntersectionObserver(
-    ([entry]) => {
-      if (entry.isIntersecting) {
-        setIsVisible(true);
-      }
-    },
-    { threshold: 0.1 }
-  );
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+        }
+      },
+      { threshold: 0.1 }
+    );
 
-  observer.observe(sectionElement);
+    observer.observe(sectionElement);
 
-  return () => {
-    observer.unobserve(sectionElement); // ✅ Use saved ref
-  };
-}, []);
+    return () => {
+      observer.unobserve(sectionElement); // ✅ Use saved ref
+    };
+  }, []);
 
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
+  const handleInputChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
+    setIsSubmitting(true);
 
     // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 2000))
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    setIsSubmitting(false)
-    setIsSubmitted(true)
+    setIsSubmitting(false);
+    setIsSubmitted(true);
 
     // Reset form after 3 seconds
     setTimeout(() => {
-      setIsSubmitted(false)
+      setIsSubmitted(false);
       setFormData({
         name: "",
         email: "",
         phone: "",
         subject: "",
         message: "",
-      })
-    }, 3000)
-  }
+      });
+    }, 3000);
+  };
 
   const contactInfo = [
     {
@@ -98,7 +110,7 @@ export default function ContactUsPage() {
       details: ["Mon - Fri: 8AM - 6PM", "Sat: 9AM - 4PM"],
       color: "from-purple-500 to-purple-600",
     },
-  ]
+  ];
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -113,7 +125,8 @@ export default function ContactUsPage() {
             </h1>
             <div className="w-20 h-1 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full mx-auto mb-6" />
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Get in touch with our team. We are here to help with your construction needs and answer any questions.
+              Get in touch with our team. We are here to help with you and
+              answer any questions.
             </p>
           </div>
         </section>
@@ -126,7 +139,9 @@ export default function ContactUsPage() {
                 <div
                   key={index}
                   className={`bg-white rounded-2xl shadow-lg border border-gray-100 p-6 text-center transition-all duration-700 hover:shadow-xl hover:-translate-y-2 ${
-                    isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                    isVisible
+                      ? "opacity-100 translate-y-0"
+                      : "opacity-0 translate-y-8"
                   }`}
                   style={{ transitionDelay: `${index * 100}ms` }}
                 >
@@ -135,7 +150,9 @@ export default function ContactUsPage() {
                   >
                     {info.icon}
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-3">{info.title}</h3>
+                  <h3 className="text-lg font-bold text-gray-900 mb-3">
+                    {info.title}
+                  </h3>
                   <div className="space-y-1">
                     {info.details.map((detail, i) => (
                       <p key={i} className="text-gray-600 text-sm">
@@ -155,12 +172,21 @@ export default function ContactUsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
               {/* Form */}
               <div
-                className={`transition-all duration-1000 ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10"}`}
+                className={`transition-all duration-1000 ${
+                  isVisible
+                    ? "opacity-100 translate-x-0"
+                    : "opacity-0 -translate-x-10"
+                }`}
               >
                 <div className="bg-white rounded-2xl shadow-xl p-8">
                   <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">Send us a Message</h2>
-                    <p className="text-gray-600">Fill out the form below and we all get back to you within 24 hours.</p>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                      Send us a Message
+                    </h2>
+                    <p className="text-gray-600">
+                      Fill out the form below and we all get back to you within
+                      24 hours.
+                    </p>
                   </div>
 
                   {isSubmitted ? (
@@ -168,14 +194,21 @@ export default function ContactUsPage() {
                       <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <CheckCircle className="w-8 h-8 text-green-600" />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">Message Sent!</h3>
-                      <p className="text-gray-600">Thank you for contacting us. We all be in touch soon.</p>
+                      <h3 className="text-xl font-bold text-gray-900 mb-2">
+                        Message Sent!
+                      </h3>
+                      <p className="text-gray-600">
+                        Thank you for contacting us. We all be in touch soon.
+                      </p>
                     </div>
                   ) : (
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                          <label
+                            htmlFor="name"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
                             Full Name *
                           </label>
                           <div className="relative">
@@ -194,7 +227,10 @@ export default function ContactUsPage() {
                         </div>
 
                         <div>
-                          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                          <label
+                            htmlFor="email"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
                             Email Address *
                           </label>
                           <div className="relative">
@@ -215,7 +251,10 @@ export default function ContactUsPage() {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                          <label
+                            htmlFor="phone"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
                             Phone Number
                           </label>
                           <div className="relative">
@@ -233,7 +272,10 @@ export default function ContactUsPage() {
                         </div>
 
                         <div>
-                          <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                          <label
+                            htmlFor="subject"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
                             Subject *
                           </label>
                           <select
@@ -246,7 +288,9 @@ export default function ContactUsPage() {
                           >
                             <option value="">Select a subject</option>
                             <option value="general">General Inquiry</option>
-                            <option value="services">Services Information</option>
+                            <option value="services">
+                              Services Information
+                            </option>
                             <option value="support">Technical Support</option>
                             <option value="partnership">Partnership</option>
                             <option value="other">Other</option>
@@ -255,7 +299,10 @@ export default function ContactUsPage() {
                       </div>
 
                       <div>
-                        <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                        <label
+                          htmlFor="message"
+                          className="block text-sm font-medium text-gray-700 mb-2"
+                        >
                           Message *
                         </label>
                         <div className="relative">
@@ -297,31 +344,49 @@ export default function ContactUsPage() {
 
               {/* Contact Info */}
               <div
-                className={`transition-all duration-1000 delay-300 ${isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-10"}`}
+                className={`transition-all duration-1000 delay-300 ${
+                  isVisible
+                    ? "opacity-100 translate-x-0"
+                    : "opacity-0 translate-x-10"
+                }`}
               >
                 <div className="space-y-8">
                   <div>
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">Get in Touch</h2>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                      Get in Touch
+                    </h2>
                     <p className="text-gray-600 text-lg leading-relaxed">
-                      Whether you need construction services, want to join our platform as a fundi, or have questions
-                      about our services, we are here to help.
+                      We are building more than just a platform ,  Whether you
+                      seeking reliable workmanship, a skilled fundi, or someone who shares our vision for a
+                      more connected and empowered industry, we would love to hear
+                      from you.
                     </p>
                   </div>
 
                   <div className="bg-gradient-to-br from-orange-50 to-yellow-50 rounded-2xl p-8 border border-orange-100">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">Quick Response</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">
+                      Quick Response
+                    </h3>
                     <p className="text-gray-600 mb-4">
-                      We typically respond to all inquiries within 24 hours during business days.
+                      We typically respond to all inquiries within 24 hours
+                      during business days.
                     </p>
                     <div className="flex items-center text-orange-600">
                       <Clock className="w-5 h-5 mr-2" />
-                      <span className="font-medium">Average response time: 2-4 hours</span>
+                      <span className="font-medium">
+                        Average response time: 2-4 hours
+                      </span>
                     </div>
                   </div>
 
                   <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">Emergency Support</h3>
-                    <p className="text-gray-600 mb-4">For urgent construction emergencies, call our 24/7 hotline:</p>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">
+                      Emergency Support
+                    </h3>
+                    <p className="text-gray-600 mb-4">
+                      For urgent construction emergencies, call our 24/7
+                      hotline:
+                    </p>
                     <div className="flex items-center text-red-600 font-bold text-lg">
                       <Phone className="w-5 h-5 mr-2" />
                       <span>+254 700 EMERGENCY</span>
@@ -336,5 +401,5 @@ export default function ContactUsPage() {
 
       <Footer />
     </div>
-  )
+  );
 }

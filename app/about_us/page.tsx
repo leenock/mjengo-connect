@@ -101,24 +101,25 @@ export default function AboutUs() {
                 }`}
               >
                 <h3 className="text-3xl font-bold mb-4">
-                  The Problem We Solved
+                  Empowering Skilled Fundis, Connecting Them to Opportunity
                 </h3>
                 <p className="text-gray-700 mb-4 leading-relaxed">
-                  In Kenya, finding reliable construction workers has always
-                  been a challenge. Word-of-mouth recommendations were limited,
-                  and there was no easy way to verify skills, compare prices, or
-                  ensure quality work.
+                  Across Kenya, countless skilled fundis remain unseen — not
+                  because they lack talent, but because they lack visibility.
+                  Without a platform to showcase their work, many struggle to
+                  find consistent jobs or grow their craft into a sustainable
+                  business.
                 </p>
                 <p className="text-gray-700 mb-4 leading-relaxed">
-                  Meanwhile, skilled fundis struggled to find consistent work
-                  and grow their businesses. Many talented professionals
-                  remained underutilized simply because potential clients could
-                  not find them.
+                  Meanwhile, clients seeking reliable construction services
+                  often rely on word-of-mouth or guesswork, with no easy way to
+                  verify skills, compare prices, or ensure quality.
                 </p>
                 <p className="text-gray-700 leading-relaxed">
-                  We realized technology could bridge this gap, creating
-                  opportunities for both sides while raising the standard of
-                  construction services across the country.
+                  We built this platform to solve both problems. By connecting
+                  trusted fundis with people who need them, we’re unlocking
+                  opportunity, restoring trust, and raising the standard of
+                  construction across the country.
                 </p>
               </div>
 
@@ -193,8 +194,6 @@ export default function AboutUs() {
                 </div>
               ))}
             </div>
-
-          
           </div>
         </section>
 
