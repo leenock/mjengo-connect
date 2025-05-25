@@ -30,13 +30,13 @@ export default function Service() {
       icon: <Briefcase className="w-10 h-10" />,
       title: "Post a Job",
       description:
-        "Need a mason, plumber, or welder? Post your job with location and budget for just Ksh 300. Verified fundis nearby will see your listing and contact you directly.",
+        "Need a mason, plumber, or welder? Post your job with location and budget for just Ksh 300. Registered fundis nearby will see your listing and contact you directly.",
       color: "from-gray-800 to-black",
       delay: 0,
     },
     {
       icon: <Users className="w-10 h-10" />,
-      title: "Browse Jobs",
+      title: "A fundi Browse Listings",
       description:
         "Are you a fundi looking for work? Browse listings by trade and location. Create a free account and get a 7-day full access trial.",
       color: "from-gray-900 to-gray-800", // dark but accessible
@@ -44,7 +44,7 @@ export default function Service() {
     },
     {
       icon: <Users className="w-10 h-10" />,
-      title: "Hire a Fundi",
+      title: "Connect & Work",
       description:
         "Post your construction job and let qualified fundis reach out. They browse listings by trade and location, then contact you directly.",
       color: "from-gray-700 to-gray-900",

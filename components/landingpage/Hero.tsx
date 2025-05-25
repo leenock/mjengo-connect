@@ -68,8 +68,8 @@ export default function HeroSection() {
             <div className="flex flex-wrap gap-6 py-4">
               {[
                 ["1000+", "Skilled Workers"],
-                ["500+", "Jobs Completed"],
-                ["50+", "Counties Served"],
+                ["500+", "Jobs Posted"],
+                ["5+", "Counties Served"],
               ].map(([stat, label], i) => (
                 <div key={i} className="text-center">
                   <div className="text-2xl lg:text-3xl font-bold text-yellow-700">
