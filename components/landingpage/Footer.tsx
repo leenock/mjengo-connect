@@ -22,8 +22,6 @@ export default function Footer() {
       id: "company",
       links: [
         { label: "About Us", href: "/about" },
-        { label: "Our services", href: "/services" },
-        { label: "Gallery", href: "/gallery" },
         { label: "Contact Us", href: "/contact" },
       ],
     },
@@ -167,17 +165,7 @@ export default function Footer() {
             <div className="text-gray-400 text-sm text-center md:text-left">
               © {new Date().getFullYear()} MJENGO Connect. All rights reserved.
             </div>
-            <div className="flex flex-wrap justify-center md:justify-end gap-6 text-sm">
-              <Link href="/terms" className="text-gray-400">
-                Terms of Service
-              </Link>
-              <Link href="/privacy" className="text-gray-400">
-                Privacy Policy
-              </Link>
-              <Link href="/cookies" className="text-gray-400">
-                Cookie Policy
-              </Link>
-            </div>
+           
           </div>
         </div>
       </div>

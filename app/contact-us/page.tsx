@@ -77,7 +77,7 @@ export default function ContactUsPage() {
     {
       icon: <Phone className="w-6 h-6" />,
       title: "Phone",
-      details: ["+254 700 123 456", "+254 711 987 654"],
+      details: ["+254 xxx xxx xxx", "+254 xxx xxx xxx"],
       color: "from-blue-500 to-blue-600",
     },
     {
