@@ -119,14 +119,19 @@ export default function ContactUsPage() {
       <main className="flex-grow pt-20">
         {/* Hero Section */}
         <section className="py-20 bg-gradient-to-br from-orange-50 to-yellow-50">
-          <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-20 text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Contact <span className="text-orange-600">Us</span>
+          <div className="max-w-7xl mx-auto px-6 sm:px-10 lg:px-20 text-center font-display">
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-gray-900 mb-6">
+              Contact{" "}
+              <span className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-transparent bg-clip-text">
+                Us
+              </span>
             </h1>
-            <div className="w-20 h-1 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full mx-auto mb-6" />
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Get in touch with our team. We are here to help with you and
-              answer any questions.
+
+            <div className="w-24 h-1 bg-gradient-to-r from-orange-500 via-yellow-400 to-red-500 rounded-full mx-auto mb-6 shadow-md" />
+
+            <p className="text-lg md:text-xl text-gray-700 leading-relaxed max-w-3xl mx-auto font-medium">
+              Get in touch with our friendly team — we’re here to help, support,
+              and answer your questions.
             </p>
           </div>
         </section>
@@ -356,10 +361,10 @@ export default function ContactUsPage() {
                       Get in Touch
                     </h2>
                     <p className="text-gray-600 text-lg leading-relaxed">
-                      We are building more than just a platform ,  Whether you
-                      seeking reliable workmanship, a skilled fundi, or someone who shares our vision for a
-                      more connected and empowered industry, we would love to hear
-                      from you.
+                      We are building more than just a platform , Whether you
+                      seeking reliable workmanship, a skilled fundi, or someone
+                      who shares our vision for a more connected and empowered
+                      industry, we would love to hear from you.
                     </p>
                   </div>
 
