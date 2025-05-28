@@ -85,7 +85,7 @@ export default function HeroSection() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link href="/job-posting" passHref>
+              <Link href="/auth/job-posting" passHref>
                 <div className="group relative px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-semibold text-base transition hover:from-yellow-700 hover:to-orange-700 hover:shadow-lg transform hover:-translate-y-1 cursor-pointer">
                   <div className="flex items-center space-x-2">
                     <svg
@@ -99,7 +99,7 @@ export default function HeroSection() {
                   </div>
                 </div>
               </Link>
-              <Link href="/jobs" passHref>
+              <Link href="/Jobs-list" passHref>
                 <div className="group px-6 py-3 bg-white text-yellow-800 border border-yellow-300 rounded-xl font-semibold text-base transition hover:border-yellow-600 hover:text-yellow-700 hover:shadow-md transform hover:-translate-y-1 cursor-pointer">
                   <div className="flex items-center space-x-2">
                     <svg
