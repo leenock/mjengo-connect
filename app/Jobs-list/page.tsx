@@ -7,6 +7,7 @@ import {
   Briefcase,
   Search,
   Shield,
+  Calendar,
   ChevronDown,
 } from "lucide-react";
 import Header from "@/components/landingpage/Header";
@@ -48,7 +49,8 @@ export default function JobsListPage() {
       title: "House Painting - 3 Bedroom Villa",
       category: "painting",
       location: "Westlands, Nairobi",
-      budget: "KSh 45,000 - 60,000",
+      StartDate: "2025-01-15",
+      budget: "KSh 800/Day",
       skills: ["Interior Painting", "Exterior Painting", "Color Consultation"],
       postedTime: "2 hours ago",
       urgency: "Urgent",
@@ -62,7 +64,8 @@ export default function JobsListPage() {
       title: "Plumbing Installation - New Apartment",
       category: "plumbing",
       location: "Karen, Nairobi",
-      budget: "KSh 25,000 - 35,000",
+      StartDate: "2025-01-15",
+      budget: "KSh 800/Day",
       skills: ["Pipe Installation", "Fixture Setup", "Water Systems"],
       postedTime: "4 hours ago",
       urgency: "Normal",
@@ -76,7 +79,8 @@ export default function JobsListPage() {
       title: "Electrical Wiring - Commercial Building",
       category: "electrical",
       location: "Industrial Area, Nairobi",
-      budget: "KSh 120,000 - 180,000",
+      StartDate: "2025-01-15",
+      budget: "KSh 800/Day",
       skills: ["Commercial Wiring", "Panel Installation", "Safety Systems"],
       postedTime: "6 hours ago",
       urgency: "Normal",
@@ -229,6 +233,10 @@ export default function JobsListPage() {
                       <div className="flex items-center">
                         <MapPin className="w-4 h-4 mr-2 text-gray-400" />
                         {job.location}
+                      </div>
+                      <div className="flex items-center">
+                        <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                        Start Date: {job.StartDate}
                       </div>
                       <div className="flex items-center">
                         <Clock className="w-4 h-4 mr-2 text-gray-400" />
