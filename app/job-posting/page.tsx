@@ -11,6 +11,7 @@ import {
   Phone,
   ArrowRight,
   CheckCircle,
+  MapPin,
 } from "lucide-react";
 import Header from "@/components/landingpage/Header";
 import Footer from "@/components/landingpage/Footer";
@@ -23,13 +24,14 @@ export default function JobPostingPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const [loginData, setLoginData] = useState({
-    email: "",
+    phone: "",
     password: "",
   });
 
   const [signupData, setSignupData] = useState({
     email: "",
     phone: "",
+    location: "",
     password: "",
     confirmPassword: "",
     agreeToTerms: false,
@@ -98,27 +100,19 @@ export default function JobPostingPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+
       <main className="flex-grow pt-20 bg-gradient-to-br from-orange-50 via-white to-yellow-50">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Side - Marketing Content */}
             <div className="space-y-8">
               <div>
-                <h1 className="text-2xl md:text-4xl font-extrabold tracking-tight text-gray-900 mb-6 font-display">
-                  Create an account to post your job in{" "}
-                  <span className="bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-transparent bg-clip-text">
-                    Minutes
-                  </span>
+                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                  Create an account to post your job in
+                  <span className="text-orange-600"> Minutes</span>
                 </h1>
-                <p className="text-lg md:text-xl text-gray-700 leading-relaxed font-medium">
-                  Connecting{" "}
-                  <span className="text-yellow-600 font-semibold">
-                    Skilled Fundis
-                  </span>{" "}
-                  with{" "}
-                  <span className="text-orange-600 font-semibold">
-                    Construction Services
-                  </span>
+                <p className="text-xl text-gray-600 leading-relaxed">
+                  Connecting Skilled Fundis with Construction Services
                 </p>
               </div>
 
@@ -201,29 +195,29 @@ export default function JobPostingPage() {
                 <>
                   <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email Address
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                       Phone Number
                       </label>
                       <div className="relative">
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
-                          type="email"
+                          type="phone"
                           required
-                          value={loginData.email}
+                          value={loginData.phone}
                           onChange={(e) =>
                             setLoginData({
                               ...loginData,
-                              email: e.target.value,
+                              phone: e.target.value,
                             })
                           }
                           className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                          placeholder="your@email.com"
+                          placeholder="Phone Number (+254 700 123 456)"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Password
                       </label>
                       <div className="relative">
@@ -297,118 +291,151 @@ export default function JobPostingPage() {
               {/* Signup Form */}
               {authMode === "signup" && (
                 <form onSubmit={handleSignup} className="space-y-6">
+                  {/* Two-column layout for desktop */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {/* Email Address - Left column */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Email Address
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="email"
+                          required
+                          value={signupData.email}
+                          onChange={(e) =>
+                            setSignupData({
+                              ...signupData,
+                              email: e.target.value,
+                            })
+                          }
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                          placeholder="your@email.com"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Phone Number - Right column */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Phone Number
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type="tel"
+                          required
+                          value={signupData.phone}
+                          onChange={(e) =>
+                            setSignupData({
+                              ...signupData,
+                              phone: e.target.value,
+                            })
+                          }
+                          className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                          placeholder="+254 700 123 456"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Location field - Full width */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email Address
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Location
                     </label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                      <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
-                        type="email"
+                        type="text"
                         required
-                        value={signupData.email}
+                        value={signupData.location}
                         onChange={(e) =>
                           setSignupData({
                             ...signupData,
-                            email: e.target.value,
+                            location: e.target.value,
                           })
                         }
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                        placeholder="your@email.com"
+                        placeholder="e.g., Nairobi, Westlands"
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type="tel"
-                        required
-                        value={signupData.phone}
-                        onChange={(e) =>
-                          setSignupData({
-                            ...signupData,
-                            phone: e.target.value,
-                          })
-                        }
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                        placeholder="+254 700 123 456"
-                      />
+                  {/* Password - Left column */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          required
+                          value={signupData.password}
+                          onChange={(e) =>
+                            setSignupData({
+                              ...signupData,
+                              password: e.target.value,
+                            })
+                          }
+                          className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                          placeholder="Create a strong password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showPassword ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Confirm Password - Right column */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Confirm Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          required
+                          value={signupData.confirmPassword}
+                          onChange={(e) =>
+                            setSignupData({
+                              ...signupData,
+                              confirmPassword: e.target.value,
+                            })
+                          }
+                          className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                          placeholder="Confirm your password"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
+                          className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        required
-                        value={signupData.password}
-                        onChange={(e) =>
-                          setSignupData({
-                            ...signupData,
-                            password: e.target.value,
-                          })
-                        }
-                        className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                        placeholder="Create a strong password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showPassword ? (
-                          <EyeOff className="w-5 h-5" />
-                        ) : (
-                          <Eye className="w-5 h-5" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Confirm Password
-                    </label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                      <input
-                        type={showConfirmPassword ? "text" : "password"}
-                        required
-                        value={signupData.confirmPassword}
-                        onChange={(e) =>
-                          setSignupData({
-                            ...signupData,
-                            confirmPassword: e.target.value,
-                          })
-                        }
-                        className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                        placeholder="Confirm your password"
-                      />
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowConfirmPassword(!showConfirmPassword)
-                        }
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                      >
-                        {showConfirmPassword ? (
-                          <EyeOff className="w-5 h-5" />
-                        ) : (
-                          <Eye className="w-5 h-5" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
+                  {/* Terms checkbox - Full width */}
                   <div className="flex items-start">
                     <input
                       type="checkbox"
@@ -422,7 +449,7 @@ export default function JobPostingPage() {
                       }
                       className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 mt-1"
                     />
-                    <label className="ml-3 text-sm text-gray-600">
+                    <label className="ml-3 font-semibold text-gray-600">
                       I agree to the{" "}
                       <button
                         type="button"
@@ -440,6 +467,7 @@ export default function JobPostingPage() {
                     </label>
                   </div>
 
+                  {/* Submit button - Full width */}
                   <button
                     type="submit"
                     disabled={isLoading}
@@ -463,7 +491,6 @@ export default function JobPostingPage() {
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
