@@ -9,12 +9,12 @@ import {
   Plus,
   Eye,
   MessageSquare,
-  Calendar,
+  User,
   DollarSign,
   Clock,
   MapPin,
-  Star,
   Menu,
+  ChartBarDecreasingIcon,
 } from "lucide-react";
 
 export default function PostJobPage() {
@@ -30,7 +30,7 @@ export default function PostJobPage() {
       bgColor: "bg-blue-100",
     },
     {
-      title: "Total Applications",
+      title: "Total Jobs Posted",
       value: "156",
       change: "+23 this week",
       icon: Users,
@@ -38,7 +38,7 @@ export default function PostJobPage() {
       bgColor: "bg-green-100",
     },
     {
-      title: "Jobs Completed",
+      title: "Total Clicks",
       value: "34",
       change: "+5 this month",
       icon: TrendingUp,
@@ -47,9 +47,9 @@ export default function PostJobPage() {
     },
     {
       title: "Total Spent",
-      value: "KSh 2.4M",
+      value: "KSh 10000",
       change: "+12% this month",
-      icon: DollarSign,
+      icon: ChartBarDecreasingIcon,
       color: "text-purple-600",
       bgColor: "bg-purple-100",
     },
@@ -91,36 +91,6 @@ export default function PostJobPage() {
     },
   ];
 
-  const recentApplications = [
-    {
-      id: 1,
-      fundiName: "David Mwangi",
-      jobTitle: "House Painting - 3 Bedroom",
-      rating: 4.8,
-      experience: "5 years",
-      appliedTime: "30 minutes ago",
-      status: "New",
-    },
-    {
-      id: 2,
-      fundiName: "Grace Njeri",
-      jobTitle: "Plumbing Installation",
-      rating: 4.9,
-      experience: "7 years",
-      appliedTime: "2 hours ago",
-      status: "Reviewed",
-    },
-    {
-      id: 3,
-      fundiName: "Peter Ochieng",
-      jobTitle: "Electrical Wiring",
-      rating: 4.7,
-      experience: "10 years",
-      appliedTime: "1 day ago",
-      status: "Shortlisted",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">
       <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
@@ -144,7 +114,8 @@ export default function PostJobPage() {
                   Welcome Doe
                 </h1>
                 <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
-                  Welcome back! Here is what is happening with your projects.
+                  Welcome back! Here is what is happening with your Job
+                  Listings.
                 </p>
               </div>
             </div>
@@ -186,7 +157,7 @@ export default function PostJobPage() {
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-4 sm:gap-8">
               {/* Recent Jobs */}
               <div className="lg:col-span-2">
                 <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100">
@@ -256,55 +227,6 @@ export default function PostJobPage() {
                   </div>
                 </div>
               </div>
-
-              {/* Recent Applications */}
-              <div>
-                <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100">
-                  <div className="p-4 sm:p-6 border-b border-gray-200">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">
-                      Recent Applications
-                    </h2>
-                  </div>
-                  <div className="space-y-3 sm:space-y-4 p-4 sm:p-6">
-                    {recentApplications.map((application) => (
-                      <div
-                        key={application.id}
-                        className="p-3 sm:p-4 border border-gray-200 rounded-lg sm:rounded-xl hover:border-orange-300 transition-colors"
-                      >
-                        <div className="flex items-center justify-between mb-2 sm:mb-3">
-                          <h4 className="font-semibold text-gray-900 text-sm sm:text-base truncate">
-                            {application.fundiName}
-                          </h4>
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full flex-shrink-0 ml-2 ${
-                              application.status === "New"
-                                ? "bg-blue-100 text-blue-600"
-                                : application.status === "Reviewed"
-                                ? "bg-yellow-100 text-yellow-600"
-                                : "bg-green-100 text-green-600"
-                            }`}
-                          >
-                            {application.status}
-                          </span>
-                        </div>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-2 truncate">
-                          {application.jobTitle}
-                        </p>
-                        <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-yellow-500 fill-current" />
-                            {application.rating}
-                          </div>
-                          <span>{application.experience}</span>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-2">
-                          {application.appliedTime}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Quick Actions */}
@@ -329,8 +251,8 @@ export default function PostJobPage() {
                     <span className="text-xs sm:text-sm">View Analytics</span>
                   </button>
                   <button className="h-16 sm:h-20 flex flex-col items-center justify-center space-y-1 sm:space-y-2 border border-gray-300 text-gray-700 rounded-lg sm:rounded-xl font-semibold hover:bg-gray-50 transition-colors">
-                    <Calendar className="w-4 h-4 sm:w-6 sm:h-6" />
-                    <span className="text-xs sm:text-sm">Schedule Meeting</span>
+                    <User className="w-4 h-4 sm:w-6 sm:h-6" />
+                    <span className="text-xs sm:text-sm">User Profile</span>
                   </button>
                 </div>
               </div>

@@ -1,11 +1,10 @@
-"use client"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Plus,
   Briefcase,
-  Users,
   MessageSquare,
   Settings,
   BarChart3,
@@ -14,15 +13,15 @@ import {
   X,
   Building2,
   Calendar,
-} from "lucide-react"
+} from "lucide-react";
 
 interface SidebarProps {
-  isOpen: boolean
-  setIsOpen: (isOpen: boolean) => void
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
 }
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const navigationItems = [
     {
@@ -42,12 +41,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       icon: Briefcase,
       badge: "12",
     },
-    {
-      name: "Applications",
-      href: "/employer/applications",
-      icon: Users,
-      badge: "24",
-    },
+
     {
       name: "Messages",
       href: "/employer/messages",
@@ -65,18 +59,23 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       icon: BarChart3,
     },
     {
-      name: "Settings",
+      name: "User Profile",
       href: "/employer/settings",
       icon: Settings,
     },
-  ]
+  ];
 
-  const isActive = (href: string) => pathname === href
+  const isActive = (href: string) => pathname === href;
 
   return (
     <>
       {/* Mobile Overlay */}
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsOpen(false)} />}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
       {/* Sidebar */}
       <div
@@ -93,7 +92,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-gray-900">MJENGO</h2>
-                <p className="text-xs text-gray-500">Employer Portal</p>
+                <p className="text-xs text-gray-500">Client Portal</p>
               </div>
             </div>
             <button
@@ -121,8 +120,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           <div className="flex-1 overflow-y-auto py-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
             <nav className="px-6 space-y-2">
               {navigationItems.map((item) => {
-                const Icon = item.icon
-                const active = isActive(item.href)
+                const Icon = item.icon;
+                const active = isActive(item.href);
 
                 return (
                   <Link
@@ -132,29 +131,39 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                       active
                         ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
                         : item.highlight
-                          ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
-                          : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
+                        : "text-gray-700 hover:bg-gray-100"
                     }`}
                   >
                     <div className="flex items-center space-x-3">
                       <Icon
                         className={`w-5 h-5 ${
-                          active || item.highlight ? "text-white" : "text-gray-500 group-hover:text-gray-700"
+                          active || item.highlight
+                            ? "text-white"
+                            : "text-gray-500 group-hover:text-gray-700"
                         }`}
                       />
-                      <span className={`font-medium ${active || item.highlight ? "text-white" : ""}`}>{item.name}</span>
+                      <span
+                        className={`font-medium ${
+                          active || item.highlight ? "text-white" : ""
+                        }`}
+                      >
+                        {item.name}
+                      </span>
                     </div>
                     {item.badge && (
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          active ? "bg-white/20 text-white" : "bg-orange-100 text-orange-600"
+                          active
+                            ? "bg-white/20 text-white"
+                            : "bg-orange-100 text-orange-600"
                         }`}
                       >
                         {item.badge}
                       </span>
                     )}
                   </Link>
-                )
+                );
               })}
             </nav>
           </div>
@@ -169,5 +178,5 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         </div>
       </div>
     </>
-  )
+  );
 }
