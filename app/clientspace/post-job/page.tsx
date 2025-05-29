@@ -1,6 +1,6 @@
-"use client"
-import { useState } from "react"
-import Sidebar from "@/components/job_posting/Sidebar"
+"use client";
+import { useState } from "react";
+import Sidebar from "@/components/job_posting/Sidebar";
 import {
   BarChart3,
   Users,
@@ -15,10 +15,10 @@ import {
   MapPin,
   Star,
   Menu,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function PostJobPage() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   const stats = [
     {
@@ -53,7 +53,7 @@ export default function PostJobPage() {
       color: "text-purple-600",
       bgColor: "bg-purple-100",
     },
-  ]
+  ];
 
   const recentJobs = [
     {
@@ -89,7 +89,7 @@ export default function PostJobPage() {
       postedTime: "3 days ago",
       urgency: "Normal",
     },
-  ]
+  ];
 
   const recentApplications = [
     {
@@ -119,7 +119,7 @@ export default function PostJobPage() {
       appliedTime: "1 day ago",
       status: "Shortlisted",
     },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">
@@ -129,7 +129,7 @@ export default function PostJobPage() {
       <div className="flex-1 lg:ml-0">
         <div className="p-4 sm:p-6 lg:p-6">
           {/* Header */}
-          <div className="mb-6 sm:mb-8 flex items-center justify-between">
+          <div className="sticky top-0 z-30 bg-white mb-6 sm:mb-8 flex items-center justify-between px-4 sm:px-6 py-4">
             <div className="flex items-center space-x-3">
               {/* Mobile Menu Toggle */}
               <button
@@ -140,7 +140,9 @@ export default function PostJobPage() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  Welcome Doe
+                </h1>
                 <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
                   Welcome back! Here is what is happening with your projects.
                 </p>
@@ -152,7 +154,7 @@ export default function PostJobPage() {
             {/* Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {stats.map((stat) => {
-                const Icon = stat.icon
+                const Icon = stat.icon;
                 return (
                   <div
                     key={stat.title}
@@ -160,18 +162,26 @@ export default function PostJobPage() {
                   >
                     <div className="flex items-center justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">{stat.title}</p>
-                        <p className="text-lg sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">{stat.value}</p>
-                        <p className="text-xs sm:text-sm text-green-600 mt-1 truncate">{stat.change}</p>
+                        <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">
+                          {stat.title}
+                        </p>
+                        <p className="text-lg sm:text-3xl font-bold text-gray-900 mt-1 sm:mt-2">
+                          {stat.value}
+                        </p>
+                        <p className="text-xs sm:text-sm text-green-600 mt-1 truncate">
+                          {stat.change}
+                        </p>
                       </div>
                       <div
                         className={`w-8 h-8 sm:w-12 sm:h-12 ${stat.bgColor} rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ml-2`}
                       >
-                        <Icon className={`w-4 h-4 sm:w-6 sm:h-6 ${stat.color}`} />
+                        <Icon
+                          className={`w-4 h-4 sm:w-6 sm:h-6 ${stat.color}`}
+                        />
                       </div>
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
 
@@ -181,7 +191,9 @@ export default function PostJobPage() {
               <div className="lg:col-span-2">
                 <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 sm:p-6 border-b border-gray-200 space-y-2 sm:space-y-0">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">Recent Job Postings</h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+                      Recent Job Postings
+                    </h2>
                     <button className="px-3 py-2 sm:px-4 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors text-sm">
                       View All
                     </button>
@@ -194,7 +206,9 @@ export default function PostJobPage() {
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{job.title}</h3>
+                            <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
+                              {job.title}
+                            </h3>
                             {job.urgency === "Urgent" && (
                               <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-medium rounded-full">
                                 Urgent
@@ -205,8 +219,8 @@ export default function PostJobPage() {
                                 job.status === "Active"
                                   ? "bg-green-100 text-green-600"
                                   : job.status === "In Progress"
-                                    ? "bg-blue-100 text-blue-600"
-                                    : "bg-gray-100 text-gray-600"
+                                  ? "bg-blue-100 text-blue-600"
+                                  : "bg-gray-100 text-gray-600"
                               }`}
                             >
                               {job.status}
@@ -247,7 +261,9 @@ export default function PostJobPage() {
               <div>
                 <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100">
                   <div className="p-4 sm:p-6 border-b border-gray-200">
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">Recent Applications</h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+                      Recent Applications
+                    </h2>
                   </div>
                   <div className="space-y-3 sm:space-y-4 p-4 sm:p-6">
                     {recentApplications.map((application) => (
@@ -264,14 +280,16 @@ export default function PostJobPage() {
                               application.status === "New"
                                 ? "bg-blue-100 text-blue-600"
                                 : application.status === "Reviewed"
-                                  ? "bg-yellow-100 text-yellow-600"
-                                  : "bg-green-100 text-green-600"
+                                ? "bg-yellow-100 text-yellow-600"
+                                : "bg-green-100 text-green-600"
                             }`}
                           >
                             {application.status}
                           </span>
                         </div>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-2 truncate">{application.jobTitle}</p>
+                        <p className="text-xs sm:text-sm text-gray-600 mb-2 truncate">
+                          {application.jobTitle}
+                        </p>
                         <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
                           <div className="flex items-center">
                             <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1 text-yellow-500 fill-current" />
@@ -279,7 +297,9 @@ export default function PostJobPage() {
                           </div>
                           <span>{application.experience}</span>
                         </div>
-                        <p className="text-xs text-gray-400 mt-2">{application.appliedTime}</p>
+                        <p className="text-xs text-gray-400 mt-2">
+                          {application.appliedTime}
+                        </p>
                       </div>
                     ))}
                   </div>
@@ -290,7 +310,9 @@ export default function PostJobPage() {
             {/* Quick Actions */}
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-gray-100">
               <div className="p-4 sm:p-6 border-b border-gray-200">
-                <h2 className="text-lg sm:text-xl font-bold text-gray-900">Quick Actions</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900">
+                  Quick Actions
+                </h2>
               </div>
               <div className="p-4 sm:p-6">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -317,5 +339,5 @@ export default function PostJobPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
