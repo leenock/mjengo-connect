@@ -111,7 +111,7 @@ export default function PostJobPage() {
               </button>
               <div>
                 <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-                  Welcome Doe
+                  Welcome Kamau
                 </h1>
                 <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
                   Welcome back! Here is what is happening with your Job
