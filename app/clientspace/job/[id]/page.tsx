@@ -25,7 +25,6 @@ import {
 export default function JobDetailsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
-  const [showApplyModal, setShowApplyModal] = useState(false);
   const params = useParams();
   const router = useRouter();
   const jobId = params.id;
@@ -49,9 +48,6 @@ The house is a modern 3-bedroom unit with approximately 1,200 square feet of int
 
 Materials will be provided by the client, but the painter must bring all necessary tools and equipment. This is an urgent project and we need someone who can start immediately.`,
     requirements: [
-      "3+ years of professional painting experience",
-      "Own painting equipment and tools",
-      "References from previous clients",
       "Available to start immediately",
       "Knowledge of different paint types",
       "Attention to detail and quality workmanship",
@@ -68,14 +64,10 @@ Materials will be provided by the client, but the painter must bring all necessa
       "Competitive payment upon completion",
       "Materials provided by client",
       "Potential for future projects",
-      "Positive review and rating opportunity",
     ],
     companyInfo: {
       name: "Kamau Properties Ltd",
       established: "2015",
-      projects: "150+ completed",
-      rating: 4.8,
-      employees: "25-50",
       description:
         "Leading property development and management company in Nairobi with over 8 years of experience.",
     },
@@ -84,10 +76,6 @@ Materials will be provided by the client, but the painter must bring all necessa
       email: "jobs@kamauproperties.co.ke",
       address: "Westlands, Nairobi",
     },
-  };
-
-  const handleApply = () => {
-    setShowApplyModal(true);
   };
 
   const handleSave = () => {
@@ -178,7 +166,7 @@ Materials will be provided by the client, but the painter must bring all necessa
                   </div>
 
                   {/* Job Meta Info */}
-                  <div className="grid grid-cols-2 font-black lg:grid-cols-4 gap-4 mb-6">
+                  <div className="grid grid-cols-2  lg:grid-cols-4 gap-4 mb-6">
                     <div className="flex items-center text-gray-600">
                       <MapPin className="w-5 h-5 mr-2" />
                       <span>{jobDetails.location}</span>
@@ -212,12 +200,6 @@ Materials will be provided by the client, but the painter must bring all necessa
 
                 {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row lg:flex-col gap-3 lg:w-48">
-                  <button
-                    onClick={handleApply}
-                    className="px-6 py-3 bg-orange-500 text-white rounded-lg font-medium hover:bg-orange-600 transition-colors"
-                  >
-                    Apply Now
-                  </button>
                   <button
                     onClick={handleSave}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
@@ -316,7 +298,7 @@ Materials will be provided by the client, but the painter must bring all necessa
                 {/* Company Information */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    About the Company
+                    About the construction Job
                   </h3>
                   <div className="space-y-4">
                     <div>
@@ -333,27 +315,6 @@ Materials will be provided by the client, but the painter must bring all necessa
                         <span className="text-gray-500">Established</span>
                         <p className="font-medium text-gray-900">
                           {jobDetails.companyInfo.established}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Projects</span>
-                        <p className="font-medium text-gray-900">
-                          {jobDetails.companyInfo.projects}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Rating</span>
-                        <div className="flex items-center">
-                          <Star className="w-4 h-4 text-yellow-500 fill-current mr-1" />
-                          <span className="font-medium text-gray-900">
-                            {jobDetails.companyInfo.rating}
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Team Size</span>
-                        <p className="font-medium text-gray-900">
-                          {jobDetails.companyInfo.employees}
                         </p>
                       </div>
                     </div>
@@ -399,38 +360,6 @@ Materials will be provided by the client, but the painter must bring all necessa
           </div>
         </div>
       </div>
-
-      {/* Apply Modal */}
-      {showApplyModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Apply for this Job
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to apply for `{jobDetails.title}` at{" "}
-              {jobDetails.company}?
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowApplyModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setShowApplyModal(false);
-                  alert("Application submitted successfully!");
-                }}
-                className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
-              >
-                Confirm Apply
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
