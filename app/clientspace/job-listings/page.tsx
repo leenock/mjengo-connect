@@ -302,7 +302,7 @@ export default function JobListingsPage() {
                         <p className="text-xs sm:text-sm text-gray-600 mb-2 truncate">
                           {application.company}
                         </p>
-                        <div className="flex items-center justify-between text-xs sm:text-sm text-gray-500">
+                        <div className="flex items-center justify-between font-extrabold text-xs sm:text-sm text-black">
                           <div className="flex items-center">
                             <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                             {application.budget}
