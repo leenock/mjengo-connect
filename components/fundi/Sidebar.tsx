@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
   Briefcase,
   Settings,
   User,
@@ -22,14 +21,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   const navigationItems = [
     {
-      name: "Dashboard",
-      href: "/employer/dashboard",
-      icon: LayoutDashboard,
-    },
-
-    {
       name: "My Jobs",
-      href: "/employer/jobs",
+      href: "/clientspace/job-listings",
       icon: Briefcase,
 
       highlight: true,
