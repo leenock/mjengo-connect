@@ -1,14 +1,13 @@
-"use client"
-import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
-import Sidebar from "@/components/fundi/Sidebar"
+"use client";
+import { useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Sidebar from "@/components/fundi/Sidebar";
 import {
   Menu,
   MapPin,
   Clock,
   DollarSign,
   Star,
-  Users,
   Calendar,
   Briefcase,
   Heart,
@@ -21,15 +20,15 @@ import {
   Mail,
   Share2,
   Flag,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function JobDetailsPage() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [isSaved, setIsSaved] = useState(false)
-  const [showApplyModal, setShowApplyModal] = useState(false)
-  const params = useParams()
-  const router = useRouter()
-  const jobId = params.id
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
+  const params = useParams();
+  const router = useRouter();
+  const jobId = params.id;
 
   // Mock job data - in real app, this would be fetched based on the ID
   const jobDetails = {
@@ -37,15 +36,13 @@ export default function JobDetailsPage() {
     title: "House Painting - 3 Bedroom",
     company: "Kamau Properties Ltd",
     location: "Westlands, Nairobi",
-    budget: "KSh 45,000 - 60,000",
-    duration: "3-5 days",
+    budget: "Ksh 800",
+    duration: "5 days",
     postedTime: "2 hours ago",
     urgency: "Urgent",
     category: "Painting",
     verified: true,
-    applicants: 12,
     views: 156,
-    rating: 4.8,
     description: `We are looking for experienced painters to paint a 3-bedroom house in Westlands. The job involves interior and exterior painting with high-quality materials. The successful candidate must have their own painting equipment and demonstrate proven experience in residential painting projects.
 
 The house is a modern 3-bedroom unit with approximately 1,200 square feet of interior space and 800 square feet of exterior walls. We expect the work to be completed within 3-5 days depending on weather conditions.
@@ -79,26 +76,27 @@ Materials will be provided by the client, but the painter must bring all necessa
       projects: "150+ completed",
       rating: 4.8,
       employees: "25-50",
-      description: "Leading property development and management company in Nairobi with over 8 years of experience.",
+      description:
+        "Leading property development and management company in Nairobi with over 8 years of experience.",
     },
     contactInfo: {
       phone: "+254 712 345 678",
       email: "jobs@kamauproperties.co.ke",
       address: "Westlands, Nairobi",
     },
-  }
+  };
 
   const handleApply = () => {
-    setShowApplyModal(true)
-  }
+    setShowApplyModal(true);
+  };
 
   const handleSave = () => {
-    setIsSaved(!isSaved)
-  }
+    setIsSaved(!isSaved);
+  };
 
   const handleBack = () => {
-    router.back()
-  }
+    router.back();
+  };
 
   const handleShare = () => {
     if (navigator.share) {
@@ -106,13 +104,13 @@ Materials will be provided by the client, but the painter must bring all necessa
         title: jobDetails.title,
         text: `Check out this job opportunity: ${jobDetails.title} at ${jobDetails.company}`,
         url: window.location.href,
-      })
+      });
     } else {
       // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(window.location.href)
-      alert("Job link copied to clipboard!")
+      navigator.clipboard.writeText(window.location.href);
+      alert("Job link copied to clipboard!");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 lg:flex">
@@ -141,62 +139,66 @@ Materials will be provided by the client, but the painter must bring all necessa
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Job Details</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                  Job Details
+                </h1>
                 <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
                   Complete information about this opportunity
                 </p>
               </div>
             </div>
           </div>
-
           <div className="space-y-6">
             {/* Job Header Card */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-3">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">{jobDetails.title}</h2>
-                    {jobDetails.verified && <CheckCircle className="w-6 h-6 text-green-500" />}
+                    <h2 className="text-2xl sm:text-xl font-extrabold text-gray-900">
+                      {jobDetails.title}
+                    </h2>
+                    {jobDetails.verified && (
+                      <CheckCircle className="w-6 h-6 text-green-500" />
+                    )}
                     {jobDetails.urgency === "Urgent" && (
-                      <span className="px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full">Urgent</span>
+                      <span className="px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full">
+                        Urgent
+                      </span>
                     )}
                   </div>
 
                   <div className="flex items-center gap-2 mb-4">
                     <Building2 className="w-5 h-5 text-gray-500" />
-                    <span className="text-lg font-medium text-gray-700">{jobDetails.company}</span>
+                    <span className="text-lg font-medium text-gray-700">
+                      {jobDetails.company}
+                    </span>
                     <div className="flex items-center ml-2">
                       <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span className="text-sm text-gray-600 ml-1">{jobDetails.rating}</span>
                     </div>
                   </div>
 
                   {/* Job Meta Info */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                  <div className="grid grid-cols-2 font-black lg:grid-cols-4 gap-4 mb-6">
                     <div className="flex items-center text-gray-600">
                       <MapPin className="w-5 h-5 mr-2" />
                       <span>{jobDetails.location}</span>
                     </div>
                     <div className="flex items-center text-gray-600">
                       <DollarSign className="w-5 h-5 mr-2" />
-                      <span>{jobDetails.budget}</span>
+                      <span>Amount {jobDetails.budget}</span>
                     </div>
                     <div className="flex items-center text-gray-600">
                       <Clock className="w-5 h-5 mr-2" />
-                      <span>{jobDetails.duration}</span>
+                      <span> Duration {jobDetails.duration}</span>
                     </div>
                     <div className="flex items-center text-gray-600">
                       <Calendar className="w-5 h-5 mr-2" />
-                      <span>{jobDetails.postedTime}</span>
+                      <span>Posted {jobDetails.postedTime}</span>
                     </div>
                   </div>
 
                   {/* Stats */}
                   <div className="flex items-center space-x-6 text-sm text-gray-500 mb-6">
-                    <div className="flex items-center">
-                      <Users className="w-4 h-4 mr-1" />
-                      <span>{jobDetails.applicants} applicants</span>
-                    </div>
                     <div className="flex items-center">
                       <Eye className="w-4 h-4 mr-1" />
                       <span>{jobDetails.views} views</span>
@@ -224,7 +226,9 @@ Materials will be provided by the client, but the painter must bring all necessa
                         : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
                     }`}
                   >
-                    <Heart className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
+                    <Heart
+                      className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`}
+                    />
                     {isSaved ? "Saved" : "Save Job"}
                   </button>
                   <button
@@ -244,19 +248,28 @@ Materials will be provided by the client, but the painter must bring all necessa
               <div className="lg:col-span-2 space-y-6">
                 {/* Job Description */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Job Description</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                    Job Description
+                  </h3>
                   <div className="prose prose-gray max-w-none">
-                    {jobDetails.description.split("\n\n").map((paragraph, index) => (
-                      <p key={index} className="text-gray-600 mb-4 leading-relaxed">
-                        {paragraph}
-                      </p>
-                    ))}
+                    {jobDetails.description
+                      .split("\n\n")
+                      .map((paragraph, index) => (
+                        <p
+                          key={index}
+                          className="text-gray-600 mb-4 leading-relaxed"
+                        >
+                          {paragraph}
+                        </p>
+                      ))}
                   </div>
                 </div>
 
                 {/* Requirements */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Requirements</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                    Requirements
+                  </h3>
                   <ul className="space-y-3">
                     {jobDetails.requirements.map((req, index) => (
                       <li key={index} className="flex items-start">
@@ -269,7 +282,9 @@ Materials will be provided by the client, but the painter must bring all necessa
 
                 {/* Responsibilities */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Key Responsibilities</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                    Key Responsibilities
+                  </h3>
                   <ul className="space-y-3">
                     {jobDetails.responsibilities.map((resp, index) => (
                       <li key={index} className="flex items-start">
@@ -282,7 +297,9 @@ Materials will be provided by the client, but the painter must bring all necessa
 
                 {/* Benefits */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">What We Offer</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                    What We Offer
+                  </h3>
                   <ul className="space-y-3">
                     {jobDetails.benefits.map((benefit, index) => (
                       <li key={index} className="flex items-start">
@@ -298,32 +315,46 @@ Materials will be provided by the client, but the painter must bring all necessa
               <div className="space-y-6">
                 {/* Company Information */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">About the Company</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                    About the Company
+                  </h3>
                   <div className="space-y-4">
                     <div>
-                      <h4 className="font-medium text-gray-900">{jobDetails.companyInfo.name}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{jobDetails.companyInfo.description}</p>
+                      <h4 className="font-medium text-gray-900">
+                        {jobDetails.companyInfo.name}
+                      </h4>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {jobDetails.companyInfo.description}
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 text-sm">
                       <div>
                         <span className="text-gray-500">Established</span>
-                        <p className="font-medium text-gray-900">{jobDetails.companyInfo.established}</p>
+                        <p className="font-medium text-gray-900">
+                          {jobDetails.companyInfo.established}
+                        </p>
                       </div>
                       <div>
                         <span className="text-gray-500">Projects</span>
-                        <p className="font-medium text-gray-900">{jobDetails.companyInfo.projects}</p>
+                        <p className="font-medium text-gray-900">
+                          {jobDetails.companyInfo.projects}
+                        </p>
                       </div>
                       <div>
                         <span className="text-gray-500">Rating</span>
                         <div className="flex items-center">
                           <Star className="w-4 h-4 text-yellow-500 fill-current mr-1" />
-                          <span className="font-medium text-gray-900">{jobDetails.companyInfo.rating}</span>
+                          <span className="font-medium text-gray-900">
+                            {jobDetails.companyInfo.rating}
+                          </span>
                         </div>
                       </div>
                       <div>
                         <span className="text-gray-500">Team Size</span>
-                        <p className="font-medium text-gray-900">{jobDetails.companyInfo.employees}</p>
+                        <p className="font-medium text-gray-900">
+                          {jobDetails.companyInfo.employees}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -331,19 +362,27 @@ Materials will be provided by the client, but the painter must bring all necessa
 
                 {/* Contact Information */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Contact Information</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                    Contact Information
+                  </h3>
                   <div className="space-y-4">
                     <div className="flex items-center">
                       <Phone className="w-5 h-5 text-gray-500 mr-3" />
-                      <span className="text-gray-600">{jobDetails.contactInfo.phone}</span>
+                      <span className="text-gray-600">
+                        {jobDetails.contactInfo.phone}
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <Mail className="w-5 h-5 text-gray-500 mr-3" />
-                      <span className="text-gray-600">{jobDetails.contactInfo.email}</span>
+                      <span className="text-gray-600">
+                        {jobDetails.contactInfo.email}
+                      </span>
                     </div>
                     <div className="flex items-center">
                       <MapPin className="w-5 h-5 text-gray-500 mr-3" />
-                      <span className="text-gray-600">{jobDetails.contactInfo.address}</span>
+                      <span className="text-gray-600">
+                        {jobDetails.contactInfo.address}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -365,9 +404,12 @@ Materials will be provided by the client, but the painter must bring all necessa
       {showApplyModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Apply for this Job</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              Apply for this Job
+            </h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to apply for `{jobDetails.title}` at {jobDetails.company}?
+              Are you sure you want to apply for `{jobDetails.title}` at{" "}
+              {jobDetails.company}?
             </p>
             <div className="flex gap-3">
               <button
@@ -378,8 +420,8 @@ Materials will be provided by the client, but the painter must bring all necessa
               </button>
               <button
                 onClick={() => {
-                  setShowApplyModal(false)
-                  alert("Application submitted successfully!")
+                  setShowApplyModal(false);
+                  alert("Application submitted successfully!");
                 }}
                 className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
               >
@@ -390,5 +432,5 @@ Materials will be provided by the client, but the painter must bring all necessa
         </div>
       )}
     </div>
-  )
+  );
 }
