@@ -168,8 +168,7 @@ export default function JobListingsPage() {
                   Welcome Fundi
                 </h1>
                 <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
-                  Welcome back! Here is what is happening with your job
-                  applications.
+                  Welcome back! Here is what is happenin...
                 </p>
               </div>
             </div>
