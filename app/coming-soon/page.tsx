@@ -160,11 +160,11 @@ export default function ComingSoonPage() {
 
             {/* Right Content - Phone Mockup */}
             <div className="relative">
-              <div className="relative mx-auto w-80 h-96 lg:w-96 lg:h-[500px]">
+              <div className="relative mx-auto w-80 h-120 lg:w-96 lg:h-[700px]">
                 {/* Phone Frame */}
                 <div className="absolute inset-0 bg-gradient-to-br from-gray-800 to-gray-900 rounded-[3rem] shadow-2xl">
                   {/* Screen */}
-                  <div className="absolute inset-4 bg-gradient-to-br from-orange-500 to-orange-600 rounded-[2.5rem] overflow-hidden">
+                  <div className="absolute inset-4 bg-gradient-to-br from-black to-orange-600 rounded-[2.5rem] overflow-hidden">
                     {/* Status Bar */}
                     <div className="h-8 bg-black/20 flex items-center justify-between px-6 text-white text-xs">
                       <span>9:41</span>
@@ -177,7 +177,7 @@ export default function ComingSoonPage() {
                         <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-3">
                           <Smartphone className="w-8 h-8" />
                         </div>
-                        <h3 className="text-lg font-bold">MJENGO</h3>
+                        <h3 className="text-lg font-bold">MJENGO CONNECT</h3>
                         <p className="text-white/80 text-sm">
                           Find Your Next Job
                         </p>
@@ -190,7 +190,7 @@ export default function ComingSoonPage() {
                             House Painting
                           </div>
                           <div className="text-xs text-white/70">
-                            Westlands • KSh 45,000
+                            Westlands • KSh 1,000 /day
                           </div>
                         </div>
                         <div className="bg-white/10 backdrop-blur rounded-xl p-3">
@@ -198,7 +198,7 @@ export default function ComingSoonPage() {
                             Plumbing Repair
                           </div>
                           <div className="text-xs text-white/70">
-                            Karen • KSh 25,000
+                            Karen • KSh 800 /day
                           </div>
                         </div>
                         <div className="bg-white/10 backdrop-blur rounded-xl p-3">
@@ -206,7 +206,23 @@ export default function ComingSoonPage() {
                             Electrical Work
                           </div>
                           <div className="text-xs text-white/70">
-                            Kiambu • KSh 80,000
+                            Kiambu • KSh 1200 /day
+                          </div>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur rounded-xl p-3">
+                          <div className="text-sm font-medium">
+                            Floor Work
+                          </div>
+                          <div className="text-xs text-white/70">
+                            Kisumu • KSh 1200 /day
+                          </div>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur rounded-xl p-3">
+                          <div className="text-sm font-medium">
+                            Welding Work
+                          </div>
+                          <div className="text-xs text-white/70">
+                            Embu • KSh 1200 /day
                           </div>
                         </div>
                       </div>
