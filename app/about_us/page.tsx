@@ -5,6 +5,7 @@ import { Lightbulb, Heart, Users } from "lucide-react";
 import Header from "@/components/landingpage/Header";
 import Footer from "@/components/landingpage/Footer";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function AboutUs() {
   const [storyVisible, setStoryVisible] = useState(false);
@@ -219,12 +220,40 @@ export default function AboutUs() {
                 partner.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="px-8 py-4 bg-white text-orange-600 rounded-xl font-semibold hover:shadow-xl transition-transform hover:-translate-y-1">
-                  Post a Job
-                </button>
-                <button className="px-8 py-4 border-2 border-white text-white rounded-xl font-semibold hover:bg-white/10 transition-transform hover:-translate-y-1">
-                  Job Listings
-                </button>
+                <Link href="/auth/job-posting" passHref>
+                  <div className="px-8 py-4 bg-white text-orange-600 rounded-xl font-semibold hover:shadow-xl transition-transform hover:-translate-y-1">
+                    <div className="flex items-center space-x-2">
+                      <svg
+                        className="w-5 h-5 group-hover:scale-110 transition-transform"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                      <span>Post a Job</span>
+                    </div>
+                  </div>
+                </Link>
+                <Link href="/Jobs-list" passHref>
+                  <div className="px-8 py-4 border-2 border-white text-white rounded-xl font-semibold hover:bg-white/10 transition-transform hover:-translate-y-1">
+                    <div className="flex items-center space-x-2">
+                      <svg
+                        className="w-5 h-5 group-hover:scale-110 transition-transform"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                      <span>Job Listings</span>
+                    </div>
+                  </div>
+                </Link>
               </div>
             </div>
           </div>
