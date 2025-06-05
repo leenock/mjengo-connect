@@ -51,6 +51,7 @@ const Header = () => {
     { href: "/", label: "Home" },
     { href: "/about_us", label: "About us" },
     { href: "/contact-us", label: "Contact us" },
+    
   ];
 
   return (
@@ -99,7 +100,8 @@ const Header = () => {
 
             {/* Desktop CTA Button */}
             <div className="hidden lg:flex items-center">
-              <button
+              <a
+                href="/coming-soon"
                 className="group relative px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold text-sm xl:text-base transition-all duration-300 hover:from-orange-600 hover:to-orange-700 hover:shadow-xl hover:shadow-orange-500/25 transform hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-orange-500"
                 type="button"
               >
@@ -115,7 +117,7 @@ const Header = () => {
                   <span>Download App</span>
                 </div>
                 <div className="absolute inset-0 rounded-xl bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-              </button>
+              </a>
             </div>
 
             {/* Mobile Menu Button */}
