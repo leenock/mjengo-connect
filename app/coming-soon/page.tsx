@@ -1,6 +1,6 @@
-"use client"
-import { useState, useEffect } from "react"
-import type React from "react"
+"use client";
+import { useState, useEffect } from "react";
+import type React from "react";
 import Header from "@/components/landingpage/Header";
 import Footer from "@/components/landingpage/Footer";
 
@@ -12,10 +12,9 @@ import {
   Star,
   Users,
   Zap,
-
   Apple,
   PlayCircle,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function ComingSoonPage() {
   const [timeLeft, setTimeLeft] = useState({
@@ -23,69 +22,74 @@ export default function ComingSoonPage() {
     hours: 0,
     minutes: 0,
     seconds: 0,
-  })
+  });
 
   // Countdown timer - set to 30 days from now
   useEffect(() => {
-    const targetDate = new Date()
-    targetDate.setDate(targetDate.getDate() + 30)
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + 300);
 
     const timer = setInterval(() => {
-      const now = new Date().getTime()
-      const distance = targetDate.getTime() - now
+      const now = new Date().getTime();
+      const distance = targetDate.getTime() - now;
 
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24))
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor(
+        (distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-      setTimeLeft({ days, hours, minutes, seconds })
+      setTimeLeft({ days, hours, minutes, seconds });
 
       if (distance < 0) {
-        clearInterval(timer)
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+        clearInterval(timer);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       }
-    }, 1000)
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [])
-
+    return () => clearInterval(timer);
+  }, []);
 
   const features = [
     {
       icon: Zap,
       title: "Instant Job Alerts",
-      description: "Get notified immediately when jobs matching your skills are posted in your area",
+      description:
+        "Get notified immediately when jobs matching your skills are posted in your area",
     },
     {
       icon: Users,
       title: "Direct Communication",
-      description: "Chat directly with employers and clients through our secure messaging system",
+      description:
+        "Chat directly with employers and clients through our secure messaging system",
     },
     {
       icon: Star,
       title: "Portfolio Showcase",
-      description: "Build your professional profile with photos of your work and client reviews",
+      description:
+        "Build your professional profile with photos of your work and client reviews",
     },
     {
       icon: CheckCircle,
       title: "Verified Jobs",
-      description: "All jobs are verified and payments are secured through our platform",
+      description:
+        "All jobs are verified and payments are secured through our platform",
     },
-  ]
+  ];
 
   const stats = [
     { number: "10,000+", label: "Registered Fundis" },
     { number: "5,000+", label: "Jobs Posted" },
     { number: "98%", label: "Success Rate" },
     { number: "24/7", label: "Support" },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-yellow-50">
       {/* Header */}
-     
-       <Header />
+
+      <Header />
 
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32">
@@ -99,13 +103,14 @@ export default function ComingSoonPage() {
               </div>
 
               <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
-                MJENGO Mobile App
+                MJENGO CONNECT Mobile App
                 <span className="block text-orange-600">Coming Soon!</span>
               </h1>
 
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Take your construction business mobile! Find jobs, connect with clients, and manage your projects on the
-                go with our powerful mobile app.
+                Take your construction business mobile! Find jobs, connect with
+                clients, and manage your projects on the go with our powerful
+                mobile app.
               </p>
 
               {/* Countdown Timer */}
@@ -116,9 +121,16 @@ export default function ComingSoonPage() {
                   { value: timeLeft.minutes, label: "Minutes" },
                   { value: timeLeft.seconds, label: "Seconds" },
                 ].map((item, index) => (
-                  <div key={index} className="bg-white rounded-xl shadow-lg p-4 text-center border border-gray-100">
-                    <div className="text-2xl md:text-3xl font-bold text-gray-900">{item.value}</div>
-                    <div className="text-xs text-gray-500 font-medium">{item.label}</div>
+                  <div
+                    key={index}
+                    className="bg-white rounded-xl shadow-lg p-4 text-center border border-gray-100"
+                  >
+                    <div className="text-2xl md:text-3xl font-bold text-gray-900">
+                      {item.value}
+                    </div>
+                    <div className="text-xs text-gray-500 font-medium">
+                      {item.label}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -141,7 +153,9 @@ export default function ComingSoonPage() {
                 </div>
               </div>
 
-              <p className="text-sm text-gray-500">Be the first to download when we launch!</p>
+              <p className="text-sm text-gray-500">
+                Be the first to download when we launch!
+              </p>
             </div>
 
             {/* Right Content - Phone Mockup */}
@@ -164,22 +178,36 @@ export default function ComingSoonPage() {
                           <Smartphone className="w-8 h-8" />
                         </div>
                         <h3 className="text-lg font-bold">MJENGO</h3>
-                        <p className="text-white/80 text-sm">Find Your Next Job</p>
+                        <p className="text-white/80 text-sm">
+                          Find Your Next Job
+                        </p>
                       </div>
 
                       {/* Mock Job Cards */}
                       <div className="space-y-3">
                         <div className="bg-white/10 backdrop-blur rounded-xl p-3">
-                          <div className="text-sm font-medium">House Painting</div>
-                          <div className="text-xs text-white/70">Westlands • KSh 45,000</div>
+                          <div className="text-sm font-medium">
+                            House Painting
+                          </div>
+                          <div className="text-xs text-white/70">
+                            Westlands • KSh 45,000
+                          </div>
                         </div>
                         <div className="bg-white/10 backdrop-blur rounded-xl p-3">
-                          <div className="text-sm font-medium">Plumbing Repair</div>
-                          <div className="text-xs text-white/70">Karen • KSh 25,000</div>
+                          <div className="text-sm font-medium">
+                            Plumbing Repair
+                          </div>
+                          <div className="text-xs text-white/70">
+                            Karen • KSh 25,000
+                          </div>
                         </div>
                         <div className="bg-white/10 backdrop-blur rounded-xl p-3">
-                          <div className="text-sm font-medium">Electrical Work</div>
-                          <div className="text-xs text-white/70">Kiambu • KSh 80,000</div>
+                          <div className="text-sm font-medium">
+                            Electrical Work
+                          </div>
+                          <div className="text-xs text-white/70">
+                            Kiambu • KSh 80,000
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -208,7 +236,9 @@ export default function ComingSoonPage() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="text-center">
-                <div className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">{stat.number}</div>
+                <div className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
+                  {stat.number}
+                </div>
                 <div className="text-gray-600 font-medium">{stat.label}</div>
               </div>
             ))}
@@ -224,13 +254,14 @@ export default function ComingSoonPage() {
               Powerful Features Coming to Your Phone
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Everything you need to grow your construction business, now in your pocket
+              Everything you need to grow your construction business, now in
+              your pocket
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {features.map((feature, index) => {
-              const Icon = feature.icon
+              const Icon = feature.icon;
               return (
                 <div
                   key={index}
@@ -239,18 +270,21 @@ export default function ComingSoonPage() {
                   <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-6">
                     <Icon className="w-6 h-6 text-orange-600" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">
+                    {feature.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {feature.description}
+                  </p>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
       </section>
 
-
       {/* Footer */}
-     <Footer />
+      <Footer />
     </div>
-  )
+  );
 }
