@@ -1,29 +1,14 @@
 "use client";
 
 import type React from "react";
-import Link from "next/link";
-
 
 import { useState } from "react";
-import {
-  Eye,
-  EyeOff,
-  Mail,
-  Lock,
-  Phone,
-  ArrowRight,
-  CheckCircle,
-  MapPin,
-  Briefcase,
-  Star,
-  Clock,
-  DollarSign,
-} from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, Phone, ArrowRight, MapPin, Briefcase, Star, DollarSign } from 'lucide-react';
 import Header from "@/components/landingpage/Header";
 import Footer from "@/components/landingpage/Footer";
+import { useRouter } from "next/navigation";
 
 export default function JobListingPage() {
-  const [currentView, setCurrentView] = useState<"auth" | "listings">("auth");
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -45,6 +30,8 @@ export default function JobListingPage() {
     agreeToTerms: false,
   });
 
+  const router = useRouter();
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -53,7 +40,9 @@ export default function JobListingPage() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     setIsLoading(false);
-    setCurrentView("listings");
+    
+    // Navigate to fundi dashboard
+    router.push('/clientspace/job-listings');
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -64,183 +53,10 @@ export default function JobListingPage() {
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     setIsLoading(false);
-    setCurrentView("listings");
+    
+    // Navigate to fundi dashboard
+    router.push('/clientspace/job-listings');
   };
-
-  // Mock job listings data
-  const jobListings = [
-    {
-      id: 1,
-      title: "House Painting - 3 Bedroom",
-      location: "Westlands, Nairobi",
-      budget: "KSh 45,000 - 60,000",
-      skills: ["Painting", "Interior Design"],
-      postedTime: "2 hours ago",
-      urgency: "Urgent",
-      description:
-        "Need experienced painter for 3-bedroom house interior and exterior painting.",
-    },
-    {
-      id: 2,
-      title: "Plumbing Repair - Kitchen & Bathroom",
-      location: "Karen, Nairobi",
-      budget: "KSh 15,000 - 25,000",
-      skills: ["Plumbing", "Pipe Fitting"],
-      postedTime: "5 hours ago",
-      urgency: "Normal",
-      description:
-        "Fix leaking pipes in kitchen and bathroom. Replace some fittings.",
-    },
-    {
-      id: 3,
-      title: "Electrical Wiring - New Construction",
-      location: "Kiambu, Kiambu County",
-      budget: "KSh 80,000 - 120,000",
-      skills: ["Electrical", "Wiring"],
-      postedTime: "1 day ago",
-      urgency: "Normal",
-      description:
-        "Complete electrical wiring for new 4-bedroom house construction.",
-    },
-    {
-      id: 4,
-      title: "Carpentry - Custom Kitchen Cabinets",
-      location: "Kilimani, Nairobi",
-      budget: "KSh 35,000 - 50,000",
-      skills: ["Carpentry", "Cabinet Making"],
-      postedTime: "2 days ago",
-      urgency: "Normal",
-      description:
-        "Design and build custom kitchen cabinets for modern kitchen.",
-    },
-  ];
-
-  if (currentView === "listings") {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow pt-20 bg-gray-50">
-          {/* Welcome Header */}
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white py-12">
-            <div className="max-w-7xl mx-auto px-6">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8" />
-                </div>
-                <h1 className="text-3xl font-bold mb-4">
-                  Welcome Back, Fundi!
-                </h1>
-                <p className="text-white/90">
-                  Find your next construction project and grow your business.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Job Listings */}
-          <div className="max-w-7xl mx-auto px-6 py-12">
-            <div className="flex justify-between items-center mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Available Jobs
-                </h2>
-                <p className="text-gray-600">
-                  {jobListings.length} jobs available in your area
-                </p>
-              </div>
-              <div className="flex gap-4">
-                <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
-                  <option>All Skills</option>
-                  <option>Painting</option>
-                  <option>Plumbing</option>
-                  <option>Electrical</option>
-                  <option>Carpentry</option>
-                </select>
-                <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
-                  <option>All Locations</option>
-                  <option>Nairobi</option>
-                  <option>Kiambu</option>
-                  <option>Mombasa</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {jobListings.map((job) => (
-                <div
-                  key={job.id}
-                  className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-xl font-bold text-gray-900">
-                          {job.title}
-                        </h3>
-                        {job.urgency === "Urgent" && (
-                          <span className="px-2 py-1 bg-red-100 text-red-600 text-xs font-medium rounded-full">
-                            Urgent
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center text-gray-600 text-sm mb-2">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        {job.location}
-                      </div>
-                      <div className="flex items-center text-gray-600 text-sm">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {job.postedTime}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="flex items-center text-green-600 font-bold mb-1">
-                        <DollarSign className="w-4 h-4 mr-1" />
-                        {job.budget}
-                      </div>
-                      <div className="flex items-center text-yellow-500">
-                        <Star className="w-4 h-4 mr-1 fill-current" />
-                        <span className="text-gray-600 text-sm">4.8</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <p className="text-gray-600 mb-4">{job.description}</p>
-
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {job.skills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-orange-100 text-orange-600 text-sm font-medium rounded-full"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1">
-                      Apply Now
-                    </button>
-                    <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-semibold transition-all duration-300 hover:bg-gray-200">
-                      View Details
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Load More */}
-            <div className="text-center mt-12">
-              <button className="px-8 py-4 bg-white text-gray-700 border-2 border-gray-200 rounded-xl font-semibold transition-all duration-300 hover:border-orange-300 hover:text-orange-600 hover:shadow-lg">
-                Load More Jobs
-              </button>
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -272,8 +88,7 @@ export default function JobListingPage() {
                       Browse Listings
                     </h3>
                     <p className="text-gray-600">
-                      Posted Job gets listed on the platform for fundis to
-                      browse and contact you.
+                      Access hundreds of verified construction jobs posted by trusted employers across Kenya.
                     </p>
                   </div>
                 </div>
@@ -288,7 +103,7 @@ export default function JobListingPage() {
                     </h3>
                     <p className="text-gray-600">
                       Contact employers and clients directly to discuss the job
-                      and get started.
+                      and get started on your next project.
                     </p>
                   </div>
                 </div>
@@ -403,12 +218,12 @@ export default function JobListingPage() {
                           Remember me
                         </span>
                       </label>
-                      <Link
-                        href="/auth/forgot-password"
+                      <button
+                        type="button"
                         className="text-sm text-orange-600 hover:text-orange-700 font-medium"
                       >
                         Forgot password?
-                      </Link>
+                      </button>
                     </div>
 
                     <button
@@ -423,7 +238,7 @@ export default function JobListingPage() {
                         </span>
                       ) : (
                         <span className="flex items-center justify-center">
-                          Sign In to View Jobs Contacts
+                          Sign In to Browse
                           <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                         </span>
                       )}
