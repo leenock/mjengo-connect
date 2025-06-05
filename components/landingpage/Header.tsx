@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 // Define types
 interface NavItem {
@@ -51,8 +52,13 @@ const Header = () => {
     { href: "/", label: "Home" },
     { href: "/about_us", label: "About us" },
     { href: "/contact-us", label: "Contact us" },
-    
   ];
+
+  const router = useRouter();
+
+  const handleClick = () => {
+    router.push("/coming-soon"); // Navigate to /download
+  };
 
   return (
     <>
@@ -250,7 +256,7 @@ const Header = () => {
             {/* CTA */}
             <div className="p-6 border-t border-gray-100">
               <button
-                onClick={handleLinkClick}
+                onClick={handleClick}
                 className="group w-full px-6 py-4 bg-gradient-to-r from-gray-900 to-black text-white rounded-xl font-semibold transition-all duration-300 hover:from-black hover:to-gray-900 hover:shadow-lg transform hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-gray-700"
                 type="button"
               >
