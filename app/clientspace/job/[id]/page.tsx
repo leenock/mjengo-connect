@@ -323,9 +323,16 @@ Materials will be provided by the client, but the painter must bring all necessa
 
                 {/* Contact Information */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
                     Contact Information
                   </h3>
+
+                  {/* Free Trial Notice */}
+                  <div className="bg-yellow-100 text-yellow-800 text-sm font-medium px-4 py-2 rounded-lg mb-4 border border-yellow-300">
+                    🎉 Free trial access –{" "}
+                    <span className="font-semibold">5 days left</span>
+                  </div>
+
                   <div className="space-y-4">
                     <div className="flex items-center">
                       <Phone className="w-5 h-5 text-gray-500 mr-3" />

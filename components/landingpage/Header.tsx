@@ -57,7 +57,7 @@ const Header = () => {
   const router = useRouter();
 
   const handleClick = () => {
-    router.push("/coming-soon"); // Navigate to /download
+    router.push("/coming-soon"); 
   };
 
   return (

@@ -26,12 +26,12 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const navigationItems = [
     {
       name: "Dashboard",
-      href: "/employer/dashboard",
+      href: "/clientspace/post-job",
       icon: LayoutDashboard,
     },
     {
       name: "Post New Job",
-      href: "/employer/post-job",
+      href: "/clientspace/newJob",
       icon: Plus,
       highlight: true,
     },

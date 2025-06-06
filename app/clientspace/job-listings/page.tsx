@@ -153,7 +153,7 @@ export default function JobListingsPage() {
       <div className="flex-1 lg:ml-0">
         <div className="p-4 sm:p-6 lg:p-6">
           {/* Header */}
-          <div className="sticky top-0 z-30 bg-gray-50 mb-6 sm:mb-8 flex items-center justify-between py-4">
+          <div className="sticky top-0 z-30 bg-white mb-6 sm:mb-8 flex items-center justify-between px-4 sm:px-6 py-4">
             <div className="flex items-center space-x-3">
               {/* Mobile Menu Toggle */}
               <button
