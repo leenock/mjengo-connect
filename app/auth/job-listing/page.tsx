@@ -42,7 +42,7 @@ export default function JobListingPage() {
     setIsLoading(false);
     
     // Navigate to fundi dashboard
-    router.push('/clientspace/job-listings');
+    router.push('/clientspace/fundi/job-listings');
   };
 
   const handleSignup = async (e: React.FormEvent) => {
