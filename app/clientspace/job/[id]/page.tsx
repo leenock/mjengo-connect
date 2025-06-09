@@ -6,8 +6,8 @@ import {
   Menu,
   MapPin,
   Clock,
-  DollarSign,
   Star,
+  DollarSign,
   Calendar,
   Briefcase,
   Heart,
@@ -20,6 +20,9 @@ import {
   Mail,
   Share2,
   Flag,
+  Shield,
+  Award,
+  Users,
 } from "lucide-react";
 
 export default function JobDetailsPage() {
@@ -101,19 +104,19 @@ Materials will be provided by the client, but the painter must bring all necessa
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 lg:flex">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 lg:flex font-inter">
       <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
 
       {/* Main Content */}
       <div className="flex-1 lg:ml-0">
-        <div className="p-4 sm:p-6 lg:p-6">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           {/* Header */}
-          <div className="sticky top-0 z-30 bg-gray-50 mb-6 sm:mb-8 flex items-center justify-between py-4">
-            <div className="flex items-center space-x-3">
+          <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl mb-8 sm:mb-10 flex items-center justify-between px-6 sm:px-8 py-6 rounded-2xl shadow-lg border border-white/20">
+            <div className="flex items-center space-x-4">
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="lg:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                className="lg:hidden p-3 rounded-xl text-slate-700 hover:bg-white/60 transition-all duration-200 shadow-sm"
                 aria-label="Toggle menu"
               >
                 <Menu className="w-6 h-6" />
@@ -121,103 +124,135 @@ Materials will be provided by the client, but the painter must bring all necessa
               {/* Back Button */}
               <button
                 onClick={handleBack}
-                className="p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                className="p-3 rounded-xl text-slate-700 hover:bg-white/60 transition-all duration-200 shadow-sm"
                 aria-label="Go back"
               >
                 <ArrowLeft className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Job Details
                 </h1>
-                <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">
                   Complete information about this opportunity
                 </p>
               </div>
             </div>
           </div>
-          <div className="space-y-6">
+
+          <div className="space-y-8">
             {/* Job Header Card */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-3">
-                    <h2 className="text-2xl sm:text-xl font-extrabold text-gray-900">
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <h2 className="text-3xl font-bold text-slate-900">
                       {jobDetails.title}
                     </h2>
                     {jobDetails.verified && (
-                      <CheckCircle className="w-6 h-6 text-green-500" />
+                      <span className="px-3 py-1 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 text-sm font-bold rounded-full flex items-center gap-1">
+                        <CheckCircle className="w-4 h-4" /> Verified
+                      </span>
                     )}
                     {jobDetails.urgency === "Urgent" && (
-                      <span className="px-3 py-1 bg-red-100 text-red-600 text-sm font-medium rounded-full">
+                      <span className="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm font-bold rounded-full">
                         Urgent
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 mb-4">
-                    <Building2 className="w-5 h-5 text-gray-500" />
-                    <span className="text-lg font-medium text-gray-700">
-                      {jobDetails.company}
-                    </span>
-                    <div className="flex items-center ml-2">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center">
+                      <Building2 className="w-5 h-5 text-indigo-600" />
+                    </div>
+                    <div>
+                      <span className="text-xl font-bold text-slate-900">
+                        {jobDetails.company}
+                      </span>
                     </div>
                   </div>
 
                   {/* Job Meta Info */}
-                  <div className="grid grid-cols-2  lg:grid-cols-4 gap-4 mb-6">
-                    <div className="flex items-center text-gray-600">
-                      <MapPin className="w-5 h-5 mr-2" />
-                      <span>{jobDetails.location}</span>
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div className="bg-white/60 rounded-2xl p-4 border border-white/40 shadow-md flex items-center">
+                      <MapPin className="w-5 h-5 mr-3 text-slate-500" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Location
+                        </p>
+                        <p className="text-sm font-bold text-slate-900">
+                          {jobDetails.location}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center text-gray-600">
-                      <DollarSign className="w-5 h-5 mr-2" />
-                      <span>Amount {jobDetails.budget}</span>
+                    <div className="bg-white/60 rounded-2xl p-4 border border-white/40 shadow-md flex items-center">
+                      <DollarSign className="w-5 h-5 mr-3 text-emerald-500" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Budget
+                        </p>
+                        <p className="text-sm font-bold text-emerald-600">
+                          {jobDetails.budget}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center text-gray-600">
-                      <Clock className="w-5 h-5 mr-2" />
-                      <span> Duration {jobDetails.duration}</span>
+                    <div className="bg-white/60 rounded-2xl p-4 border border-white/40 shadow-md flex items-center">
+                      <Clock className="w-5 h-5 mr-3 text-slate-500" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Duration
+                        </p>
+                        <p className="text-sm font-bold text-slate-900">
+                          {jobDetails.duration}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-center text-gray-600">
-                      <Calendar className="w-5 h-5 mr-2" />
-                      <span>Posted {jobDetails.postedTime}</span>
+                    <div className="bg-white/60 rounded-2xl p-4 border border-white/40 shadow-md flex items-center">
+                      <Calendar className="w-5 h-5 mr-3 text-slate-500" />
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Posted
+                        </p>
+                        <p className="text-sm font-bold text-slate-900">
+                          {jobDetails.postedTime}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
                   {/* Stats */}
-                  <div className="flex items-center space-x-6 text-sm text-gray-500 mb-6">
+                  <div className="flex items-center space-x-6 text-sm font-bold text-slate-500">
                     <div className="flex items-center">
-                      <Eye className="w-4 h-4 mr-1" />
+                      <Eye className="w-5 h-5 mr-2" />
                       <span>{jobDetails.views} views</span>
                     </div>
                     <div className="flex items-center">
-                      <Briefcase className="w-4 h-4 mr-1" />
+                      <Briefcase className="w-5 h-5 mr-2" />
                       <span>{jobDetails.category}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row lg:flex-col gap-3 lg:w-48">
+                <div className="flex flex-col sm:flex-row lg:flex-col gap-4 lg:w-56">
                   <button
                     onClick={handleSave}
-                    className={`px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 ${
+                    className={`px-6 py-4 rounded-2xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-2 shadow-lg ${
                       isSaved
-                        ? "bg-red-50 text-red-600 border border-red-200"
-                        : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100"
+                        ? "bg-gradient-to-r from-red-500 to-pink-500 text-white"
+                        : "bg-white/60 text-slate-700 border-2 border-slate-200 hover:border-slate-300 hover:bg-white/80"
                     }`}
                   >
                     <Heart
-                      className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`}
+                      className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`}
                     />
                     {isSaved ? "Saved" : "Save Job"}
                   </button>
                   <button
                     onClick={handleShare}
-                    className="px-6 py-3 bg-gray-50 text-gray-700 border border-gray-200 rounded-lg font-medium hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                    className="px-6 py-4 bg-white/60 text-slate-700 border-2 border-slate-200 rounded-2xl font-bold hover:border-slate-300 hover:bg-white/80 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg"
                   >
-                    <Share2 className="w-4 h-4" />
+                    <Share2 className="w-5 h-5" />
                     Share
                   </button>
                 </div>
@@ -225,21 +260,26 @@ Materials will be provided by the client, but the painter must bring all necessa
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Left Column - Job Details */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-8">
                 {/* Job Description */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    Job Description
-                  </h3>
-                  <div className="prose prose-gray max-w-none">
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Briefcase className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      Job Description
+                    </h3>
+                  </div>
+                  <div className="prose prose-slate max-w-none">
                     {jobDetails.description
                       .split("\n\n")
                       .map((paragraph, index) => (
                         <p
                           key={index}
-                          className="text-gray-600 mb-4 leading-relaxed"
+                          className="text-slate-600 mb-4 leading-relaxed font-medium"
                         >
                           {paragraph}
                         </p>
@@ -248,45 +288,72 @@ Materials will be provided by the client, but the painter must bring all necessa
                 </div>
 
                 {/* Requirements */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    Requirements
-                  </h3>
-                  <ul className="space-y-3">
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Shield className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      Requirements
+                    </h3>
+                  </div>
+                  <ul className="space-y-4">
                     {jobDetails.requirements.map((req, index) => (
                       <li key={index} className="flex items-start">
-                        <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-600">{req}</span>
+                        <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center mr-4 mt-0.5 flex-shrink-0">
+                          <CheckCircle className="w-5 h-5 text-emerald-600" />
+                        </div>
+                        <span className="text-slate-600 font-medium">
+                          {req}
+                        </span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 {/* Responsibilities */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    Key Responsibilities
-                  </h3>
-                  <ul className="space-y-3">
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Users className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      Key Responsibilities
+                    </h3>
+                  </div>
+                  <ul className="space-y-4">
                     {jobDetails.responsibilities.map((resp, index) => (
                       <li key={index} className="flex items-start">
-                        <AlertCircle className="w-5 h-5 text-blue-500 mr-3 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-600">{resp}</span>
+                        <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center mr-4 mt-0.5 flex-shrink-0">
+                          <AlertCircle className="w-5 h-5 text-indigo-600" />
+                        </div>
+                        <span className="text-slate-600 font-medium">
+                          {resp}
+                        </span>
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 {/* Benefits */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    What We Offer
-                  </h3>
-                  <ul className="space-y-3">
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Award className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      What We Offer
+                    </h3>
+                  </div>
+                  <ul className="space-y-4">
                     {jobDetails.benefits.map((benefit, index) => (
                       <li key={index} className="flex items-start">
-                        <Star className="w-5 h-5 text-yellow-500 mr-3 mt-0.5 flex-shrink-0 fill-current" />
-                        <span className="text-gray-600">{benefit}</span>
+                        <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center mr-4 mt-0.5 flex-shrink-0">
+                          <Star className="w-5 h-5 text-amber-600 fill-current" />
+                        </div>
+                        <span className="text-slate-600 font-medium">
+                          {benefit}
+                        </span>
                       </li>
                     ))}
                   </ul>
@@ -294,72 +361,110 @@ Materials will be provided by the client, but the painter must bring all necessa
               </div>
 
               {/* Right Column - Company Info & Contact */}
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {/* Company Information */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    About the construction Job
-                  </h3>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium text-gray-900">
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Building2 className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      About the Company
+                    </h3>
+                  </div>
+                  <div className="space-y-6">
+                    <div className="bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg">
+                      <h4 className="font-bold text-slate-900 text-lg mb-2">
                         {jobDetails.companyInfo.name}
                       </h4>
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-slate-600 font-medium">
                         {jobDetails.companyInfo.description}
                       </p>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-500">Established</span>
-                        <p className="font-medium text-gray-900">
-                          {jobDetails.companyInfo.established}
-                        </p>
+                      <div className="mt-4 pt-4 border-t border-slate-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-bold text-slate-500">
+                            Established
+                          </span>
+                          <span className="font-bold text-slate-900">
+                            {jobDetails.companyInfo.established}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Contact Information */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    Contact Information
-                  </h3>
-
-                  {/* Free Trial Notice */}
-                  <div className="bg-yellow-100 text-yellow-800 text-sm font-medium px-4 py-2 rounded-lg mb-4 border border-yellow-300">
-                    🎉 Free trial access –{" "}
-                    <span className="font-semibold">5 days left</span>
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Phone className="w-5 h-5 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900">
+                      Contact Information
+                    </h3>
                   </div>
 
-                  <div className="space-y-4">
+                  {/* Free Trial Notice */}
+                  <div className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 font-bold px-6 py-4 rounded-2xl mb-6 border border-amber-300 flex items-center gap-3">
+                    <div className="w-8 h-8 bg-amber-200 rounded-full flex items-center justify-center">
+                      <Star className="w-4 h-4 text-amber-600 fill-current" />
+                    </div>
+                    <div>
+                      <span className="font-black">Free trial access</span> –{" "}
+                      <span className="font-black">5 days left</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg space-y-4">
                     <div className="flex items-center">
-                      <Phone className="w-5 h-5 text-gray-500 mr-3" />
-                      <span className="text-gray-600">
-                        {jobDetails.contactInfo.phone}
-                      </span>
+                      <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mr-4">
+                        <Phone className="w-5 h-5 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Phone
+                        </p>
+                        <p className="text-base font-bold text-slate-900">
+                          {jobDetails.contactInfo.phone}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center">
-                      <Mail className="w-5 h-5 text-gray-500 mr-3" />
-                      <span className="text-gray-600">
-                        {jobDetails.contactInfo.email}
-                      </span>
+                      <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mr-4">
+                        <Mail className="w-5 h-5 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Email
+                        </p>
+                        <p className="text-base font-bold text-slate-900">
+                          {jobDetails.contactInfo.email}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center">
-                      <MapPin className="w-5 h-5 text-gray-500 mr-3" />
-                      <span className="text-gray-600">
-                        {jobDetails.contactInfo.address}
-                      </span>
+                      <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mr-4">
+                        <MapPin className="w-5 h-5 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Address
+                        </p>
+                        <p className="text-base font-bold text-slate-900">
+                          {jobDetails.contactInfo.address}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Report Job */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                  <button className="flex items-center text-red-600 hover:text-red-700 transition-colors">
-                    <Flag className="w-4 h-4 mr-2" />
-                    <span className="text-sm">Report this job</span>
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+                  <button className="flex items-center text-red-600 hover:text-red-700 transition-colors gap-2 font-bold">
+                    <Flag className="w-5 h-5" />
+                    <span>Report this job</span>
                   </button>
                 </div>
               </div>

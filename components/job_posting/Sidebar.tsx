@@ -5,14 +5,13 @@ import {
   LayoutDashboard,
   Plus,
   Briefcase,
-  MessageSquare,
   Settings,
   BarChart3,
   User,
   LogOut,
   X,
   Building2,
-  Calendar,
+  Star,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -28,40 +27,34 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       name: "Dashboard",
       href: "/clientspace/post-job",
       icon: LayoutDashboard,
+      description: "Overview & statistics",
     },
     {
       name: "Post New Job",
       href: "/clientspace/newJob",
       icon: Plus,
       highlight: true,
+      description: "Create a new listing",
     },
     {
       name: "My Jobs",
-      href: "/employer/jobs",
+      href: "/clientspace/myJobs",
       icon: Briefcase,
       badge: "12",
+      description: "Manage your listings",
     },
 
     {
-      name: "Messages",
-      href: "/employer/messages",
-      icon: MessageSquare,
-      badge: "3",
-    },
-    {
-      name: "Calendar",
-      href: "/employer/calendar",
-      icon: Calendar,
-    },
-    {
       name: "Analytics",
-      href: "/employer/analytics",
+      href: "/clientspace/post-job",
       icon: BarChart3,
+      description: "Performance insights",
     },
     {
       name: "User Profile",
-      href: "/employer/settings",
+      href: "/clientspace/userProfile",
       icon: Settings,
+      description: "Account settings",
     },
   ];
 
@@ -72,53 +65,77 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-all duration-300"
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 z-50 transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen ${
+        className={`fixed top-0 left-0 h-full bg-gradient-to-b from-white via-slate-50 to-indigo-50 border-r border-white/20 shadow-2xl z-50 transition-all duration-500 ease-out lg:sticky lg:top-0 lg:h-screen ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        } w-72`}
+        } w-80`}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full backdrop-blur-xl">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between p-6 border-b border-white/30 bg-white/40 backdrop-blur-xl">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 via-pink-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
+                <Building2 className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-bold text-gray-900">MJENGO</h2>
-                <p className="text-xs text-gray-500">Client Portal</p>
+                <h2 className="text-xl font-black text-slate-900 tracking-tight">
+                  MJENGO
+                </h2>
+                <p className="text-sm font-bold text-slate-600 uppercase tracking-wider">
+                  Client Portal
+                </p>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="lg:hidden w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/60 transition-all duration-200 shadow-sm"
             >
-              <X className="w-5 h-5 text-gray-600" />
+              <X className="w-6 h-6 text-slate-600" />
             </button>
           </div>
 
           {/* User Profile Section */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
-                <User className="w-6 h-6 text-white" />
+          <div className="p-6 border-b border-white/30 bg-white/20 backdrop-blur-xl">
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-xl">
+                  <User className="w-8 h-8 text-white" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                </div>
               </div>
-              <div>
-                <p className="font-semibold text-gray-900">John Kamau</p>
-                <p className="text-sm text-gray-500">Kamau Properties Ltd</p>
+              <div className="flex-1">
+                <p className="font-black text-slate-900 text-lg">John Kamau</p>
+                <p className="text-sm font-bold text-slate-600 mb-2">
+                  Kamau Properties Ltd
+                </p>
+                <div className="flex items-center gap-1">
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className="w-3 h-3 text-amber-400 fill-current"
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs font-bold text-slate-600 ml-1">
+                    4.9
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <div className="flex-1 overflow-y-auto py-6 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-            <nav className="px-6 space-y-2">
+          <div className="flex-1 overflow-y-auto py-6 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
+            <nav className="px-6 space-y-3">
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const active = isActive(item.href);
@@ -127,52 +144,116 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`group flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 ${
+                    className={`group relative flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] ${
                       active
-                        ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg"
+                        ? "bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 text-white shadow-xl shadow-orange-500/25"
                         : item.highlight
-                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/20"
+                        : "text-slate-700 hover:bg-white/60 hover:shadow-lg backdrop-blur-sm"
                     }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <Icon
-                        className={`w-5 h-5 ${
+                    <div className="flex items-center space-x-4">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
                           active || item.highlight
-                            ? "text-white"
-                            : "text-gray-500 group-hover:text-gray-700"
-                        }`}
-                      />
-                      <span
-                        className={`font-medium ${
-                          active || item.highlight ? "text-white" : ""
+                            ? "bg-white/20"
+                            : "bg-slate-100 group-hover:bg-white/80"
                         }`}
                       >
-                        {item.name}
-                      </span>
+                        <Icon
+                          className={`w-5 h-5 ${
+                            active || item.highlight
+                              ? "text-white"
+                              : "text-slate-600 group-hover:text-slate-700"
+                          }`}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <span
+                          className={`font-bold text-base block ${
+                            active || item.highlight
+                              ? "text-white"
+                              : "text-slate-900"
+                          }`}
+                        >
+                          {item.name}
+                        </span>
+                        <span
+                          className={`text-xs font-medium ${
+                            active || item.highlight
+                              ? "text-white/80"
+                              : "text-slate-500 group-hover:text-slate-600"
+                          }`}
+                        >
+                          {item.description}
+                        </span>
+                      </div>
                     </div>
                     {item.badge && (
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      <div
+                        className={`px-3 py-1 text-xs font-black rounded-full ${
                           active
-                            ? "bg-white/20 text-white"
-                            : "bg-orange-100 text-orange-600"
+                            ? "bg-white/30 text-white"
+                            : "bg-gradient-to-r from-orange-100 to-pink-100 text-orange-600 shadow-sm"
                         }`}
                       >
                         {item.badge}
-                      </span>
+                      </div>
+                    )}
+
+                    {/* Active indicator */}
+                    {active && (
+                      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white rounded-r-full shadow-lg"></div>
                     )}
                   </Link>
                 );
               })}
             </nav>
+
+            {/* Quick Stats */}
+            <div className="mx-6 mt-8 p-4 bg-white/40 backdrop-blur-xl rounded-2xl border border-white/30 shadow-lg">
+              <h4 className="text-sm font-black text-slate-900 mb-3 uppercase tracking-wider">
+                Account Stats
+              </h4>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-600">
+                    Active Jobs
+                  </span>
+                  <span className="text-sm font-black text-slate-900">12</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-600">
+                    Applications
+                  </span>
+                  <span className="text-sm font-black text-emerald-600">
+                    +28
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-slate-600">
+                    Rating
+                  </span>
+                  <span className="text-sm font-black text-amber-600">
+                    4.9★
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-gray-200 flex-shrink-0">
-            <button className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-gray-700 hover:bg-gray-100 transition-colors">
-              <LogOut className="w-5 h-5 text-gray-500" />
-              <span className="font-medium">Sign Out</span>
+          <div className="p-6 border-t border-white/30 bg-white/20 backdrop-blur-xl flex-shrink-0">
+            <button className="w-full flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-700 hover:bg-white/60 transition-all duration-200 group hover:shadow-lg">
+              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors">
+                <LogOut className="w-5 h-5 text-slate-600 group-hover:text-red-600 transition-colors" />
+              </div>
+              <div className="flex-1 text-left">
+                <span className="font-bold text-slate-900 block">Sign Out</span>
+                <span className="text-xs font-medium text-slate-500">
+                  End your session
+                </span>
+              </div>
             </button>
           </div>
         </div>
