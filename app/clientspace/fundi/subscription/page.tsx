@@ -68,11 +68,11 @@ export default function SubscriptionPage() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
-                  My Subscription
+                <h1 className="text-2xl sm:text-xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                  Welcome Kamau
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">
-                  Manage your current plan and explore upgrades
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-semibold">
+                  Discover amazing opportunities and connect
                 </p>
               </div>
             </div>
