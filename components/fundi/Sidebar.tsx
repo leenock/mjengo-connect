@@ -21,7 +21,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   const navigationItems = [
     {
-      name: "My Jobs",
+      name: "Jobs Listings",
       href: "/clientspace/fundi/job-listings",
       icon: Briefcase,
       highlight: true,
