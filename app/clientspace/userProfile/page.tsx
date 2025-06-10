@@ -12,7 +12,7 @@ export default function EmployerProfileSettings() {
   const [profileData, setProfileData] = useState({
     firstName: "John",
     lastName: "Kamau",
-    email: "john.kamau@kamauproperties.co.ke",
+    email: "kamau@gmail.com",
     phone: "+254 712 345 678",
     location: "Nairobi, Kenya",
     company: "Kamau Properties Ltd",
@@ -68,7 +68,7 @@ export default function EmployerProfileSettings() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Profile Settings
                 </h1>
                 <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">Update your account information</p>

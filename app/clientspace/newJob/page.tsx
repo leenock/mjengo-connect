@@ -14,16 +14,15 @@ import {
   ListChecks,
   Mail,
   MapPin,
+  Plus,
+  MessageSquare,
+  BarChart3,
   Menu,
   Phone,
   Save,
   Send,
   User,
-  FileImage,
-  Calendar,
   AlertCircle,
-  Copy,
-  Trash2,
 } from "lucide-react";
 import Sidebar from "@/components/job_posting/Sidebar";
 
@@ -100,30 +99,6 @@ export default function PostJobPage() {
     { number: 4, title: "Review & Submit" },
   ];
 
-  const quickActions = [
-    {
-      icon: FileImage,
-      label: "Add Photos",
-      color: "bg-gradient-to-br from-blue-100 to-blue-200 text-blue-600",
-    },
-    {
-      icon: Calendar,
-      label: "Schedule Post",
-      color: "bg-gradient-to-br from-purple-100 to-purple-200 text-purple-600",
-    },
-    {
-      icon: Copy,
-      label: "Save Template",
-      color:
-        "bg-gradient-to-br from-emerald-100 to-emerald-200 text-emerald-600",
-    },
-    {
-      icon: AlertCircle,
-      label: "Get Help",
-      color: "bg-gradient-to-br from-amber-100 to-amber-200 text-amber-600",
-    },
-  ];
-
   if (isSubmitted) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 lg:flex font-inter">
@@ -154,7 +129,7 @@ export default function PostJobPage() {
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <button
-                    onClick={() => router.push("/employer/dashboard")}
+                    onClick={() => router.push("/clientspace/post-job")}
                     className="px-8 py-4 bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 text-white rounded-2xl font-bold hover:from-orange-600 hover:via-pink-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                   >
                     Go to Dashboard
@@ -211,18 +186,17 @@ export default function PostJobPage() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
-                  Welcome, Kamau
+                <h1 className="text-2xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                  Welcome Kamau
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">
-                  Welcome back! Here is what is happening with your job
-                  listings.
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-black">
+                  Post a New Job
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             {/* Enhanced Progress Steps */}
             <div className="mb-10">
               <div className="flex items-center justify-between">
@@ -879,38 +853,44 @@ export default function PostJobPage() {
             </div>
 
             {/* Enhanced Quick Actions */}
-            <div className="mt-8 bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
-              <h3 className="text-xl font-bold text-slate-900 mb-6">
-                Quick Actions
-              </h3>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                {quickActions.map((action, index) => (
-                  <button
-                    key={index}
-                    className="group flex flex-col items-center justify-center p-6 rounded-2xl border-2 border-white/40 hover:border-orange-300 hover:shadow-lg transition-all duration-300 hover:scale-105 bg-white/40 hover:bg-white/60"
-                  >
-                    <div
-                      className={`w-12 h-12 ${action.color} rounded-2xl flex items-center justify-center mb-3 shadow-lg group-hover:scale-110 transition-transform`}
-                    >
-                      <action.icon className="w-6 h-6" />
-                    </div>
-                    <span className="text-sm font-bold text-slate-700">
-                      {action.label}
-                    </span>
-                  </button>
-                ))}
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden mt-8">
+              <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-orange-50 to-pink-50">
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">
+                  Quick Actions
+                </h2>
+                <p className="text-slate-600 font-medium">
+                  Manage your account efficiently
+                </p>
               </div>
-
-              <div className="mt-8 border-t-2 border-white/30 pt-6">
-                <div className="flex justify-between items-center">
-                  <button className="flex items-center text-slate-600 hover:text-red-600 font-bold text-sm transition-colors duration-200">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete Draft
+              <div className="p-6 sm:p-8">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                  <button
+                    onClick={() => router.push("/clientspace/newJob")}
+                    className="group h-20 sm:h-24 flex flex-col items-center justify-center space-y-2 bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 hover:from-orange-600 hover:via-pink-600 hover:to-red-600 text-white rounded-2xl font-bold transition-all duration-300 hover:shadow-xl transform hover:scale-105 shadow-lg"
+                  >
+                    <Plus className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs sm:text-sm">Post New Job</span>
                   </button>
-
-                  <button className="flex items-center text-slate-600 hover:text-orange-600 font-bold text-sm transition-colors duration-200">
-                    <AlertCircle className="w-4 h-4 mr-2" />
-                    Need Help?
+                  <button
+                    onClick={() => router.push("/clientspace/myJobs")}
+                    className="group h-20 sm:h-24 flex flex-col items-center justify-center space-y-2 bg-white/60 border-2 border-slate-200 text-slate-700 rounded-2xl font-bold hover:bg-white/80 hover:border-slate-300 transition-all duration-300 hover:shadow-lg transform hover:scale-105"
+                  >
+                    <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 group-hover:text-slate-700 group-hover:scale-110 transition-all" />
+                    <span className="text-xs sm:text-sm">My Jobs</span>
+                  </button>
+                  <button
+                    onClick={() => router.push("/clientspace/post-job")}
+                    className="group h-20 sm:h-24 flex flex-col items-center justify-center space-y-2 bg-white/60 border-2 border-slate-200 text-slate-700 rounded-2xl font-bold hover:bg-white/80 hover:border-slate-300 transition-all duration-300 hover:shadow-lg transform hover:scale-105"
+                  >
+                    <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 group-hover:text-slate-700 group-hover:scale-110 transition-all" />
+                    <span className="text-xs sm:text-sm">View Analytics</span>
+                  </button>
+                  <button
+                    onClick={() => router.push("/clientspace/userProfile")}
+                    className="group h-20 sm:h-24 flex flex-col items-center justify-center space-y-2 bg-white/60 border-2 border-slate-200 text-slate-700 rounded-2xl font-bold hover:bg-white/80 hover:border-slate-300 transition-all duration-300 hover:shadow-lg transform hover:scale-105"
+                  >
+                    <User className="w-5 h-5 sm:w-6 sm:h-6 text-slate-600 group-hover:text-slate-700 group-hover:scale-110 transition-all" />
+                    <span className="text-xs sm:text-sm">User Profile</span>
                   </button>
                 </div>
               </div>

@@ -11,7 +11,6 @@ import {
   LogOut,
   X,
   Building2,
-  Star,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -116,19 +115,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 <p className="text-sm font-bold text-slate-600 mb-2">
                   Kamau Properties Ltd
                 </p>
-                <div className="flex items-center gap-1">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="w-3 h-3 text-amber-400 fill-current"
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs font-bold text-slate-600 ml-1">
-                    4.9
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -224,18 +210,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-slate-600">
-                    Applications
+                    Total Submitted Jobs
                   </span>
                   <span className="text-sm font-black text-emerald-600">
-                    +28
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-600">
-                    Rating
-                  </span>
-                  <span className="text-sm font-black text-amber-600">
-                    4.9★
+                    528
                   </span>
                 </div>
               </div>
