@@ -146,10 +146,7 @@ export default function AdminModeration() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-full text-sm font-bold">
-              <AlertTriangle className="w-4 h-4" />
-              <span>5 Urgent</span>
-            </div>
+            
           </div>
 
           {/* Search and Filters */}
