@@ -243,43 +243,43 @@ export default function AdminModeration() {
                           </div>
                         </div>
                         <p className="text-slate-600 font-medium mb-4">{report.description}</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                           <div className="flex items-center space-x-2">
-                            <User className="w-4 h-4 text-slate-400" />
-                            <span className="font-medium text-slate-600">
+                            <User className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                            <span className="font-medium text-slate-600 truncate">
                               Reported by: <span className="font-bold text-slate-900">{report.reportedBy}</span>
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Shield className="w-4 h-4 text-slate-400" />
-                            <span className="font-medium text-slate-600">
+                            <Shield className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                            <span className="font-medium text-slate-600 truncate">
                               Target: <span className="font-bold text-slate-900">{report.reportedUser}</span>
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <FileText className="w-4 h-4 text-slate-400" />
-                            <span className="font-medium text-slate-600">
+                            <FileText className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                            <span className="font-medium text-slate-600 truncate">
                               Content: <span className="font-bold text-slate-900">{report.reportedContent}</span>
                             </span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Clock className="w-4 h-4 text-slate-400" />
-                            <span className="font-medium text-slate-600">{report.timestamp}</span>
+                            <Clock className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                            <span className="font-medium text-slate-600 text-xs sm:text-sm">{report.timestamp}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-row lg:flex-col gap-2">
-                        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg">
-                          <Eye className="w-4 h-4" />
-                          <span>Review</span>
+                      <div className="flex flex-col sm:flex-row lg:flex-col gap-2 w-full sm:w-auto lg:w-auto">
+                        <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg text-sm min-h-[40px]">
+                          <Eye className="w-4 h-4 flex-shrink-0" />
+                          <span className="whitespace-nowrap">Review</span>
                         </button>
-                        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg">
-                          <Check className="w-4 h-4" />
-                          <span>Approve</span>
+                        <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg text-sm min-h-[40px]">
+                          <Check className="w-4 h-4 flex-shrink-0" />
+                          <span className="whitespace-nowrap">Approve</span>
                         </button>
-                        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-bold hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg">
-                          <Ban className="w-4 h-4" />
-                          <span>Action</span>
+                        <button className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-bold hover:from-red-600 hover:to-pink-600 transition-all duration-200 shadow-lg text-sm min-h-[40px]">
+                          <Ban className="w-4 h-4 flex-shrink-0" />
+                          <span className="whitespace-nowrap">Action</span>
                         </button>
                       </div>
                     </div>
