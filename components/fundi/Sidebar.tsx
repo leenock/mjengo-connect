@@ -21,7 +21,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
   const navigationItems = [
     {
-      name: "Jobs Listings",
+      name: "Job Listings",
       href: "/clientspace/fundi/job-listings",
       icon: Briefcase,
       highlight: true,
@@ -32,7 +32,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       href: "/clientspace/fundi/saved-jobs",
       icon: Calendar,
       badge: "3",
-      description: "Your bookmarked jobs",
+      description: "My bookmarked jobs",
     },
     {
       name: "Subscriptions",
@@ -77,8 +77,8 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 <h2 className="text-xl font-black text-slate-900 tracking-tight">
                   MJENGO
                 </h2>
-                <p className="text-sm font-bold text-slate-600 uppercase tracking-wider">
-                  Connect People
+                <p className="text-sm font-extrabold text-slate-600 uppercase tracking-wider">
+                  Connect
                 </p>
               </div>
             </div>

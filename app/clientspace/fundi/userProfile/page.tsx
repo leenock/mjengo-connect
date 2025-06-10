@@ -1,6 +1,6 @@
-"use client"
-import { useState } from "react"
-import Sidebar from "@/components/fundi/Sidebar"
+"use client";
+import { useState } from "react";
+import Sidebar from "@/components/fundi/Sidebar";
 import {
   Menu,
   User,
@@ -14,16 +14,16 @@ import {
   Eye,
   EyeOff,
   Camera,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function UserProfileSettings() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [profileData, setProfileData] = useState({
-    email: "john.doe@example.com",
+    email: "john@gmail.com",
     phone: "+254 712 345 678",
     location: "Nairobi, Kenya",
     skills: "Plumbing, Electrical Work, Carpentry",
@@ -33,40 +33,41 @@ export default function UserProfileSettings() {
     firstName: "John",
     lastName: "Doe",
     bio: "Experienced handyman with expertise in various home improvement services.",
-  })
-
-
+  });
 
   const handleInputChange = (field: string, value: string) => {
     setProfileData((prev) => ({
       ...prev,
       [field]: value,
-    }))
-  }
+    }));
+  };
 
   const handleSaveProfile = async () => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     // Validate passwords match if they're being updated
-    if (profileData.password && profileData.password !== profileData.confirmPassword) {
-      alert("Passwords do not match!")
-      setIsLoading(false)
-      return
+    if (
+      profileData.password &&
+      profileData.password !== profileData.confirmPassword
+    ) {
+      alert("Passwords do not match!");
+      setIsLoading(false);
+      return;
     }
 
     // Simulate API call
     setTimeout(() => {
-      console.log("Profile updated:", profileData)
-      alert("Profile updated successfully!")
-      setIsLoading(false)
+      console.log("Profile updated:", profileData);
+      alert("Profile updated successfully!");
+      setIsLoading(false);
       // Clear password fields after successful update
       setProfileData((prev) => ({
         ...prev,
         password: "",
         confirmPassword: "",
-      }))
-    }, 1500)
-  }
+      }));
+    }, 1500);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 lg:flex font-inter">
@@ -95,8 +96,6 @@ export default function UserProfileSettings() {
             </div>
           </div>
 
-         
-
           {/* Profile Form */}
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-6 sm:p-8 lg:p-10">
             <div className="flex items-center gap-6 mb-8 pb-6 border-b border-slate-200">
@@ -112,9 +111,10 @@ export default function UserProfileSettings() {
                 <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 leading-tight">
                   {profileData.firstName} {profileData.lastName}
                 </h2>
-                <p className="text-slate-600 text-lg font-medium mt-1">{profileData.email}</p>
-                <div className="flex items-center gap-2 mt-2">
-                </div>
+                <p className="text-slate-600 text-lg font-medium mt-1">
+                  {profileData.email}
+                </p>
+                <div className="flex items-center gap-2 mt-2"></div>
               </div>
             </div>
 
@@ -125,7 +125,9 @@ export default function UserProfileSettings() {
                   <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center">
                     <User className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900">Personal Information</h3>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Personal Information
+                  </h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -137,7 +139,9 @@ export default function UserProfileSettings() {
                       <input
                         type="text"
                         value={profileData.firstName}
-                        onChange={(e) => handleInputChange("firstName", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("firstName", e.target.value)
+                        }
                         className="w-full px-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300"
                         placeholder="Enter your first name"
                       />
@@ -152,7 +156,9 @@ export default function UserProfileSettings() {
                       <input
                         type="text"
                         value={profileData.lastName}
-                        onChange={(e) => handleInputChange("lastName", e.target.value)}
+                        onChange={(e) =>
+                          handleInputChange("lastName", e.target.value)
+                        }
                         className="w-full px-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300"
                         placeholder="Enter your last name"
                       />
@@ -169,7 +175,9 @@ export default function UserProfileSettings() {
                     <input
                       type="email"
                       value={profileData.email}
-                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("email", e.target.value)
+                      }
                       className="w-full pl-12 pr-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300"
                       placeholder="Enter your email"
                     />
@@ -185,7 +193,9 @@ export default function UserProfileSettings() {
                     <input
                       type="tel"
                       value={profileData.phone}
-                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("phone", e.target.value)
+                      }
                       className="w-full pl-12 pr-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300"
                       placeholder="Enter your phone number"
                     />
@@ -201,7 +211,9 @@ export default function UserProfileSettings() {
                     <input
                       type="text"
                       value={profileData.location}
-                      onChange={(e) => handleInputChange("location", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("location", e.target.value)
+                      }
                       className="w-full pl-12 pr-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300"
                       placeholder="Enter your location"
                     />
@@ -215,16 +227,22 @@ export default function UserProfileSettings() {
                   <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
                     <Briefcase className="w-5 h-5 text-white" />
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900">Professional Information</h3>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    Professional Information
+                  </h3>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Skills</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                    Skills
+                  </label>
                   <div className="relative group">
                     <Briefcase className="absolute left-4 top-4 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
                     <textarea
                       value={profileData.skills}
-                      onChange={(e) => handleInputChange("skills", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("skills", e.target.value)
+                      }
                       rows={4}
                       className="w-full pl-12 pr-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 resize-none group-hover:border-slate-300"
                       placeholder="List your skills (comma separated)"
@@ -241,7 +259,9 @@ export default function UserProfileSettings() {
                     <input
                       type="text"
                       value={profileData.experience}
-                      onChange={(e) => handleInputChange("experience", e.target.value)}
+                      onChange={(e) =>
+                        handleInputChange("experience", e.target.value)
+                      }
                       className="w-full pl-12 pr-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300"
                       placeholder="Years of experience"
                     />
@@ -249,7 +269,9 @@ export default function UserProfileSettings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">Bio</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                    Bio
+                  </label>
                   <textarea
                     value={profileData.bio}
                     onChange={(e) => handleInputChange("bio", e.target.value)}
@@ -265,7 +287,9 @@ export default function UserProfileSettings() {
                     <div className="w-10 h-10 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl flex items-center justify-center">
                       <Lock className="w-5 h-5 text-white" />
                     </div>
-                    <h4 className="text-lg font-bold text-slate-900">Change Password</h4>
+                    <h4 className="text-lg font-bold text-slate-900">
+                      Change Password
+                    </h4>
                   </div>
 
                   <div className="space-y-4">
@@ -278,7 +302,9 @@ export default function UserProfileSettings() {
                         <input
                           type={showPassword ? "text" : "password"}
                           value={profileData.password}
-                          onChange={(e) => handleInputChange("password", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("password", e.target.value)
+                          }
                           className="w-full pl-12 pr-14 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300"
                           placeholder="Enter new password"
                         />
@@ -287,7 +313,11 @@ export default function UserProfileSettings() {
                           onClick={() => setShowPassword(!showPassword)}
                           className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                         >
-                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          {showPassword ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -301,16 +331,24 @@ export default function UserProfileSettings() {
                         <input
                           type={showConfirmPassword ? "text" : "password"}
                           value={profileData.confirmPassword}
-                          onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
+                          onChange={(e) =>
+                            handleInputChange("confirmPassword", e.target.value)
+                          }
                           className="w-full pl-12 pr-14 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300"
                           placeholder="Confirm new password"
                         />
                         <button
                           type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
                           className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                         >
-                          {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          {showConfirmPassword ? (
+                            <EyeOff className="w-5 h-5" />
+                          ) : (
+                            <Eye className="w-5 h-5" />
+                          )}
                         </button>
                       </div>
                     </div>
@@ -334,5 +372,5 @@ export default function UserProfileSettings() {
         </div>
       </div>
     </div>
-  )
+  );
 }

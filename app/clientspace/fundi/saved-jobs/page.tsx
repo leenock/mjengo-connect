@@ -129,7 +129,7 @@ export default function JobListingsPage() {
                       <p className="text-xs sm:text-sm font-bold text-slate-600 truncate uppercase tracking-wide">
                         {stat.title}
                       </p>
-                      <p className="text-2xl sm:text-4xl font-black text-slate-900 mt-2 leading-none">{stat.value}</p>
+                      <p className="text-xl sm:text-4xl font-black text-slate-900 mt-2 leading-none">{stat.value}</p>
                       <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-2 truncate">{stat.change}</p>
                     </div>
                     <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/60 rounded-2xl flex items-center justify-center flex-shrink-0 ml-3 shadow-lg">

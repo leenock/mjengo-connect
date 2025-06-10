@@ -84,7 +84,7 @@ export default function SubscriptionPage() {
               <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
                 <CreditCard className="w-6 h-6 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">Current Subscription</h2>
+              <h2 className="text-xl font-black text-slate-900">Current Subscription</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -128,7 +128,7 @@ export default function SubscriptionPage() {
               <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
                 <Zap className="w-6 h-6 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">Available Plans</h2>
+              <h2 className="text-xl font-black text-slate-900">Available Plans</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -226,7 +226,7 @@ export default function SubscriptionPage() {
               <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-lg">
                 <Star className="w-6 h-6 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">Subscription Benefits</h2>
+              <h2 className="text-xl font-black text-slate-900">Subscription Benefits</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
