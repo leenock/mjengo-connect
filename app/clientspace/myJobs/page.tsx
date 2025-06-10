@@ -83,20 +83,20 @@ export default function JobListingsPage() {
       saved: false,
     },
     // Add more jobs as needed
-     {
+    {
       id: 2,
       title: "Office Renovation",
       company: "Tech Innovations Ltd",
       location: "CBD, Nairobi",
       budget: "Ksh 1000",
-      duration: "2 weeks",  
+      duration: "2 weeks",
       postedTime: "1 day ago",
       StartDate: "2025-01-20",
 
       urgency: "Normal",
       category: "Renovation",
       description:
-        "Renovation of office space including painting, flooring, and electrical work. Must have experience with commercial projects.", 
+        "Renovation of office space including painting, flooring, and electrical work. Must have experience with commercial projects.",
       requirements: [
         "Commercial Renovation",
         "Electrical Work",
@@ -123,7 +123,7 @@ export default function JobListingsPage() {
 
       <div className="flex-1 lg:ml-0">
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-               {/* Header */}
+          {/* Header */}
           <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl mb-8 sm:mb-10 flex items-center justify-between px-6 sm:px-8 py-6 rounded-2xl shadow-lg border border-white/20">
             <div className="flex items-center space-x-4">
               <button
@@ -138,7 +138,8 @@ export default function JobListingsPage() {
                   Welcome Kamau
                 </h1>
                 <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">
-                  Welcome back! Here is what is happening with your job listings.
+                  Welcome back! Here is what is happening with your job
+                  listings.
                 </p>
               </div>
             </div>
@@ -265,14 +266,36 @@ export default function JobListingsPage() {
                           <span>{job.views} views</span>
                         </div>
                       </div>
+                      {/* Action Button edit button */}
 
-                      <button
-                        onClick={() => viewJobDetails(job.id)}
-                        className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 text-white font-bold rounded-2xl hover:from-orange-600 hover:via-pink-600 hover:to-red-600 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform"
-                      >
-                        View Details
-                        <ArrowRight className="w-5 h-5" />
-                      </button>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                        <button
+                          className="flex items-center justify-center w-full sm:w-auto px-4 sm:px-6 py-3 
+                            bg-gradient-to-r from-red-500 via-red-600 to-red-700 
+                            text-white font-bold rounded-2xl 
+                            hover:from-red-600 hover:via-red-700 hover:to-red-800 
+                            transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform mb-3 sm:mb-0"
+                        >
+                          <span className="text-sm sm:text-base">
+                            Edit Details
+                          </span>
+                          <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 ml-2" />
+                        </button>
+
+                        <button
+                          onClick={() => viewJobDetails(job.id)}
+                          className="flex items-center justify-center w-full sm:w-auto px-4 sm:px-6 py-3 
+                                bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 
+                                text-white font-bold rounded-2xl 
+                                hover:from-blue-600 hover:via-indigo-600 hover:to-purple-600 
+                                transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 transform"
+                        >
+                          <span className="text-sm sm:text-base">
+                            View Details
+                          </span>
+                          <ArrowRight className="w-4 sm:w-5 h-4 sm:h-5 ml-2" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

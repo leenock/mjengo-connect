@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Sidebar from "@/components/job_posting/Sidebar";
+import Sidebar from "@/components/fundi/Sidebar"
 import {
   Menu,
   MapPin,

@@ -134,7 +134,7 @@ export default function JobListingsPage() {
   }
 
   const viewJobDetails = (jobId: number) => {
-    router.push(`../job/${jobId}`)
+    router.push(`./job/${jobId}`)
   }
 
   return (
