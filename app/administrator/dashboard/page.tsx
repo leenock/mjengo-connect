@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import AdminSidebar from "@/components/admin/Sidebar"
+import { useState } from "react";
+import AdminSidebar from "@/components/admin/Sidebar";
 import {
   Users,
   UserCheck,
@@ -10,17 +10,16 @@ import {
   AlertTriangle,
   DollarSign,
   Menu,
-  Star,
   MessageSquare,
   BarChart3,
   Clock,
   MapPin,
   ArrowRight,
   Shield,
-} from "lucide-react"
+} from "lucide-react";
 
 export default function AdminDashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const stats = [
     {
@@ -59,7 +58,7 @@ export default function AdminDashboard() {
       bgColor: "bg-gradient-to-br from-violet-50 to-violet-100",
       borderColor: "border-violet-200",
     },
-  ]
+  ];
 
   const recentActivity = [
     {
@@ -67,7 +66,7 @@ export default function AdminDashboard() {
       title: "New Fundi Registration - John Mwangi",
       location: "Nairobi, Kenya",
       type: "User Registration",
-      status: "Pending Verification",
+      status: "verified",
       time: "2 minutes ago",
       priority: "Normal",
       category: "Registration",
@@ -102,14 +101,24 @@ export default function AdminDashboard() {
       priority: "High",
       category: "Moderation",
     },
-  ]
+  ];
 
-  const topFundis = [
-    { name: "Peter Kamau", rating: 4.9, jobs: 45, earnings: "KSh 180K", location: "Nairobi" },
-    { name: "Mary Wanjiku", rating: 4.8, jobs: 38, earnings: "KSh 152K", location: "Mombasa" },
-    { name: "David Ochieng", rating: 4.7, jobs: 42, earnings: "KSh 168K", location: "Kisumu" },
-    { name: "Grace Mutua", rating: 4.9, jobs: 35, earnings: "KSh 140K", location: "Nakuru" },
-  ]
+  const topClients = [
+    {
+      name: "Peter Kamau",
+      rating: 4.9,
+      jobs: 45,
+      earnings: "KSh 180K",
+      location: "Nairobi",
+    },
+    {
+      name: "Mary Wanjiku",
+      rating: 4.8,
+      jobs: 38,
+      earnings: "KSh 152K",
+      location: "Mombasa",
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 lg:flex font-inter">
@@ -129,10 +138,10 @@ export default function AdminDashboard() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-3xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Admin Dashboard
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-extrabold">
                   Welcome back! Here is your platform overview.
                 </p>
               </div>
@@ -147,7 +156,7 @@ export default function AdminDashboard() {
             {/* Enhanced Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {stats.map((stat) => {
-                const Icon = stat.icon
+                const Icon = stat.icon;
                 return (
                   <div
                     key={stat.title}
@@ -158,15 +167,21 @@ export default function AdminDashboard() {
                         <p className="text-xs sm:text-sm font-bold text-slate-600 truncate uppercase tracking-wide">
                           {stat.title}
                         </p>
-                        <p className="text-2xl sm:text-4xl font-black text-slate-900 mt-2 leading-none">{stat.value}</p>
-                        <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-2 truncate">{stat.change}</p>
+                        <p className="text-2xl sm:text-4xl font-black text-slate-900 mt-2 leading-none">
+                          {stat.value}
+                        </p>
+                        <p className="text-xs sm:text-sm text-slate-500 font-semibold mt-2 truncate">
+                          {stat.change}
+                        </p>
                       </div>
                       <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/60 rounded-2xl flex items-center justify-center flex-shrink-0 ml-3 shadow-lg">
-                        <Icon className={`w-6 h-6 sm:w-8 sm:h-8 ${stat.color}`} />
+                        <Icon
+                          className={`w-6 h-6 sm:w-8 sm:h-8 ${stat.color}`}
+                        />
                       </div>
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
 
@@ -174,10 +189,14 @@ export default function AdminDashboard() {
             <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-indigo-50 to-purple-50">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Recent Platform Activity</h2>
-                  <p className="text-slate-600 font-medium">Monitor system events and user actions</p>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">
+                    Recent Platform Activity
+                  </h2>
+                  <p className="text-slate-600 font-extrabold">
+                    Monitor system events and user actions
+                  </p>
                 </div>
-                <button className="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-bold hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-lg">
+                <button className="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-extrabold hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-lg">
                   View All
                   <ArrowRight className="w-4 h-4" />
                 </button>
@@ -191,7 +210,9 @@ export default function AdminDashboard() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2 mb-3">
-                          <h3 className="font-bold text-slate-900 text-base sm:text-lg">{activity.title}</h3>
+                          <h3 className="font-bold text-slate-900 text-base sm:text-lg">
+                            {activity.title}
+                          </h3>
                           {activity.priority === "Urgent" && (
                             <span className="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-sm">
                               Urgent
@@ -207,10 +228,10 @@ export default function AdminDashboard() {
                               activity.status === "Active"
                                 ? "bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700"
                                 : activity.status === "Under Review"
-                                  ? "bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700"
-                                  : activity.status === "Pending Verification"
-                                    ? "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700"
-                                    : "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700"
+                                ? "bg-gradient-to-r from-orange-100 to-amber-100 text-orange-700"
+                                : activity.status === "Pending Verification"
+                                ? "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700"
+                                : "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700"
                             }`}
                           >
                             {activity.status}
@@ -219,11 +240,15 @@ export default function AdminDashboard() {
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs sm:text-sm font-bold text-slate-600">
                           <div className="flex items-center">
                             <MapPin className="w-4 h-4 mr-2 text-slate-400" />
-                            <span className="truncate">{activity.location}</span>
+                            <span className="truncate">
+                              {activity.location}
+                            </span>
                           </div>
                           <div className="flex items-center">
                             <Activity className="w-4 h-4 mr-2 text-indigo-500" />
-                            <span className="text-indigo-600 font-black truncate">{activity.category}</span>
+                            <span className="text-indigo-600 font-black truncate">
+                              {activity.category}
+                            </span>
                           </div>
                           <div className="flex items-center">
                             <Clock className="w-4 h-4 mr-2 text-slate-400" />
@@ -231,7 +256,9 @@ export default function AdminDashboard() {
                           </div>
                           <div className="flex items-center">
                             <AlertTriangle className="w-4 h-4 mr-2 text-amber-500" />
-                            <span className="text-amber-600 font-black">{activity.type}</span>
+                            <span className="text-amber-600 font-black">
+                              {activity.type}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -245,8 +272,12 @@ export default function AdminDashboard() {
             <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-emerald-50 to-teal-50">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Top Performing Fundis</h2>
-                  <p className="text-slate-600 font-medium">Highest rated and most active professionals</p>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">
+                    Top Revenue Clients
+                  </h2>
+                  <p className="text-slate-600 font-extrabold">
+                    Most active professionals
+                  </p>
                 </div>
                 <button className="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg">
                   View All
@@ -254,7 +285,7 @@ export default function AdminDashboard() {
                 </button>
               </div>
               <div className="space-y-4 p-6 sm:p-8">
-                {topFundis.map((fundi, index) => (
+                {topClients.map((fundi, index) => (
                   <div
                     key={index}
                     className="group p-4 sm:p-6 bg-gradient-to-r from-white/60 to-slate-50/60 rounded-2xl hover:from-white/80 hover:to-slate-50/80 transition-all duration-300 border border-white/40 hover:shadow-lg hover:scale-[1.02]"
@@ -268,15 +299,15 @@ export default function AdminDashboard() {
                             .join("")}
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-bold text-slate-900 text-base sm:text-lg">{fundi.name}</h3>
+                          <h3 className="font-bold text-slate-900 text-base sm:text-lg">
+                            {fundi.name}
+                          </h3>
                           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 text-xs sm:text-sm font-bold text-slate-600 mt-2">
                             <div className="flex items-center">
-                              <Star className="w-4 h-4 mr-2 text-amber-400 fill-current" />
-                              <span className="text-amber-600 font-black">{fundi.rating}</span>
-                            </div>
-                            <div className="flex items-center">
                               <Building2 className="w-4 h-4 mr-2 text-indigo-500" />
-                              <span className="text-indigo-600 font-black">{fundi.jobs} jobs</span>
+                              <span className="text-indigo-600 font-black">
+                                {fundi.jobs} jobs
+                              </span>
                             </div>
                             <div className="flex items-center">
                               <MapPin className="w-4 h-4 mr-2 text-slate-400" />
@@ -286,8 +317,12 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl sm:text-2xl font-black text-slate-900">{fundi.earnings}</p>
-                        <p className="text-xs font-medium text-slate-500">Total Earnings</p>
+                        <p className="text-xl sm:text-2xl font-black text-slate-900">
+                          {fundi.earnings}
+                        </p>
+                        <p className="text-xs font-medium text-slate-500">
+                          Total Spent
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -298,8 +333,12 @@ export default function AdminDashboard() {
             {/* Enhanced Quick Actions */}
             <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
               <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-orange-50 to-pink-50">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Admin Quick Actions</h2>
-                <p className="text-slate-600 font-medium">Manage your platform efficiently</p>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">
+                  Admin Quick Actions
+                </h2>
+                <p className="text-slate-600 font-medium">
+                  Manage your platform efficiently
+                </p>
               </div>
               <div className="p-6 sm:p-8">
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -326,5 +365,5 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
-  )
+  );
 }
