@@ -134,10 +134,10 @@ export default function JobListingsPage() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-xl sm:text-xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Welcome Kamau
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-extrabold">
                   Welcome back! Here is what is happening with your job
                   listings.
                 </p>

@@ -131,10 +131,10 @@ export default function PostJobPage() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-2xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Welcome Kamau
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-bold">
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-extrabold">
                   Here is what is happening with your job listings.
                 </p>
               </div>
@@ -178,10 +178,10 @@ export default function PostJobPage() {
             <div className="space-y-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-indigo-50 to-purple-50">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">
                     Your Recent Job Postings
                   </h2>
-                  <p className="text-slate-600 font-medium">
+                  <p className="text-slate-600 font-extrabold">
                     Click to View more details about each job posting.
                   </p>
                 </div>

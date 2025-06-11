@@ -186,7 +186,7 @@ export default function PostJobPage() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl sm:text-2xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-2xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Welcome Kamau
                 </h1>
                 <p className="text-slate-600 mt-2 text-base sm:text-lg font-black">
@@ -256,7 +256,7 @@ export default function PostJobPage() {
                       <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
                         <Briefcase className="w-6 h-6 text-white" />
                       </div>
-                      <h2 className="text-2xl font-bold text-slate-900">
+                      <h2 className="text-2xl font-extrabold text-slate-900">
                         Job Details
                       </h2>
                     </div>

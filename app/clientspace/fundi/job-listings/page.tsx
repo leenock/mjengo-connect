@@ -155,10 +155,10 @@ export default function JobListingsPage() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl sm:text-xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-2xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Welcome Kamau
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-semibold">
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-extrabold">
                   Discover amazing opportunities and connect
                 </p>
               </div>
@@ -199,8 +199,8 @@ export default function JobListingsPage() {
                 <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-indigo-50 to-purple-50">
                     <div>
-                      <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Recent Job Postings</h2>
-                      <p className="text-slate-600 font-medium">Fresh opportunities just for you</p>
+                      <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">Recent Job Postings</h2>
+                      <p className="text-slate-600 font-extrabold">Fresh opportunities just for you</p>
                     </div>
                     <button className="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-bold hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-lg">
                       View All
@@ -263,8 +263,8 @@ export default function JobListingsPage() {
               <div>
                 <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
                   <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-emerald-50 to-teal-50">
-                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Saved Jobs</h2>
-                    <p className="text-slate-600 font-medium">Your bookmarked opportunities</p>
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">Saved Jobs</h2>
+                    <p className="text-slate-600 font-extrabold">Your bookmarked opportunities</p>
                   </div>
                   <div className="space-y-4 p-6 sm:p-8">
                     {recentApplications.map((application) => (
