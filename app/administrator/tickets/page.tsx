@@ -143,10 +143,10 @@ export default function AdminSupportTickets() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-3xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Support Tickets
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">Manage customer support requests</p>
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-bold">Manage customer support requests</p>
               </div>
             </div>
             <div className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-full text-sm font-bold">
@@ -158,8 +158,8 @@ export default function AdminSupportTickets() {
           {/* Search and Filters */}
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden mb-8">
             <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-green-50 to-emerald-50">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Filter Tickets</h2>
-              <p className="text-slate-600 font-medium">Search and manage support tickets</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">Filter Tickets</h2>
+              <p className="text-slate-600 font-bold">Search and manage support tickets</p>
             </div>
             <div className="p-6 sm:p-8">
               <div className="flex flex-col gap-4">
@@ -211,8 +211,8 @@ export default function AdminSupportTickets() {
           {/* Tickets List */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Support Tickets</h2>
-              <div className="text-sm font-medium text-slate-600">{tickets.length} total tickets</div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">Support Tickets</h2>
+              <div className="text-sm font-bold text-slate-600">{tickets.length} total tickets</div>
             </div>
 
             <div className="space-y-4">

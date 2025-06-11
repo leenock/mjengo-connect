@@ -138,10 +138,10 @@ export default function AdminModeration() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-3xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Content Moderation
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-bold">
                   Review and manage reported content
                 </p>
               </div>
@@ -152,8 +152,8 @@ export default function AdminModeration() {
           {/* Search and Filters */}
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden mb-8">
             <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-red-50 to-pink-50">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Filter Reports</h2>
-              <p className="text-slate-600 font-medium">Find and manage content reports efficiently</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">Filter Reports</h2>
+              <p className="text-slate-600 font-bold">Find and manage content reports efficiently</p>
             </div>
             <div className="p-6 sm:p-8">
               <div className="flex flex-col gap-4">
@@ -203,7 +203,7 @@ export default function AdminModeration() {
           {/* Reports List */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Content Reports</h2>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">Content Reports</h2>
               <div className="text-sm font-medium text-slate-600">Showing {reports.length} reports</div>
             </div>
 

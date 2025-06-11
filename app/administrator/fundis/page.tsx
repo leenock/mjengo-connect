@@ -131,10 +131,10 @@ export default function AdminManageFundis() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-3xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Manage Fundis
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">1,247 registered skilled workers</p>
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-extrabold">1,247 registered skilled workers</p>
               </div>
             </div>
             <div className="hidden sm:flex items-center space-x-3"></div>
@@ -143,8 +143,8 @@ export default function AdminManageFundis() {
           {/* Search and Filters */}
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden mb-8">
             <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-indigo-50 to-blue-50">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Search & Filter</h2>
-              <p className="text-slate-600 font-medium">Find and manage fundis efficiently</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">Search & Filter</h2>
+              <p className="text-slate-600 font-extrabold">Find and manage fundis efficiently</p>
             </div>
             <div className="p-4 sm:p-6 lg:p-8">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -181,7 +181,7 @@ export default function AdminManageFundis() {
           {/* Fundis Table */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Fundis Directory</h2>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">Fundis Directory</h2>
               <div className="flex items-center gap-3">
                 <button className="flex items-center gap-2 px-4 py-2 bg-white/70 text-slate-700 rounded-xl font-bold hover:bg-white/90 transition-all duration-200 shadow-lg">
                   <Download className="w-4 h-4" />

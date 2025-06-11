@@ -118,10 +118,10 @@ export default function AdminSettings() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-3xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Admin Settings
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-bold">
                   Manage users and system configuration
                 </p>
               </div>
@@ -140,7 +140,7 @@ export default function AdminSettings() {
             <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-3xl shadow-2xl border border-white/30 w-full max-w-md">
                 <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-t-3xl">
-                  <h2 className="text-2xl font-bold text-slate-900">Add New User</h2>
+                  <h2 className="text-2xl font-black text-slate-900">Add New User</h2>
                   <p className="text-slate-600 font-medium">Create a new admin user account</p>
                 </div>
                 <div className="p-6 space-y-4">
@@ -213,7 +213,7 @@ export default function AdminSettings() {
           {/* Users List */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Admin Users</h2>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">Admin Users</h2>
               <div className="text-sm font-medium text-slate-600">{users.length} total users</div>
             </div>
 

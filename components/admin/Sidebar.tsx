@@ -7,6 +7,7 @@ import {
   UserCheck,
   Building2,
   BarChart3,
+  Plus,
   Settings,
   Shield,
   MessageSquare,
@@ -52,6 +53,12 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
       icon: Building2,
       badge: "156",
       description: "Active & pending jobs",
+    },
+    {
+      name: "Post New Job",
+      href: "/administrator/postJob",
+      icon: Plus,
+      description: "Admin Add new Jobs",
     },
     {
       name: "Reports",

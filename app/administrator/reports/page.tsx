@@ -112,10 +112,10 @@ export default function AdminReports() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                <h1 className="text-3xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Analytics & Reports
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-bold">
                   Platform insights and performance metrics
                 </p>
               </div>
@@ -216,8 +216,8 @@ export default function AdminReports() {
             {/* Top Categories */}
             <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
               <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-purple-50 to-pink-50">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Top Job Categories</h2>
-                <p className="text-slate-600 font-medium">Most popular service categories</p>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">Top Job Categories</h2>
+                <p className="text-slate-600 font-bold">Most popular service categories</p>
               </div>
               <div className="p-6 sm:p-8">
                 <div className="space-y-4">
@@ -248,8 +248,8 @@ export default function AdminReports() {
             {/* Recent Activity */}
             <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
               <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-amber-50 to-orange-50">
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Recent Activity</h2>
-                <p className="text-slate-600 font-medium">Latest platform transactions and events</p>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">Recent Activity</h2>
+                <p className="text-slate-600 font-bold">Latest platform transactions and events</p>
               </div>
               <div className="p-6 sm:p-8">
                 <div className="space-y-4">

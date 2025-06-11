@@ -196,10 +196,10 @@ export default function AdminManageJobs() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
-                  Manage Job Listings
+                <h1 className="text-3xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
+                  Manage Job Listings-
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-medium">2,156 total job postings</p>
+                <p className="text-slate-600 mt-2 text-bold sm:text-lg font-extrabold">2,156 total job postings</p>
               </div>
             </div>
             <div className="hidden sm:flex items-center space-x-3"></div>
@@ -208,8 +208,8 @@ export default function AdminManageJobs() {
           {/* Search and Filters */}
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden mb-8">
             <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-orange-50 to-amber-50">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Search & Filter</h2>
-              <p className="text-slate-600 font-medium">Find and manage job listings efficiently</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">Search & Filter</h2>
+              <p className="text-slate-600 font-extrabold">Find and manage job listings efficiently</p>
             </div>
             <div className="p-6 sm:p-8">
               <div className="flex flex-col gap-4">
@@ -257,7 +257,7 @@ export default function AdminManageJobs() {
           {/* Jobs Table */}
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Job Listings Directory</h2>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">Job Listings Directory</h2>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                 <button className="flex items-center justify-center gap-2 px-4 py-2 bg-white/70 text-slate-700 rounded-xl font-bold hover:bg-white/90 transition-all duration-200 shadow-lg">
                   <Download className="w-4 h-4" />
