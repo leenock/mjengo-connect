@@ -88,7 +88,8 @@ export default function JobListingPage() {
                       Browse Listings
                     </h3>
                     <p className="text-gray-600">
-                      Access hundreds of verified construction jobs posted by trusted employers across Kenya.
+                      Access hundreds of verified construction jobs posted by
+                      trusted employers across Kenya.
                     </p>
                   </div>
                 </div>
@@ -329,7 +330,8 @@ export default function JobListingPage() {
                       </label>
                       <div className="relative">
                         <Briefcase className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                        <select
+                        <input
+                          type="text"
                           required
                           value={signupData.skills}
                           onChange={(e) =>
@@ -339,17 +341,9 @@ export default function JobListingPage() {
                             })
                           }
                           className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                           placeholder="e.g., welding, plumbing"
                         >
-                          <option value="">Select your skill</option>
-                          <option value="masonry">Masonry</option>
-                          <option value="painting">Painting</option>
-                          <option value="plumbing">Plumbing</option>
-                          <option value="electrical">Electrical</option>
-                          <option value="carpentry">Carpentry</option>
-                          <option value="welding">Welding</option>
-                          <option value="roofing">Roofing</option>
-                          <option value="tiling">Tiling</option>
-                        </select>
+                        </input>
                       </div>
                     </div>
 
