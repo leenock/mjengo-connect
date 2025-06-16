@@ -419,7 +419,7 @@ export default function PostJobPage() {
 
                     <div>
                       <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-                        Requirements
+                        Skills and Requirements
                       </label>
                       <textarea
                         value={jobDetails.requirements}

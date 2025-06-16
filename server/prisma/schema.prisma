@@ -30,6 +30,54 @@ model Client_User {
   paymentLogs ClientPaymentLog[] // NEW: Relationship to payments
 }
 
+model ClientPaymentLog {
+  id         String      @id @default(cuid())
+  clientId   String
+  client     Client_User @relation(fields: [clientId], references: [id])
+  jobId      String      @unique
+  job        Job         @relation(fields: [jobId], references: [id])
+  phone      String
+  amount     Int
+  receipt    String      @unique
+  status     PaymentStatus // "Success", "Failed", etc.
+  rawPayload Json?
+  createdAt  DateTime    @default(now())
+
+  @@index([clientId])
+  @@index([jobId])
+}
+
+model Job {
+  id       String @id @default(cuid())
+  title    String
+  category String
+  jobType  String
+  location String
+  duration String
+  salary   String
+
+  Jobdescription      String
+  SkillsAndrequirements     String
+  responsibilities String
+  benefits         String? // Optional field
+
+  companyName      String
+  contactPerson    String
+  phoneNumber      String
+  email            String
+  preferredContact String
+
+  timePosted DateTime @default(now())
+  isUrgent   Boolean  @default(false)
+  isPaid     Boolean  @default(false) // NEW: Was job ad paid for?
+
+  // Relations
+  postedById String
+  postedBy   Client_User @relation(fields: [postedById], references: [id])
+
+  payment ClientPaymentLog? // NEW: Link to payment
+}
+
 model Fundi_User {
   id               String          @id @default(cuid())
   email            String          @unique
@@ -95,55 +143,6 @@ model PaymentLog {
   @@index([fundiId])
   @@index([receipt])
   @@index([createdAt])
-}
-
-model Job {
-  id       String @id @default(cuid())
-  title    String
-  category String
-  jobType  String
-  location String
-  duration String
-  salary   String
-
-  description      String
-  skillsRequired   String
-  requirements     String
-  responsibilities String
-  benefits         String? // Optional field
-
-  companyName      String
-  contactPerson    String
-  phoneNumber      String
-  email            String
-  preferredContact String
-
-  timePosted DateTime @default(now())
-  isUrgent   Boolean  @default(false)
-  isPaid     Boolean  @default(false) // NEW: Was job ad paid for?
-
-  // Relations
-  postedById String
-  postedBy   Client_User @relation(fields: [postedById], references: [id])
-
-  payment ClientPaymentLog? // NEW: Link to payment
-}
-
-model ClientPaymentLog {
-  id         String      @id @default(cuid())
-  clientId   String
-  client     Client_User @relation(fields: [clientId], references: [id])
-  jobId      String      @unique
-  job        Job         @relation(fields: [jobId], references: [id])
-  phone      String
-  amount     Int
-  receipt    String      @unique
-  status     String // "Success", "Failed", etc.
-  rawPayload Json?
-  createdAt  DateTime    @default(now())
-
-  @@index([clientId])
-  @@index([jobId])
 }
 
 enum Plan {
