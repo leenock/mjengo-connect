@@ -5,6 +5,8 @@ import {
   updateClientUser,
   updateClientUserPassword,
   deleteClientUser,
+  loginClientUser,
+  logoutClientUser,
 } from "../services/clientUserService.js";
 
 // Client User Controller
@@ -19,9 +21,12 @@ export const registerClientUser = async (req, res) => {
     res.status(201).json(newUser);
   } catch (error) {
     console.error("Register Error:", error);
-    res.status(400).json({ message: error.message || "Internal server error" });
+    res.status(400).json({
+      error: error.message || "Internal server error",
+    });
   }
 };
+
 // get all client users
 export const getAllClientUsers = async (req, res) => {
   try {
@@ -89,5 +94,48 @@ export const deleteClientUserController = async (req, res) => {
   } catch (error) {
     console.error("Delete Client User Error:", error);
     res.status(400).json({ message: error.message || "Internal server error" });
+  }
+};
+
+//****************************Client User Controlleer Login Functionality*****************************************/
+
+export const loginController = async (req, res) => {
+  const { emailOrPhone, password } = req.body;
+
+  try {
+    const { token, user } = await loginClientUser({ emailOrPhone, password });
+
+    const userSafe = {
+      id: user.id,
+      email: user.email,
+      phone: user.phone,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      company: user.company,
+      location: user.location,
+      isActive: user.isActive,
+      createdAt: user.createdAt?.toISOString(),
+      updatedAt: user.updatedAt?.toISOString(),
+    };
+
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: userSafe,
+    });
+  } catch (error) {
+    console.error("Login Error:", error);
+    res.status(401).json({ message: error.message || "Login failed" });
+  }
+};
+
+// logout controller
+export const logoutController = async (_req, res) => {
+  try {
+    await logoutClientUser(); // Assuming this function handles session invalidation
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.error("Logout Error:", error);
+    res.status(500).json({ message: error.message || "Internal server error" });
   }
 };

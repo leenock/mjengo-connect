@@ -1,9 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const prisma = new PrismaClient();
 
 // This service handles client user operations such as registration, login, and fetching user data.
+
+//*****************Client User Service Registration Functionality********************/
+
 /**
  * Registers a new client user.
  * @param {Object} userData - The user data containing email, phone, and password.
@@ -14,15 +18,20 @@ export const registerClient = async (userData) => {
   const { email, phone, password } = userData;
 
   const existingUser = await prisma.client_User.findFirst({
-    where: { OR: [{ email }, { phone }] },
+    where: {
+      OR: [{ email }, { phone }],
+    },
   });
-
   if (existingUser) {
-    throw new Error("Email or phone number is already in use");
+    if (existingUser.email === email) {
+      throw new Error("Email is already registered.");
+    }
+    if (existingUser.phone === phone) {
+      throw new Error("Phone number is already registered.");
+    }
+    throw new Error("Email or phone number is already registered.");
   }
-
   const hashedPassword = await bcrypt.hash(password, 10);
-
   const newUser = await prisma.client_User.create({
     data: {
       ...userData,
@@ -158,4 +167,44 @@ export const deleteClientUser = async (id) => {
   });
 
   return { message: "Client user deleted successfully" };
+};
+
+//****************************Client User Service Login Functionality*****************************************/
+
+/**
+ * Authenticates a client user by phone/email and password.
+ * @param {string} emailOrPhone
+ * @param {string} password
+ * @returns {Promise<{ token: string, user: object }>} Authenticated user details + JWT token.
+ * @throws {Error} If authentication fails.
+ */
+export const loginClientUser = async ({ emailOrPhone, password }) => {
+  const user = await prisma.client_User.findFirst({
+    where: {
+      OR: [{ email: emailOrPhone }, { phone: emailOrPhone }],
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    throw new Error("Invalid credentials, please try again");
+  }
+
+  const token = jwt.sign(
+    { id: user.id,
+      email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+
+  return { token, user };
+};
+
+// Logout client user
+export const logoutClientUser = async () => {
+  return { message: "User logged out successfully" };
 };

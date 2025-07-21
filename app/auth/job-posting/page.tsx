@@ -1,8 +1,6 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Eye,
   EyeOff,
@@ -16,15 +14,26 @@ import {
 import Header from "@/components/landingpage/Header";
 import Footer from "@/components/landingpage/Footer";
 import { useRouter } from "next/navigation";
+import Toast from "@/components/ui/Toast";
+import ClientAuthService from "@/app/services/client_user";
+import { validateForm, hasFormErrors } from "@/app/utils/client_validation";
 
 export default function JobPostingPage() {
+  const [mounted, setMounted] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{
+    message: string;
+    type: "success" | "error";
+  } | null>(null);
+
+  const router = useRouter();
 
   const [loginData, setLoginData] = useState({
-    phone: "",
+    emailOrPhone: "",
     password: "",
   });
 
@@ -37,37 +46,169 @@ export default function JobPostingPage() {
     agreeToTerms: false,
   });
 
-  const router = useRouter();
+  useEffect(() => {
+    setMounted(true);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+    // Optional: Redirect if already authenticated
+    if (ClientAuthService.isAuthenticated()) {
+      router.push("/clientspace/post-job");
+    }
+  }, [router]);
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+  if (!mounted) return null; // Prevent hydration errors
 
-    setIsLoading(false);
-
-    // Navigate to client dashboard
-    router.push("/clientspace/post-job");
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSignupData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setIsLoading(true);
+  setToast(null); // clear previous toast
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+  try {
+    const res = await fetch("http://localhost:5000/api/client/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        emailOrPhone: loginData.emailOrPhone,
+        password: loginData.password,
+      }),
+      
+     
+    });
 
+    const data = await res.json();
+    console.log("Login response status:", res.status);
+    console.log("Login response data:", data);
+
+    if (!res.ok) {
+      throw new Error(data.message || "Login failed");
+    }
+
+    const { token, user } = data;
+
+    if (!token || !user) {
+      console.error("Missing token or user in response:", data);
+      throw new Error("Invalid server response. Missing token or user data.");
+    }
+
+    // Store token and user data
+    ClientAuthService.setAuth(token, user);
+
+    // Show success toast
+    setToast({
+      message: "Login successful! Redirecting...",
+      type: "success",
+    });
+
+    // Delay for user to see success feedback
+    setTimeout(() => {
+      router.push("/clientspace/post-job");
+    }, 1000);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "An unexpected error occurred during login.";
+
+    console.error("Login error:", error);
+
+    setToast({
+      message,
+      type: "error",
+    });
+  } finally {
     setIsLoading(false);
+  }
+};
 
-    // Navigate to client dashboard
-    router.push("/clientspace/post-job");
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+
+    if (signupData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    if (signupData.password !== signupData.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    const validationErrors = validateForm(signupData);
+    if (hasFormErrors(validationErrors)) {
+      const allErrors = Object.values(validationErrors)
+        .filter(Boolean)
+        .join(" | ");
+      setError(allErrors);
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/client/registerClient/",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: signupData.email,
+            phone: signupData.phone,
+            location: signupData.location,
+            password: signupData.password,
+            isActive: true,
+          }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error ?? data.message ?? "Account creation failed");
+        setIsLoading(false);
+        return;
+      }
+      // Toast on success
+      setToast({
+        message: "Account added successfully, please login to continue.",
+        type: "success",
+      });
+
+      // ✅ Clear form fields
+      setSignupData({
+        email: "",
+        phone: "",
+        location: "",
+        password: "",
+        confirmPassword: "",
+        agreeToTerms: false,
+      });
+
+      // ✅ Switch to login mode on the same section
+      setAuthMode("login");
+    } catch (err) {
+      console.error("Error creating account:", err);
+      setError("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   };
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       <main className="flex-grow pt-20 bg-gradient-to-br from-orange-50 via-white to-yellow-50">
         <div className="max-w-7xl mx-auto px-6 py-12">
@@ -171,11 +312,11 @@ export default function JobPostingPage() {
                         <input
                           type="phone"
                           required
-                          value={loginData.phone}
+                          value={loginData.emailOrPhone}
                           onChange={(e) =>
                             setLoginData({
                               ...loginData,
-                              phone: e.target.value,
+                              emailOrPhone: e.target.value,
                             })
                           }
                           className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
@@ -255,6 +396,39 @@ export default function JobPostingPage() {
                   </form>
                 </>
               )}
+              {error && (
+                <div className="bg-red-500 text-white p-4 rounded-lg shadow-lg mb-6 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-5 h-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M18 12H6"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 6v12"
+                      />
+                    </svg>
+                    <span>{error}</span>
+                  </div>
+                  <button
+                    onClick={() => setError(null)}
+                    className="text-white ml-4 hover:text-gray-300"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )}
 
               {/* Signup Form */}
               {authMode === "signup" && (
@@ -270,14 +444,10 @@ export default function JobPostingPage() {
                         <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type="email"
+                          name="email"
                           required
                           value={signupData.email}
-                          onChange={(e) =>
-                            setSignupData({
-                              ...signupData,
-                              email: e.target.value,
-                            })
-                          }
+                          onChange={handleChange}
                           className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                           placeholder="your@email.com"
                         />
@@ -293,16 +463,12 @@ export default function JobPostingPage() {
                         <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type="tel"
+                          name="phone"
                           required
                           value={signupData.phone}
-                          onChange={(e) =>
-                            setSignupData({
-                              ...signupData,
-                              phone: e.target.value,
-                            })
-                          }
+                          onChange={handleChange}
                           className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
-                          placeholder="+254 700 123 456"
+                          placeholder="0700 123 456"
                         />
                       </div>
                     </div>
@@ -317,14 +483,10 @@ export default function JobPostingPage() {
                       <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <input
                         type="text"
+                        name="location"
                         required
                         value={signupData.location}
-                        onChange={(e) =>
-                          setSignupData({
-                            ...signupData,
-                            location: e.target.value,
-                          })
-                        }
+                        onChange={handleChange}
                         className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                         placeholder="e.g., Nairobi, Westlands"
                       />
@@ -341,14 +503,10 @@ export default function JobPostingPage() {
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type={showPassword ? "text" : "password"}
+                          name="password"
                           required
                           value={signupData.password}
-                          onChange={(e) =>
-                            setSignupData({
-                              ...signupData,
-                              password: e.target.value,
-                            })
-                          }
+                          onChange={handleChange}
                           className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                           placeholder="Create a strong password"
                         />
@@ -375,14 +533,10 @@ export default function JobPostingPage() {
                         <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
                           type={showConfirmPassword ? "text" : "password"}
+                          name="confirmPassword"
                           required
                           value={signupData.confirmPassword}
-                          onChange={(e) =>
-                            setSignupData({
-                              ...signupData,
-                              confirmPassword: e.target.value,
-                            })
-                          }
+                          onChange={handleChange}
                           className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                           placeholder="Confirm your password"
                         />
@@ -407,14 +561,10 @@ export default function JobPostingPage() {
                   <div className="flex items-start">
                     <input
                       type="checkbox"
+                      name="agreeToTerms"
                       required
                       checked={signupData.agreeToTerms}
-                      onChange={(e) =>
-                        setSignupData({
-                          ...signupData,
-                          agreeToTerms: e.target.checked,
-                        })
-                      }
+                      onChange={handleChange}
                       className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 mt-1"
                     />
                     <label className="ml-3 font-semibold text-gray-600">

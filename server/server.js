@@ -4,6 +4,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 // Import routes
  import client_UserRoute from './routes/client_UserRoute.js'; 
+ import client_authRoute from './routes/client_authRoute.js';
 
 // Load environment variables
 dotenv.config();
@@ -23,6 +24,9 @@ app.get('/', (req, res) => {
 
 // Client User Routes
 app.use('/api/client', client_UserRoute); 
+
+// Use the auth routes under /api/auth
+app.use('/api/client/auth', client_authRoute);
 
 // Start the server
 const PORT = process.env.PORT || 5000;

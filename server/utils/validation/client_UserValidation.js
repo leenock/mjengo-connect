@@ -11,7 +11,7 @@ export const registerClientUserSchema = Joi.object({
     'string.empty': 'Phone cannot be empty.',
     'any.required': 'Phone is required.'
   }),
-  firstName: Joi.string().min(2).max(30).required().messages({
+ /*  firstName: Joi.string().min(2).max(30).required().messages({
     'string.min': 'First name must be at least 2 characters.',
     'string.max': 'First name must be at most 30 characters.',
     'string.empty': 'First name cannot be empty.',
@@ -22,7 +22,7 @@ export const registerClientUserSchema = Joi.object({
     'string.max': 'Last name must be at most 30 characters.',
     'string.empty': 'Last name cannot be empty.',
     'any.required': 'Last name is required.'
-  }),
+  }), */
  company: Joi.string().min(2).max(100).optional().allow('').messages({
   'string.min': 'Company name must be at least 2 characters.',
   'string.max': 'Company name must be at most 100 characters.',

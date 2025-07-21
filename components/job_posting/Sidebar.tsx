@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -9,9 +10,11 @@ import {
   BarChart3,
   User,
   LogOut,
+  ThumbsUp,
   X,
   Building2,
 } from "lucide-react";
+import ClientAuthService from "@/app/services/client_user";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -19,6 +22,15 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
+  const [email, setUserEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const userData = ClientAuthService.getUserData();
+    if (userData?.phone) {
+      setUserEmail(` ${userData.phone}`);
+    }
+  }, []);
+
   const pathname = usePathname();
 
   const navigationItems = [
@@ -56,6 +68,10 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       description: "Account settings",
     },
   ];
+
+  const handleLogout = async () => {
+    await ClientAuthService.logout();
+  };
 
   const isActive = (href: string) => pathname === href;
 
@@ -111,7 +127,9 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 </div>
               </div>
               <div className="flex-1">
-                <p className="font-black text-slate-900 text-lg">John Kamau</p>
+                <p className="font-black text-slate-900 text-lg">
+                  {email ?? "User"}
+                </p>
                 <p className="text-sm font-bold text-slate-600 mb-2">
                   Kamau Properties Ltd
                 </p>
@@ -222,9 +240,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
 
           {/* Footer */}
           <div className="p-6 border-t border-white/30 bg-white/20 backdrop-blur-xl flex-shrink-0">
-            <button className="w-full flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-700 hover:bg-white/60 transition-all duration-200 group hover:shadow-lg">
-              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors">
-                <LogOut className="w-5 h-5 text-slate-600 group-hover:text-red-600 transition-colors" />
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-700 hover:bg-white/60 transition-all duration-200 group hover:shadow-lg"
+            >
+              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors relative">
+                <LogOut className="w-5 h-5 text-slate-600 group-hover:hidden transition-colors" />
+                <ThumbsUp className="w-5 h-5 text-red-600 hidden group-hover:block transition-colors absolute" />
               </div>
               <div className="flex-1 text-left">
                 <span className="font-bold text-slate-900 block">Sign Out</span>

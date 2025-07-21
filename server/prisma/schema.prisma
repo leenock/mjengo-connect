@@ -14,10 +14,11 @@ model Client_User {
   email     String   @unique
   phone     String   @unique
   location  String
-  firstName String
-  lastName  String
+  firstName String?
+  lastName  String?
   company   String?
   password  String
+  isActive  Boolean   @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
