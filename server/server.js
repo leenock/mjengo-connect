@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 // Import routes
  import client_UserRoute from './routes/client_UserRoute.js'; 
  import client_authRoute from './routes/client_authRoute.js';
+ import jobRoute from "./routes/jobRoute.js"
+
 
 // Load environment variables
 dotenv.config();
@@ -27,6 +29,9 @@ app.use('/api/client', client_UserRoute);
 
 // Use the auth routes under /api/auth
 app.use('/api/client/auth', client_authRoute);
+
+// Job Routes
+app.use("/api/client", jobRoute)
 
 // Start the server
 const PORT = process.env.PORT || 5000;
