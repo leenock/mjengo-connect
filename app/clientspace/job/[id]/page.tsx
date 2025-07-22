@@ -19,7 +19,6 @@ import {
   Phone,
   Mail,
   Share2,
-  Flag,
   Shield,
   Award,
   Users,
@@ -407,15 +406,7 @@ Materials will be provided by the client, but the painter must bring all necessa
                   </div>
 
                   {/* Free Trial Notice */}
-                  <div className="bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 font-bold px-6 py-4 rounded-2xl mb-6 border border-amber-300 flex items-center gap-3">
-                    <div className="w-8 h-8 bg-amber-200 rounded-full flex items-center justify-center">
-                      <Star className="w-4 h-4 text-amber-600 fill-current" />
-                    </div>
-                    <div>
-                      <span className="font-black">Free trial access</span> –{" "}
-                      <span className="font-black">5 days left</span>
-                    </div>
-                  </div>
+                 
 
                   <div className="bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg space-y-4">
                     <div className="flex items-center">
@@ -460,13 +451,7 @@ Materials will be provided by the client, but the painter must bring all necessa
                   </div>
                 </div>
 
-                {/* Report Job */}
-                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
-                  <button className="flex items-center text-red-600 hover:text-red-700 transition-colors gap-2 font-bold">
-                    <Flag className="w-5 h-5" />
-                    <span>Report this job</span>
-                  </button>
-                </div>
+               
               </div>
             </div>
           </div>

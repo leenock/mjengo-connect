@@ -11,7 +11,7 @@ export function middleware(req: NextRequest) {
 
   const isProtectedVisitorPage = [
     "/clientspace/post-job",
-    "/settingsclientspace/newJob",
+    "/clientspace/newJob",
     "/clientspace/myJobs",
     "/clientspace/userProfile",
     "/clientspace/job",
@@ -34,7 +34,7 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     "/clientspace/post-job/:path*",
-    "/settingsclientspace/newJob/:path*",
+    "/clientspace/newJob/:path*",
     "/clientspace/myJobs/:path*",
     "/clientspace/userProfile/:path*",
     "/clientspace/job/:path*",
