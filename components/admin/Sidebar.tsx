@@ -1,6 +1,6 @@
 "use client"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation" // Import useRouter
 import {
   LayoutDashboard,
   Users,
@@ -25,6 +25,7 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   const pathname = usePathname()
+  const router = useRouter() // Initialize useRouter
 
   const navigationItems = [
     {
@@ -32,6 +33,12 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
       href: "/administrator/dashboard",
       icon: LayoutDashboard,
       description: "Overview & analytics",
+    },
+    {
+      name: "Manage Users",
+      href: "/administrator/settings",
+      icon: Users,
+      description: "System user management",
     },
     {
       name: "Manage Fundis",
@@ -95,6 +102,12 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   ]
 
   const isActive = (href: string) => pathname === href
+
+  const handleSignOut = () => {
+    // In a real application, you would clear authentication tokens/session here
+    console.log("Signing out...")
+    router.push("/administrator/auth/login") // Redirect to login page
+  }
 
   return (
     <>
@@ -242,7 +255,10 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
           {/* Footer */}
           <div className="p-6 border-t border-slate-700/50 bg-slate-800/20 backdrop-blur-xl flex-shrink-0">
-            <button className="w-full flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:bg-slate-700/60 transition-all duration-200 group hover:shadow-lg hover:text-white">
+            <button
+              onClick={handleSignOut} // Call handleSignOut
+              className="w-full flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:bg-slate-700/60 transition-all duration-200 group hover:shadow-lg hover:text-white"
+            >
               <div className="w-10 h-10 bg-slate-700 rounded-xl flex items-center justify-center group-hover:bg-red-600 transition-colors">
                 <LogOut className="w-5 h-5 text-slate-300 group-hover:text-white transition-colors" />
               </div>

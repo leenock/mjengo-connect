@@ -553,18 +553,27 @@ export default function PostJobPage() {
                     </div>
 
                     {/* Urgent Job Checkbox */}
-                    <div className="flex items-center space-x-3">
-                      <input
-                        type="checkbox"
-                        id="isUrgent"
-                        checked={jobDetails.isUrgent}
-                        onChange={(e) => updateJobDetails("isUrgent", e.target.checked)}
-                        className="w-5 h-5 text-orange-600 border-slate-300 rounded focus:ring-orange-500"
-                      />
-                      <label htmlFor="isUrgent" className="text-sm font-bold text-slate-700">
-                        Mark as Urgent Job
-                      </label>
-                    </div>
+                   
+                      <div className="flex items-center justify-between rounded-xl bg-white/60 p-4 shadow-sm border border-white/40 hover:bg-white/80 transition-colors duration-200">
+                        <label htmlFor="isUrgent" className="text-base font-medium text-slate-700 flex items-center">
+                          <span className="mr-3 px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm font-bold rounded-full">
+                            Urgent
+                          </span>
+                          Mark as Urgent Job
+                        </label>
+                        <div className="relative inline-block w-12 h-6">
+                          <input
+                            type="checkbox"
+                            id="isUrgent"
+                            name="isUrgent"
+                            checked={jobDetails.isUrgent}
+                              onChange={(e) => updateJobDetails("isUrgent", e.target.checked)}
+                            className="opacity-0 w-0 h-0 peer"
+                          />
+                          <span className="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-slate-300 rounded-full transition-all duration-300 peer-checked:bg-gradient-to-r peer-checked:from-orange-500 peer-checked:to-pink-500"></span>
+                          <span className="absolute h-4 w-4 bg-white rounded-full left-1 top-1 transition-all duration-300 peer-checked:translate-x-6"></span>
+                        </div>
+                      </div>
                   </div>
                 )}
 

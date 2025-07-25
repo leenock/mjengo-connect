@@ -1,7 +1,8 @@
-"use client";
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+"use client"
+
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
   Plus,
@@ -13,26 +14,25 @@ import {
   ThumbsUp,
   X,
   Building2,
-} from "lucide-react";
-import ClientAuthService from "@/app/services/client_user";
+  MessageSquare,
+  DollarSign,
+} from "lucide-react"
+import ClientAuthService from "@/app/services/client_user"
 
 interface SidebarProps {
-  isOpen: boolean;
-  setIsOpen: (isOpen: boolean) => void;
+  isOpen: boolean
+  setIsOpen: (isOpen: boolean) => void
 }
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
-  const [email, setUserEmail] = useState<string | null>(null);
-
+  const [email, setUserEmail] = useState<string | null>(null)
   useEffect(() => {
-    const userData = ClientAuthService.getUserData();
+    const userData = ClientAuthService.getUserData()
     if (userData?.phone) {
-      setUserEmail(` ${userData.phone}`);
+      setUserEmail(` ${userData.phone}`)
     }
-  }, []);
-
-  const pathname = usePathname();
-
+  }, [])
+  const pathname = usePathname()
   const navigationItems = [
     {
       name: "Dashboard",
@@ -54,12 +54,17 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       badge: "12",
       description: "Manage your listings",
     },
-
     {
-      name: "Analytics",
-      href: "/clientspace/post-job",
+      name: "Payments",
+      href: "/clientspace/payment",
       icon: BarChart3,
       description: "Performance insights",
+    },
+    {
+      name: "Add Funds", // New navigation item
+      href: "/clientspace/add-funds",
+      icon: DollarSign, // Using DollarSign icon for Add Funds
+      description: "Top up your account",
     },
     {
       name: "User Profile",
@@ -67,126 +72,109 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       icon: Settings,
       description: "Account settings",
     },
-  ];
-
+    {
+      name: "Message Admin", // New navigation item
+      href: "/clientspace/message-admin",
+      icon: MessageSquare,
+      description: "Send a message to support",
+    },
+  ]
   const handleLogout = async () => {
-    await ClientAuthService.logout();
-  };
-
-  const isActive = (href: string) => pathname === href;
-
+    await ClientAuthService.logout()
+  }
+  const isActive = (href: string) => pathname === href
   return (
     <>
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-all duration-300"
+          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm transition-all duration-300 lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
-
       {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full bg-gradient-to-b from-white via-slate-50 to-indigo-50 border-r border-white/20 shadow-2xl z-50 transition-all duration-500 ease-out lg:sticky lg:top-0 lg:h-screen ${
+        className={`fixed top-0 left-0 z-50 h-full w-80 border-r border-white/20 bg-gradient-to-b from-white via-slate-50 to-indigo-50 shadow-2xl transition-all duration-500 ease-out lg:sticky lg:top-0 lg:h-screen ${
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        } w-80`}
+        }`}
       >
-        <div className="flex flex-col h-full backdrop-blur-xl">
+        <div className="flex h-full flex-col backdrop-blur-xl">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-white/30 bg-white/40 backdrop-blur-xl">
+          <div className="flex items-center justify-between border-b border-white/30 bg-white/40 p-6 backdrop-blur-xl">
             <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 via-pink-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg">
-                <Building2 className="w-7 h-7 text-white" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 via-pink-500 to-red-500 shadow-lg">
+                <Building2 className="h-7 w-7 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-black text-slate-900 tracking-tight">
-                  MJENGO
-                </h2>
-                <p className="text-sm font-bold text-slate-600 uppercase tracking-wider">
-                  Client Portal
-                </p>
+                <h2 className="text-xl font-black tracking-tight text-slate-900">MJENGO</h2>
+                <p className="text-sm font-bold uppercase tracking-wider text-slate-600">Client Portal</p>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="lg:hidden w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white/60 transition-all duration-200 shadow-sm"
+              className="flex h-10 w-10 items-center justify-center rounded-xl shadow-sm transition-all duration-200 hover:bg-white/60 lg:hidden"
             >
-              <X className="w-6 h-6 text-slate-600" />
+              <X className="h-6 w-6 text-slate-600" />
             </button>
           </div>
-
           {/* User Profile Section */}
-          <div className="p-6 border-b border-white/30 bg-white/20 backdrop-blur-xl">
+          <div className="border-b border-white/30 bg-white/20 p-6 backdrop-blur-xl">
             <div className="flex items-center space-x-4">
               <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center shadow-xl">
-                  <User className="w-8 h-8 text-white" />
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-500 shadow-xl">
+                  <User className="h-8 w-8 text-white" />
                 </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
-                  <div className="w-2 h-2 bg-white rounded-full"></div>
+                <div className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-emerald-400 to-emerald-500 shadow-lg">
+                  <div className="h-2 w-2 rounded-full bg-white"></div>
                 </div>
               </div>
               <div className="flex-1">
-                <p className="font-black text-slate-900 text-lg">
-                  {email ?? "User"}
-                </p>
-                <p className="text-sm font-bold text-slate-600 mb-2">
-                  Kamau Properties Ltd
-                </p>
+                <p className="text-lg font-black text-slate-900">{email ?? "User"}</p>
+                <p className="mb-2 text-sm font-bold text-slate-600">Kamau Properties Ltd</p>
               </div>
             </div>
           </div>
-
           {/* Navigation */}
-          <div className="flex-1 overflow-y-auto py-6 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent">
-            <nav className="px-6 space-y-3">
+          <div className="flex-1 overflow-y-auto py-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-slate-300">
+            <nav className="space-y-3 px-6">
               {navigationItems.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
-
+                const Icon = item.icon
+                const active = isActive(item.href)
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className={`group relative flex items-center justify-between px-5 py-4 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] ${
+                    className={`group relative flex transform items-center justify-between rounded-2xl px-5 py-4 transition-all duration-300 hover:scale-[1.02] ${
                       active
                         ? "bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 text-white shadow-xl shadow-orange-500/25"
                         : item.highlight
-                        ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 shadow-lg shadow-emerald-500/20"
-                        : "text-slate-700 hover:bg-white/60 hover:shadow-lg backdrop-blur-sm"
+                          ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:from-emerald-600 hover:to-teal-600"
+                          : "text-slate-700 backdrop-blur-sm hover:bg-white/60 hover:shadow-lg"
                     }`}
                   >
                     <div className="flex items-center space-x-4">
                       <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                          active || item.highlight
-                            ? "bg-white/20"
-                            : "bg-slate-100 group-hover:bg-white/80"
+                        className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200 ${
+                          active || item.highlight ? "bg-white/20" : "bg-slate-100 group-hover:bg-white/80"
                         }`}
                       >
                         <Icon
-                          className={`w-5 h-5 ${
-                            active || item.highlight
-                              ? "text-white"
-                              : "text-slate-600 group-hover:text-slate-700"
+                          className={`h-5 w-5 ${
+                            active || item.highlight ? "text-white" : "text-slate-600 group-hover:text-slate-700"
                           }`}
                         />
                       </div>
                       <div className="flex-1">
                         <span
-                          className={`font-bold text-base block ${
-                            active || item.highlight
-                              ? "text-white"
-                              : "text-slate-900"
+                          className={`block text-base font-bold ${
+                            active || item.highlight ? "text-white" : "text-slate-900"
                           }`}
                         >
                           {item.name}
                         </span>
                         <span
                           className={`text-xs font-medium ${
-                            active || item.highlight
-                              ? "text-white/80"
-                              : "text-slate-500 group-hover:text-slate-600"
+                            active || item.highlight ? "text-white/80" : "text-slate-500 group-hover:text-slate-600"
                           }`}
                         >
                           {item.description}
@@ -195,7 +183,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     </div>
                     {item.badge && (
                       <div
-                        className={`px-3 py-1 text-xs font-black rounded-full ${
+                        className={`rounded-full px-3 py-1 text-xs font-black ${
                           active
                             ? "bg-white/30 text-white"
                             : "bg-gradient-to-r from-orange-100 to-pink-100 text-orange-600 shadow-sm"
@@ -204,60 +192,47 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         {item.badge}
                       </div>
                     )}
-
                     {/* Active indicator */}
                     {active && (
-                      <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white rounded-r-full shadow-lg"></div>
+                      <div className="absolute left-0 top-1/2 h-8 w-1 -translate-y-1/2 transform rounded-r-full bg-white shadow-lg"></div>
                     )}
                   </Link>
-                );
+                )
               })}
             </nav>
-
             {/* Quick Stats */}
-            <div className="mx-6 mt-8 p-4 bg-white/40 backdrop-blur-xl rounded-2xl border border-white/30 shadow-lg">
-              <h4 className="text-sm font-black text-slate-900 mb-3 uppercase tracking-wider">
-                Account Stats
-              </h4>
+            <div className="mx-6 mt-8 rounded-2xl border border-white/30 bg-white/40 p-4 shadow-lg backdrop-blur-xl">
+              <h4 className="mb-3 text-sm font-black uppercase tracking-wider text-slate-900">Account Stats</h4>
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-600">
-                    Active Jobs
-                  </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-600">Active Jobs</span>
                   <span className="text-sm font-black text-slate-900">12</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-600">
-                    Total Submitted Jobs
-                  </span>
-                  <span className="text-sm font-black text-emerald-600">
-                    528
-                  </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-600">Total Submitted Jobs</span>
+                  <span className="text-sm font-black text-emerald-600">528</span>
                 </div>
               </div>
             </div>
           </div>
-
           {/* Footer */}
-          <div className="p-6 border-t border-white/30 bg-white/20 backdrop-blur-xl flex-shrink-0">
+          <div className="flex-shrink-0 border-t border-white/30 bg-white/20 p-6 backdrop-blur-xl">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-700 hover:bg-white/60 transition-all duration-200 group hover:shadow-lg"
+              className="group flex w-full items-center space-x-4 rounded-2xl px-5 py-4 text-slate-700 transition-all duration-200 hover:shadow-lg hover:bg-white/60"
             >
-              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors relative">
-                <LogOut className="w-5 h-5 text-slate-600 group-hover:hidden transition-colors" />
-                <ThumbsUp className="w-5 h-5 text-red-600 hidden group-hover:block transition-colors absolute" />
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 transition-colors group-hover:bg-red-100">
+                <LogOut className="absolute h-5 w-5 text-slate-600 transition-colors group-hover:hidden" />
+                <ThumbsUp className="absolute hidden h-5 w-5 text-red-600 transition-colors group-hover:block" />
               </div>
               <div className="flex-1 text-left">
-                <span className="font-bold text-slate-900 block">Sign Out</span>
-                <span className="text-xs font-medium text-slate-500">
-                  End your session
-                </span>
+                <span className="block font-bold text-slate-900">Sign Out</span>
+                <span className="text-xs font-medium text-slate-500">End your session</span>
               </div>
             </button>
           </div>
         </div>
       </div>
     </>
-  );
+  )
 }
