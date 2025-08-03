@@ -1,6 +1,6 @@
 // This is the Prisma schema file for the job board application.
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
 }
 
@@ -10,34 +10,38 @@ datasource db {
 }
 
 model Client_User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  phone     String   @unique
-  location  String
-  firstName String?
-  lastName  String?
-  company   String?
-  password  String
-  isActive  Boolean   @default(true)
+  id            String        @id @default(cuid())
+  email         String        @unique
+  phone         String        @unique
+  location      String
+  firstName     String?
+  lastName      String?
+  company       String?
+  password      String
+  isActive      Boolean       @default(true)
+  accountStatus AccountStatus @default(ACTIVE) // ✅ more descriptive
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  jobs        Job[]
-  paymentLogs ClientPaymentLog[] // NEW: Relationship to payments
+  jobs           Job[]
+  paymentLogs    ClientPaymentLog[] // NEW: Relationship to payments
+  logs           SystemLog[] // ✅ reverse relation
+  supportTickets SupportTicket[]
 }
 
 model ClientPaymentLog {
-  id         String      @id @default(cuid())
+  id         String        @id @default(cuid())
   clientId   String
-  client     Client_User @relation(fields: [clientId], references: [id])
-  jobId      String      @unique
-  job        Job         @relation(fields: [jobId], references: [id])
+  client     Client_User   @relation(fields: [clientId], references: [id])
+  jobId      String        @unique
+  job        Job           @relation(fields: [jobId], references: [id])
   phone      String
   amount     Int
-  receipt    String      @unique
+  receipt    String        @unique
   status     PaymentStatus // "Success", "Failed", etc.
   rawPayload Json?
-  createdAt  DateTime    @default(now())
+  createdAt  DateTime      @default(now())
 
   @@index([clientId])
   @@index([jobId])
@@ -52,10 +56,10 @@ model Job {
   duration String
   salary   String
 
-  Jobdescription      String
-  SkillsAndrequirements     String
-  responsibilities String
-  benefits         String? // Optional field
+  Jobdescription        String
+  SkillsAndrequirements String
+  responsibilities      String
+  benefits              String? // Optional field
 
   companyName      String
   contactPerson    String
@@ -67,15 +71,15 @@ model Job {
   isUrgent   Boolean  @default(false)
   isPaid     Boolean  @default(false) //  Was job ad paid for?
 
-  clickCount Int      @default(0) //  Tracks how many times the job has been viewed or clicked
-  status JobStatus @default(PENDING)
-
+  clickCount Int       @default(0) //  Tracks how many times the job has been viewed or clicked
+  status     JobStatus @default(PENDING)
 
   // Relations
   postedById String
   postedBy   Client_User @relation(fields: [postedById], references: [id])
 
-  payment ClientPaymentLog? // Link to payment
+  payment    ClientPaymentLog? // Link to payment
+  jobReports JobReport[] // ✅ Reverse relation to reports
 }
 
 model Fundi_User {
@@ -92,6 +96,8 @@ model Fundi_User {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
+  accountStatus AccountStatus @default(ACTIVE) // ✅ Default is ACTIVE
+
   subscriptionPlan Plan      @default(FREE)
   planStartDate    DateTime? // for premium
   planEndDate      DateTime? // for premium
@@ -99,8 +105,18 @@ model Fundi_User {
   trialEndsAt        DateTime? // 7-day free trial tracker
   subscriptionStatus SubscriptionStatus @default(TRIAL)
 
-  subscriptions Subscription[]
-  paymentLogs   PaymentLog[]
+  subscriptions  Subscription[]
+  paymentLogs    PaymentLog[]
+  logs           SystemLog[] // ✅ reverse relation
+  jobReports     JobReport[] // ✅ Reverse relation to reports
+  supportTickets SupportTicket[]
+}
+
+// Enum for fundi account status
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
 }
 
 model Subscription {
@@ -145,6 +161,174 @@ model PaymentLog {
   @@index([createdAt])
 }
 
+// Administration model for managing clients, fundis and jobs
+model Admin {
+  id              String          @id @default(cuid())
+  fullName        String
+  email           String          @unique
+  phone           String
+  role            Role
+  status          Status          @default(ACTIVE)
+  password        String
+  lastLogin       DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  logs            SystemLog[] // ✅ reverse relation
+  assignedTickets SupportTicket[] @relation("AssignedSupportTickets")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+  SUPPORT
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+// system logs from actions performed by admins, fundis, or clients
+model SystemLog {
+  id        String      @id @default(cuid())
+  level     LogLevel
+  category  LogCategory
+  message   String
+  details   String?
+  ipAddress String?
+  source    String? // E.g. "Auth Service", "Job Service"
+  timestamp DateTime    @default(now())
+
+  // Optional user references
+  adminId  String?
+  clientId String?
+  fundiId  String?
+
+  admin  Admin?       @relation(fields: [adminId], references: [id])
+  client Client_User? @relation(fields: [clientId], references: [id])
+  fundi  Fundi_User?  @relation(fields: [fundiId], references: [id])
+
+  @@index([adminId])
+  @@index([clientId])
+  @@index([fundiId])
+}
+
+enum LogLevel {
+  ERROR
+  WARNING
+  INFO
+  SUCCESS
+}
+
+enum LogCategory {
+  AUTHENTICATION
+  USER_ACTIVITY
+  JOB_MANAGEMENT
+  PAYMENT
+  DATABASE
+  SYSTEM
+}
+
+// job reporting model by the fundis 
+model JobReport {
+  id          String        @id @default(cuid())
+  title       String
+  description String // Reason for reporting the job
+  priority    PriorityLevel
+  status      ReportStatus  @default(PENDING)
+
+  reporterId String
+  reporter   Fundi_User @relation(fields: [reporterId], references: [id])
+
+  jobId String
+  job   Job    @relation(fields: [jobId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([reporterId])
+  @@index([jobId])
+}
+
+enum PriorityLevel {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ReportStatus {
+  PENDING
+  UNDER_REVIEW
+  RESOLVED
+  REJECTED
+}
+
+// support ticket 
+model SupportTicket {
+  id       String          @id @default(cuid())
+  subject  String
+  message  String
+  category SupportCategory
+  priority PriorityLevel
+  status   TicketStatus    @default(OPEN)
+
+  // Who created the ticket (optional one of either)
+  fundiId String?
+  fundi   Fundi_User? @relation(fields: [fundiId], references: [id])
+
+  clientId String?
+  client   Client_User? @relation(fields: [clientId], references: [id])
+
+  // Assigned admin (optional)
+  assignedToId String?
+  assignedTo   Admin?  @relation("AssignedSupportTickets", fields: [assignedToId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  replies SupportReply[] // One-to-many replies
+
+  @@index([fundiId])
+  @@index([clientId])
+  @@index([assignedToId])
+}
+
+model SupportReply {
+  id         String   @id @default(cuid())
+  ticketId   String
+  message    String
+  authorType UserType
+  authorName String // E.g. "Sarah Manager", "John Kamau"
+  createdAt  DateTime @default(now())
+
+  ticket SupportTicket @relation(fields: [ticketId], references: [id])
+
+  @@index([ticketId])
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum SupportCategory {
+  PAYMENT_ISSUES
+  ACCOUNT_VERIFICATION
+  HARASSMENT_REPORT
+  GENERAL_INQUIRY
+  OTHER
+}
+
+enum UserType {
+  ADMIN
+  CLIENT
+  FUNDI
+}
+
 enum Plan {
   FREE
   PREMIUM
@@ -172,9 +356,9 @@ enum PaymentStatus {
 }
 
 enum JobStatus {
-  PENDING       // Waiting for moderation or approval
-  ACTIVE        // Live and visible to users
-  CLOSED        // Job is no longer accepting applications
-  REJECTED      // Rejected during moderation
-  EXPIRED       // Automatically marked expired after a period
+  PENDING // Waiting for moderation or approval
+  ACTIVE // Live and visible to users
+  CLOSED // Job is no longer accepting applications
+  REJECTED // Rejected during moderation
+  EXPIRED // Automatically marked expired after a period
 }
