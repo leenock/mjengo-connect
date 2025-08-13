@@ -7,6 +7,8 @@ import client_UserRoute from "./routes/client_UserRoute.js"
 import client_authRoute from "./routes/client_authRoute.js"
 import jobRoute from "./routes/jobRoute.js"
 import ticketUsersRoute from "./routes/ticketUsersRoute.js"
+import fundi_authRoute from "./routes/fundi_authRoute.js"
+
 
 // Load environment variables
 dotenv.config()
@@ -34,6 +36,9 @@ app.use("/api/client", jobRoute)
 
 // Support Ticket Routes
 app.use("/api/support", ticketUsersRoute)
+
+// Fundi User Routes // Added fundi route usage
+app.use("/api/fundi", fundi_authRoute)
 
 // Start the server
 const PORT = process.env.PORT || 5000

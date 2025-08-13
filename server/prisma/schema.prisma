@@ -84,14 +84,14 @@ model Job {
 
 model Fundi_User {
   id               String          @id @default(cuid())
-  email            String          @unique
-  firstName        String
-  lastName         String
+  email            String?          @unique
+  firstName        String?
+  lastName         String?
   phone            String          @unique
   location         String
   primary_skill    String
   experience_level ExperienceLevel
-  biography        String
+  biography        String?
   password         String
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt

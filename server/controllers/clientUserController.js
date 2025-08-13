@@ -18,7 +18,15 @@ import {
 export const registerClientUser = async (req, res) => {
   try {
     const newUser = await registerClient(req.body);
-    res.status(201).json(newUser);
+    
+    // Remove password from response using delete operator
+    const userSafe = { ...newUser }
+    delete userSafe.password
+    
+    res.status(201).json({
+      message: "Client user registered successfully",
+      user: userSafe
+    });
   } catch (error) {
     console.error("Register Error:", error);
     res.status(400).json({

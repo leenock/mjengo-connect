@@ -132,7 +132,7 @@ export default function UserProfileSettings() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                    <label className="block text-sm  text-slate-700 mb-3 uppercase tracking-wide">
                       First Name
                     </label>
                     <div className="relative group">
@@ -149,7 +149,7 @@ export default function UserProfileSettings() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                    <label className="block text-sm  text-slate-700 mb-3 uppercase tracking-wide">
                       Last Name
                     </label>
                     <div className="relative group">
@@ -167,7 +167,7 @@ export default function UserProfileSettings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                  <label className="block text-sm text-slate-700 mb-3 uppercase tracking-wide">
                     Email Address
                   </label>
                   <div className="relative group">
@@ -185,7 +185,7 @@ export default function UserProfileSettings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                  <label className="block text-sm text-slate-700 mb-3 uppercase tracking-wide">
                     Phone Number
                   </label>
                   <div className="relative group">
@@ -203,7 +203,7 @@ export default function UserProfileSettings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                  <label className="block text-sm  text-slate-700 mb-3 uppercase tracking-wide">
                     Location
                   </label>
                   <div className="relative group">
@@ -233,8 +233,8 @@ export default function UserProfileSettings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-                    Skills
+                  <label className="block text-sm  text-slate-700 mb-3 uppercase tracking-wide">
+                    Primary Skills
                   </label>
                   <div className="relative group">
                     <Briefcase className="absolute left-4 top-4 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
@@ -251,25 +251,34 @@ export default function UserProfileSettings() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
-                    Experience
+                  <label className="block text-sm  text-slate-700 mb-3 uppercase tracking-wide">
+                    Experience Level
                   </label>
                   <div className="relative group">
                     <Award className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-                    <input
-                      type="text"
+                    <select
+                      required
                       value={profileData.experience}
                       onChange={(e) =>
                         handleInputChange("experience", e.target.value)
                       }
-                      className="w-full pl-12 pr-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300"
-                      placeholder="Years of experience"
-                    />
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                    >
+                      <option value="">Select experience</option>
+                      <option value="beginner">Beginner (0-2 years)</option>
+                      <option value="intermediate">
+                        Intermediate (3-5 years)
+                      </option>
+                      <option value="experienced">
+                        Experienced (6-10 years)
+                      </option>
+                      <option value="expert">Expert (10+ years)</option>
+                    </select>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                  <label className="block text-sm  text-slate-700 mb-3 uppercase tracking-wide">
                     Bio
                   </label>
                   <textarea
@@ -294,7 +303,7 @@ export default function UserProfileSettings() {
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                      <label className="block text-sm  text-slate-700 mb-3 uppercase tracking-wide">
                         New Password
                       </label>
                       <div className="relative group">
