@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   Briefcase,
@@ -7,9 +8,12 @@ import {
   LogOut,
   X,
   Building2,
+  ThumbsUp,
   Calendar,
   Shield,
 } from "lucide-react";
+import FundiAuthService from "@/app/services/fundi_user"
+
 
 interface SidebarProps {
   isOpen: boolean;
@@ -17,6 +21,13 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
+   const [email, setUserEmail] = useState<string | null>(null);
+  useEffect(() => {
+    const userData = FundiAuthService.getUserData();
+    if (userData?.phone) {
+      setUserEmail(` ${userData.phone}`);
+    }
+  }, []);
   const pathname = usePathname();
 
   const navigationItems = [
@@ -47,7 +58,9 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       description: "Account settings",
     },
   ];
-
+ const handleLogout = async () => {
+    await FundiAuthService.logout();
+  };
   const isActive = (href: string) => pathname === href;
 
   return (
@@ -102,7 +115,9 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 </div>
               </div>
               <div className="flex-1">
-                <p className="font-black text-slate-900 text-lg">John Kamau</p>
+                 <p className="text-lg font-black text-slate-900">
+                  {email ?? "User"}
+                </p>
                 <p className="text-sm font-bold text-slate-600 mb-2">
                   Professional Fundi
                 </p>
@@ -218,13 +233,17 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-white/30 bg-white/20 backdrop-blur-xl flex-shrink-0">
-            <button className="w-full flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-700 hover:bg-white/60 transition-all duration-200 group hover:shadow-lg">
-              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-red-100 transition-colors">
-                <LogOut className="w-5 h-5 text-slate-600 group-hover:text-red-600 transition-colors" />
+        <div className="flex-shrink-0 border-t border-white/30 bg-white/20 p-6 backdrop-blur-xl">
+            <button
+              onClick={handleLogout}
+              className="group flex w-full items-center space-x-4 rounded-2xl px-5 py-4 text-slate-700 transition-all duration-200 hover:shadow-lg hover:bg-white/60"
+            >
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 transition-colors group-hover:bg-red-100">
+                <LogOut className="absolute h-5 w-5 text-slate-600 transition-colors group-hover:hidden" />
+                <ThumbsUp className="absolute hidden h-5 w-5 text-red-600 transition-colors group-hover:block" />
               </div>
               <div className="flex-1 text-left">
-                <span className="font-bold text-slate-900 block">Sign Out</span>
+                <span className="block font-bold text-slate-900">Sign Out</span>
                 <span className="text-xs font-medium text-slate-500">
                   End your session
                 </span>
