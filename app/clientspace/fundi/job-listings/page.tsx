@@ -1,5 +1,5 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Sidebar from "@/components/fundi/Sidebar"
 import {
@@ -17,8 +17,22 @@ import {
   Filter,
   ArrowRight,
 } from "lucide-react"
+import FundiAuthService from "@/app/services/fundi_user";
+
 
 export default function JobListingsPage() {
+
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [lastName, setLastName] = useState<string | null>(null);
+
+    useEffect(() => {
+    const userData = FundiAuthService.getUserData();
+    if (userData) {
+      if (userData.firstName) setFirstName(userData.firstName);
+      if (userData.lastName) setLastName(userData.lastName);
+    }
+  }, []);
+
   const [isOpen, setIsOpen] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState("All")
   const [searchTerm, setSearchTerm] = useState("")
@@ -155,8 +169,10 @@ export default function JobListingsPage() {
                 <Menu className="w-6 h-6" />
               </button>
               <div>
-                <h1 className="text-2xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
-                  Welcome Kamau
+                <h1 className="text-2xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">Welcome Back,
+                  { } {firstName || lastName
+                    ? `${firstName ?? ""} ${lastName ?? ""}`.trim()
+                    : "User"}
                 </h1>
                 <p className="text-slate-600 mt-2 text-base sm:text-lg font-extrabold">
                   Discover amazing opportunities and connect

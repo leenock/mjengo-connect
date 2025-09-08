@@ -112,6 +112,19 @@ model Fundi_User {
   supportTickets SupportTicket[]
 }
 
+//saved jobs model for fundi users
+/* model SavedJob {
+  id        String     @id @default(cuid())
+  fundiId   String
+  fundi     Fundi_User @relation(fields: [fundiId], references: [id])
+  jobId     String
+  job       Job        @relation(fields: [jobId], references: [id])
+  savedAt   DateTime   @default(now())  
+  @@unique([fundiId, jobId]) // Prevent duplicate saves
+  @@index([fundiId])
+  @@index([jobId])
+ */
+
 // Enum for fundi account status
 enum AccountStatus {
   ACTIVE

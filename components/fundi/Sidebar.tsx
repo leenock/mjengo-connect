@@ -12,8 +12,7 @@ import {
   Calendar,
   Shield,
 } from "lucide-react";
-import FundiAuthService from "@/app/services/fundi_user"
-
+import FundiAuthService from "@/app/services/fundi_user";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -21,11 +20,16 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
-   const [email, setUserEmail] = useState<string | null>(null);
+  const [phone, setUserPhone] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [lastName, setLastName] = useState<string | null>(null);
+
   useEffect(() => {
     const userData = FundiAuthService.getUserData();
-    if (userData?.phone) {
-      setUserEmail(` ${userData.phone}`);
+    if (userData) {
+      if (userData.phone) setUserPhone(userData.phone);
+      if (userData.firstName) setFirstName(userData.firstName);
+      if (userData.lastName) setLastName(userData.lastName);
     }
   }, []);
   const pathname = usePathname();
@@ -58,7 +62,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       description: "Account settings",
     },
   ];
- const handleLogout = async () => {
+  const handleLogout = async () => {
     await FundiAuthService.logout();
   };
   const isActive = (href: string) => pathname === href;
@@ -115,11 +119,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                 </div>
               </div>
               <div className="flex-1">
-                 <p className="text-lg font-black text-slate-900">
-                  {email ?? "User"}
+                <p className="text-lg font-black text-slate-900">
+                  {phone ?? "User"}
                 </p>
                 <p className="text-sm font-bold text-slate-600 mb-2">
-                  Professional Fundi
+                  {firstName || lastName
+                    ? `${firstName ?? ""} ${lastName ?? ""}`.trim()
+                    : "User"}
                 </p>
               </div>
             </div>
@@ -233,7 +239,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
           </div>
 
           {/* Footer */}
-        <div className="flex-shrink-0 border-t border-white/30 bg-white/20 p-6 backdrop-blur-xl">
+          <div className="flex-shrink-0 border-t border-white/30 bg-white/20 p-6 backdrop-blur-xl">
             <button
               onClick={handleLogout}
               className="group flex w-full items-center space-x-4 rounded-2xl px-5 py-4 text-slate-700 transition-all duration-200 hover:shadow-lg hover:bg-white/60"
