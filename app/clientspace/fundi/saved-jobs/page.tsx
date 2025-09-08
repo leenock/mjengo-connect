@@ -12,6 +12,7 @@ import {
   Heart,
   ArrowRight,
 } from "lucide-react";
+import FundiAuthService from "@/app/services/fundi_user";
 
 interface Job {
   id: string;
@@ -35,11 +36,22 @@ interface Job {
 
 export default function JobListingsPage() {
   const [isOpen, setIsOpen] = useState(false);
+  const [firstName, setFirstName] = useState<string | null>(null);
+  const [lastName, setLastName] = useState<string | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 3;
   const router = useRouter();
+
+  // Fetch user data
+  useEffect(() => {
+    const userData = FundiAuthService.getUserData();
+    if (userData) {
+      if (userData.firstName) setFirstName(userData.firstName);
+      if (userData.lastName) setLastName(userData.lastName);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -62,8 +74,8 @@ export default function JobListingsPage() {
   };
 
   const viewJobDetails = (jobId: string) => {
-  router.push(`/clientspace/fundi/job-listings/${jobId}`);
-};
+    router.push(`/clientspace/fundi/job-listings/${jobId}`);
+  };
 
   // Pagination logic
   const indexOfLastJob = currentPage * jobsPerPage;
@@ -89,7 +101,10 @@ export default function JobListingsPage() {
               </button>
               <div>
                 <h1 className="text-2xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
-                  Welcome Kamau
+                  Welcome Back,{" "}
+                  {firstName || lastName
+                    ? `${firstName ?? ""} ${lastName ?? ""}`.trim()
+                    : "User"}
                 </h1>
                 <p className="text-slate-600 mt-2 text-base sm:text-lg font-extrabold">
                   Discover amazing opportunities and connect
