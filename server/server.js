@@ -2,13 +2,17 @@
 import express from "express"
 import cors from "cors"
 import dotenv from "dotenv"
+
 // Import routes
 import client_UserRoute from "./routes/client_UserRoute.js"
 import client_authRoute from "./routes/client_authRoute.js"
 import jobRoute from "./routes/jobRoute.js"
 import ticketUsersRoute from "./routes/ticketUsersRoute.js"
 import fundi_authRoute from "./routes/fundi_authRoute.js"
-
+import savedJobRoutes from "./routes/savedJobRoute.js" // New saved job routes
+import adminRoute from "./routes/adminRoute.js"
+import adminAuthRoute from "./routes/adminAuthRoute.js"
+import adminManagementRoute from "./routes/adminManagementRoute.js" // Added admin management route import
 
 // Load environment variables
 dotenv.config()
@@ -39,6 +43,18 @@ app.use("/api/support", ticketUsersRoute)
 
 // Fundi User Routes // Added fundi route usage
 app.use("/api/fundi", fundi_authRoute)
+
+// saved Job Routes
+app.use("/api/fundi/saved-jobs", savedJobRoutes)
+
+// Admin Management Routes
+app.use("/api/admin", adminRoute)
+
+// Admin Authentication Routes
+app.use("/api/admin/auth", adminAuthRoute)
+
+// Admin Management & Dashboard Routes
+app.use("/api/admin/management", adminManagementRoute) // Added admin management routes for dashboard and system operations
 
 // Start the server
 const PORT = process.env.PORT || 5000

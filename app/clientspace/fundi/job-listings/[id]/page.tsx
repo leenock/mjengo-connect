@@ -25,6 +25,7 @@ import {
   Award,
   Users,
 } from "lucide-react";
+import FundiAuthService from "@/app/services/fundi_user";
 
 interface Job {
   id: string;
@@ -47,6 +48,7 @@ interface Job {
 export default function JobDetailsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false); // New state for saving/unsaving
   const [jobDetails, setJobDetails] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,10 +79,89 @@ export default function JobDetailsPage() {
       }
     }
 
-    if (jobId) fetchJob();
+    async function checkSavedStatus() {
+        const token = FundiAuthService.getToken();
+        if (!token) {
+            // User is not logged in, so the job can't be saved
+            setIsSaved(false);
+            return;
+        }
+
+        try {
+            const res = await fetch(`http://localhost:5000/api/fundi/saved-jobs/check/${jobId}`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+            });
+            const data = await res.json();
+            if (res.ok) {
+                setIsSaved(data.data.isSaved);
+            } else {
+                console.error("Failed to check saved status:", data.message);
+                setIsSaved(false);
+            }
+        } catch (err) {
+            console.error("Error checking saved status:", err);
+            setIsSaved(false);
+        }
+    }
+
+    if (jobId) {
+      fetchJob();
+      checkSavedStatus();
+    }
   }, [jobId]);
 
-  const handleSave = () => setIsSaved(!isSaved);
+  const handleSave = async () => {
+    const token = FundiAuthService.getToken();
+    if (!token) {
+      alert("You must be logged in to save jobs.");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      if (isSaved) {
+        // Remove saved job
+        const res = await fetch(`http://localhost:5000/api/fundi/saved-jobs/remove/${jobId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (res.ok) {
+          setIsSaved(false);
+        } else {
+          const errorData = await res.json();
+          alert(`Failed to unsave job: ${errorData.message}`);
+        }
+      } else {
+        // Save job
+        const res = await fetch("http://localhost:5000/api/fundi/saved-jobs/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({ jobId }),
+        });
+        if (res.ok) {
+          setIsSaved(true);
+        } else {
+          const errorData = await res.json();
+          alert(`Failed to save job: ${errorData.message}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error saving/unsaving job:", error);
+      alert("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleBack = () => router.back();
 
   const handleShare = () => {
@@ -168,14 +249,15 @@ export default function JobDetailsPage() {
             <div className="hidden lg:flex items-center gap-4">
               <button
                 onClick={handleSave}
+                disabled={isSaving}
                 className={`px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center gap-2 shadow-md ${
                   isSaved
                     ? "bg-gradient-to-r from-red-500 to-pink-500 text-white"
                     : "bg-white/60 text-slate-700 border border-slate-200 hover:border-slate-300 hover:bg-white/80"
-                }`}
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <Heart className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
-                {isSaved ? "Saved" : "Save Job"}
+                {isSaving ? "Updating..." : (isSaved ? "Saved" : "Save Job")}
               </button>
               <button
                 onClick={handleShare}
@@ -285,16 +367,17 @@ export default function JobDetailsPage() {
                 <div className="flex flex-col sm:flex-row lg:flex-col gap-4 lg:w-56">
                   <button
                     onClick={handleSave}
+                    disabled={isSaving}
                     className={`px-6 py-4 rounded-2xl font-bold text-base transition-all duration-300 flex items-center justify-center gap-2 shadow-lg ${
                       isSaved
                         ? "bg-gradient-to-r from-red-500 to-pink-500 text-white"
                         : "bg-white/60 text-slate-700 border-2 border-slate-200 hover:border-slate-300 hover:bg-white/80"
-                    }`}
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     <Heart
                       className={`w-5 h-5 ${isSaved ? "fill-current" : ""}`}
                     />
-                    {isSaved ? "Saved" : "Save Job"}
+                    {isSaving ? "Updating..." : (isSaved ? "Saved" : "Save Job")}
                   </button>
                   <button
                     onClick={handleShare}

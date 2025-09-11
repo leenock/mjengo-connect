@@ -1,6 +1,8 @@
 "use client"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation" // Import useRouter
+import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
+import AdminAuthService from "@/app/services/admin_auth"
 import {
   LayoutDashboard,
   Users,
@@ -25,7 +27,20 @@ interface AdminSidebarProps {
 
 export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   const pathname = usePathname()
-  const router = useRouter() // Initialize useRouter
+  const [loggingOut, setLoggingOut] = useState(false)
+  // Use null as the initial state to represent no user data
+  const [userFullName, setUserFullName] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string | null>(null)
+
+  useEffect(() => {
+    const userData = AdminAuthService.getUserData()
+    if (userData) {
+      setUserFullName(userData.fullName)
+      setUserEmail(userData.email)
+      setUserRole(userData.role)
+    }
+  }, [])
 
   const navigationItems = [
     {
@@ -103,11 +118,33 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
   const isActive = (href: string) => pathname === href
 
-  const handleSignOut = () => {
-    // In a real application, you would clear authentication tokens/session here
-    console.log("Signing out...")
-    router.push("/administrator/auth/login") // Redirect to login page
+  const handleSignOut = async () => {
+    setLoggingOut(true)
+
+    setTimeout(async () => {
+      await AdminAuthService.logout()
+    }, 4000)
   }
+
+  // Determine role classes
+  const roleColorClasses = (role: string | null) => {
+    if (!role) return "bg-slate-500/20 text-slate-300"
+    switch (role) {
+      case "SUPER_ADMIN":
+        return "bg-purple-500/20 text-purple-300"
+      case "ADMIN":
+        return "bg-blue-500/20 text-blue-300"
+      case "MODERATOR":
+        return "bg-orange-500/20 text-orange-300"
+      case "SUPPORT":
+        return "bg-green-500/20 text-green-300"
+      default:
+        return "bg-slate-500/20 text-slate-300"
+    }
+  }
+
+  // Format the role for display or show a fallback
+  const formattedRole = userRole ? userRole.replace("_", " ") : "Loading..."
 
   return (
     <>
@@ -157,11 +194,11 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
                 </div>
               </div>
               <div className="flex-1">
-                <p className="font-black text-white text-lg">Admin User</p>
-                <p className="text-sm font-bold text-slate-300 mb-2">System Administrator</p>
+                <p className="font-black text-white text-lg">{userFullName ?? "Admin User"}</p>
+                <p className="text-sm font-bold text-slate-300 mb-2">{userEmail ?? "Loading..."}</p>
                 <div className="flex items-center gap-2">
-                  <div className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs font-bold rounded-full">
-                    SUPER ADMIN
+                  <div className={`px-2 py-1 text-xs font-bold rounded-full ${roleColorClasses(userRole)}`}>
+                    {formattedRole}
                   </div>
                 </div>
               </div>
@@ -223,7 +260,6 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
                         {item.badge}
                       </div>
                     )}
-
                     {/* Active indicator */}
                     {active && (
                       <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-1 h-8 bg-white rounded-r-full shadow-lg"></div>
@@ -256,15 +292,47 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
           {/* Footer */}
           <div className="p-6 border-t border-slate-700/50 bg-slate-800/20 backdrop-blur-xl flex-shrink-0">
             <button
-              onClick={handleSignOut} // Call handleSignOut
-              className="w-full flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:bg-slate-700/60 transition-all duration-200 group hover:shadow-lg hover:text-white"
+              onClick={handleSignOut}
+              disabled={loggingOut}
+              className={`w-full flex items-center space-x-4 px-5 py-4 rounded-2xl transition-all duration-200 group ${
+                loggingOut
+                  ? "bg-slate-700/60 cursor-not-allowed"
+                  : "text-slate-300 hover:bg-slate-700/60 hover:shadow-lg hover:text-white"
+              }`}
             >
-              <div className="w-10 h-10 bg-slate-700 rounded-xl flex items-center justify-center group-hover:bg-red-600 transition-colors">
-                <LogOut className="w-5 h-5 text-slate-300 group-hover:text-white transition-colors" />
+              <div className="w-10 h-10 bg-slate-700 rounded-xl flex items-center justify-center transition-colors group-hover:bg-red-600">
+                {loggingOut ? (
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <LogOut className="w-5 h-5 text-slate-300 group-hover:text-white transition-colors" />
+                )}
               </div>
               <div className="flex-1 text-left">
-                <span className="font-bold text-slate-200 group-hover:text-white block">Sign Out</span>
-                <span className="text-xs font-medium text-slate-400 group-hover:text-slate-300">End admin session</span>
+                <span className="font-bold text-slate-200 group-hover:text-white block">
+                  {loggingOut ? "Signing Out..." : "Sign Out"}
+                </span>
+                <span className="text-xs font-medium text-slate-400 group-hover:text-slate-300">
+                  End admin session
+                </span>
               </div>
             </button>
           </div>

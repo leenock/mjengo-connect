@@ -1,7 +1,7 @@
 import Joi from "joi"
 
 // Validation schema for saving a job
-const saveJobSchema = Joi.object({
+export const saveJobSchema = Joi.object({
   jobId: Joi.string().required().messages({
     "string.empty": "Job ID is required",
     "any.required": "Job ID is required",
@@ -9,7 +9,7 @@ const saveJobSchema = Joi.object({
 })
 
 // Validation schema for getting saved jobs with pagination
-const getSavedJobsSchema = Joi.object({
+export const paginationSchema = Joi.object({
   page: Joi.number().integer().min(1).default(1).messages({
     "number.base": "Page must be a number",
     "number.integer": "Page must be an integer",
@@ -23,16 +23,10 @@ const getSavedJobsSchema = Joi.object({
   }),
 })
 
-// Validation schema for removing a saved job
-const removeSavedJobSchema = Joi.object({
+// Validation schema for a job ID parameter
+export const jobIdParamSchema = Joi.object({
   jobId: Joi.string().required().messages({
     "string.empty": "Job ID is required",
     "any.required": "Job ID is required",
   }),
 })
-
-module.exports = {
-  saveJobSchema,
-  getSavedJobsSchema,
-  removeSavedJobSchema,
-}

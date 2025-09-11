@@ -80,6 +80,7 @@ model Job {
 
   payment    ClientPaymentLog? // Link to payment
   jobReports JobReport[] // ✅ Reverse relation to reports
+  savedJobs  SavedJob[] // ✅ Reverse relation to saved jobs
 }
 
 model Fundi_User {
@@ -110,20 +111,23 @@ model Fundi_User {
   logs           SystemLog[] // ✅ reverse relation
   jobReports     JobReport[] // ✅ Reverse relation to reports
   supportTickets SupportTicket[]
+  savedJobs      SavedJob[] // ✅ Reverse relation to saved jobs
 }
 
-//saved jobs model for fundi users
-/* model SavedJob {
+// Saved jobs model for fundi users
+model SavedJob {
   id        String     @id @default(cuid())
   fundiId   String
-  fundi     Fundi_User @relation(fields: [fundiId], references: [id])
+  fundi     Fundi_User @relation(fields: [fundiId], references: [id], onDelete: Cascade)
   jobId     String
-  job       Job        @relation(fields: [jobId], references: [id])
-  savedAt   DateTime   @default(now())  
+  job       Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  savedAt   DateTime   @default(now())
+  
   @@unique([fundiId, jobId]) // Prevent duplicate saves
   @@index([fundiId])
   @@index([jobId])
- */
+  @@index([savedAt])
+}
 
 // Enum for fundi account status
 enum AccountStatus {
