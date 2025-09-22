@@ -13,6 +13,7 @@ import savedJobRoutes from "./routes/savedJobRoute.js" // New saved job routes
 import adminRoute from "./routes/adminRoute.js"
 import adminAuthRoute from "./routes/adminAuthRoute.js"
 import adminManagementRoute from "./routes/adminManagementRoute.js" // Added admin management route import
+import adminSupportTicketsRoute from "./routes/adminSupportTickets.js" // Added admin support ticket routes import
 
 // Load environment variables
 dotenv.config()
@@ -55,6 +56,9 @@ app.use("/api/admin/auth", adminAuthRoute)
 
 // Admin Management & Dashboard Routes
 app.use("/api/admin/management", adminManagementRoute) // Added admin management routes for dashboard and system operations
+
+// Admin Support Ticket Routes
+app.use("/api/admin/support", adminSupportTicketsRoute) // Added admin support ticket routes
 
 // Start the server
 const PORT = process.env.PORT || 5000

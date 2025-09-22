@@ -1,4 +1,4 @@
-import Joi from "joi"
+import Joi from "joi";
 
 // Admin creation validation schema
 export const createAdminSchema = Joi.object({
@@ -14,17 +14,19 @@ export const createAdminSchema = Joi.object({
   }),
 
   phone: Joi.string()
-    .pattern(/^\+?[1-9]\d{1,14}$/)
-    .required()
+    .pattern(/^0[0-9]{9}$/)
     .messages({
       "string.pattern.base": "Please provide a valid phone number",
       "any.required": "Phone number is required",
     }),
 
-  role: Joi.string().valid("SUPER_ADMIN", "ADMIN", "MODERATOR", "SUPPORT").required().messages({
-    "any.only": "Role must be one of: SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT",
-    "any.required": "Role is required",
-  }),
+  role: Joi.string()
+    .valid("SUPER_ADMIN", "ADMIN", "MODERATOR", "SUPPORT")
+    .required()
+    .messages({
+      "any.only": "Role must be one of: SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT",
+      "any.required": "Role is required",
+    }),
 
   password: Joi.string()
     .min(8)
@@ -40,7 +42,7 @@ export const createAdminSchema = Joi.object({
   status: Joi.string().valid("ACTIVE", "INACTIVE").default("ACTIVE").messages({
     "any.only": "Status must be either ACTIVE or INACTIVE",
   }),
-})
+});
 
 // Admin update validation schema
 export const updateAdminSchema = Joi.object({
@@ -54,14 +56,16 @@ export const updateAdminSchema = Joi.object({
   }),
 
   phone: Joi.string()
-    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .pattern(/^0[0-9]{9}$/)
     .messages({
       "string.pattern.base": "Please provide a valid phone number",
     }),
 
-  role: Joi.string().valid("SUPER_ADMIN", "ADMIN", "MODERATOR", "SUPPORT").messages({
-    "any.only": "Role must be one of: SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT",
-  }),
+  role: Joi.string()
+    .valid("SUPER_ADMIN", "ADMIN", "MODERATOR", "SUPPORT")
+    .messages({
+      "any.only": "Role must be one of: SUPER_ADMIN, ADMIN, MODERATOR, SUPPORT",
+    }),
 
   password: Joi.string()
     .min(8)
@@ -79,7 +83,7 @@ export const updateAdminSchema = Joi.object({
   .min(1)
   .messages({
     "object.min": "At least one field must be provided for update",
-  })
+  });
 
 // Admin login validation schema
 export const adminLoginSchema = Joi.object({
@@ -90,4 +94,4 @@ export const adminLoginSchema = Joi.object({
   password: Joi.string().required().messages({
     "any.required": "Password is required",
   }),
-})
+});

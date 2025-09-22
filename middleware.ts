@@ -4,6 +4,7 @@ import type { NextRequest } from "next/server"
 export function middleware(req: NextRequest) {
   const visitorToken = req.cookies.get("visitorToken")?.value
   const fundiToken = req.cookies.get("fundiToken")?.value
+  const adminToken = req.cookies.get("adminToken")?.value // Added: Admin token
 
   const path = req.nextUrl.pathname
 
@@ -12,6 +13,10 @@ export function middleware(req: NextRequest) {
 
   const isFundiDashboard = path.startsWith("/clientspace/fundi/job-listings")
   const isFundiLoginPage = path === "/auth/job-listing"
+
+  // Added: Admin login and dashboard URLs
+  const isAdminDashboard = path.startsWith("/administrator/dashboard")
+  const isAdminLoginPage = path === "/administrator/auth/login"
 
   const isProtectedClientPage = [
     "/clientspace/post-job",
@@ -30,6 +35,19 @@ export function middleware(req: NextRequest) {
     "/clientspace/fundi/subscription",
     "/clientspace/fundi/userProfile",
   ].some((route) => path.startsWith(route))
+  
+  // Added: Protected admin URLs
+  const isProtectedAdminPage = [
+    "/administrator/dashboard",
+    "/administrator/settings",
+    "/administrator/fundis",
+    "/administrator/clients",
+    "/administrator/postJob",
+    "/administrator/reports",
+    "/administrator/tickets",
+    "/administrator/moderation",
+    "/administrator/system_logs",
+  ].some((route) => path.startsWith(route))
 
   // Redirect to client login if trying to access protected client areas without client token
   if ((isClientDashboard || isProtectedClientPage) && !visitorToken) {
@@ -40,6 +58,11 @@ export function middleware(req: NextRequest) {
   if ((isFundiDashboard || isProtectedFundiPage) && !fundiToken) {
     return NextResponse.redirect(new URL("/auth/job-listing", req.url))
   }
+  
+  // Added: Redirect to admin login if trying to access protected admin areas without admin token
+  if ((isAdminDashboard || isProtectedAdminPage) && !adminToken) {
+    return NextResponse.redirect(new URL("/administrator/auth/login", req.url))
+  }
 
   // Prevent access to client login if already logged in
   if (isClientLoginPage && visitorToken) {
@@ -49,6 +72,11 @@ export function middleware(req: NextRequest) {
   // Prevent access to fundi login if already logged in
   if (isFundiLoginPage && fundiToken) {
     return NextResponse.redirect(new URL("/clientspace/fundi/job-listings", req.url))
+  }
+  
+  // Added: Prevent access to admin login if already logged in
+  if (isAdminLoginPage && adminToken) {
+    return NextResponse.redirect(new URL("/administrator/dashboard", req.url))
   }
 
   return NextResponse.next()
@@ -71,5 +99,9 @@ export const config = {
     "/clientspace/fundi/subscription/:path*",
     "/clientspace/fundi/userProfile/:path*",
     "/auth/job-listing",
+
+    // Added: Matcher for all admin routes and the login page
+    "/administrator/:path*",
+    "/administrator/auth/login",
   ],
 }

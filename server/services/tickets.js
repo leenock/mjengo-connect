@@ -223,3 +223,112 @@ export const getSupportTicketsByClientUser = async (clientId) => {
 
   return tickets
 }
+
+/**
+ * Assigns a support ticket to an admin.
+ * @param {string} ticketId - The ID of the support ticket.
+ * @param {string} assignedToId - The ID of the admin to assign the ticket to.
+ * @returns {Promise<Object>} The updated support ticket.
+ * @throws {Error} If the ticket or admin is not found.
+ */
+export const assignSupportTicket = async (ticketId, assignedToId) => {
+  if (!ticketId || typeof ticketId !== "string") {
+    throw new Error("A valid ticket ID is required")
+  }
+
+  if (!assignedToId || typeof assignedToId !== "string") {
+    throw new Error("A valid admin ID is required")
+  }
+
+  // Verify the ticket exists
+  const existingTicket = await prisma.supportTicket.findUnique({
+    where: { id: ticketId },
+  })
+
+  if (!existingTicket) {
+    throw new Error("Support ticket not found")
+  }
+
+  // Verify the admin exists
+  const admin = await prisma.admin.findUnique({
+    where: { id: assignedToId },
+    select: { id: true, fullName: true, role: true, status: true },
+  })
+
+  if (!admin) {
+    throw new Error("Admin not found")
+  }
+
+  if (admin.status !== "ACTIVE") {
+    throw new Error("Cannot assign ticket to inactive admin")
+  }
+
+  // Update the ticket with assignment
+  const updatedTicket = await prisma.supportTicket.update({
+    where: { id: ticketId },
+    data: {
+      assignedToId,
+      status: existingTicket.status === "OPEN" ? "IN_PROGRESS" : existingTicket.status,
+      updatedAt: new Date(),
+    },
+    include: {
+      client: {
+        select: {
+          id: true,
+          email: true,
+          phone: true,
+          firstName: true,
+          lastName: true,
+          company: true,
+        },
+      },
+      fundi: {
+        select: {
+          id: true,
+          email: true,
+          phone: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
+      assignedTo: {
+        select: {
+          id: true,
+          fullName: true,
+          role: true,
+        },
+      },
+    },
+  })
+
+  return updatedTicket
+}
+
+/**
+ * Gets support ticket statistics for admin dashboard.
+ * @returns {Promise<Object>} Statistics object with ticket counts.
+ */
+export const getSupportTicketStats = async () => {
+  try {
+    const [total, open, inProgress, resolved, closed, urgent] = await Promise.all([
+      prisma.supportTicket.count(),
+      prisma.supportTicket.count({ where: { status: "OPEN" } }),
+      prisma.supportTicket.count({ where: { status: "IN_PROGRESS" } }),
+      prisma.supportTicket.count({ where: { status: "RESOLVED" } }),
+      prisma.supportTicket.count({ where: { status: "CLOSED" } }),
+      prisma.supportTicket.count({ where: { priority: "URGENT" } }),
+    ])
+
+    return {
+      total,
+      open,
+      inProgress,
+      resolved,
+      closed,
+      urgent,
+    }
+  } catch (error) {
+    console.error("Error fetching support ticket stats:", error)
+    throw new Error("Failed to fetch support ticket statistics")
+  }
+}
