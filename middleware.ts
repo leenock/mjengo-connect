@@ -33,6 +33,7 @@ export function middleware(req: NextRequest) {
     "/clientspace/fundi/job-listings",
     "/clientspace/fundi/saved-jobs",
     "/clientspace/fundi/subscription",
+    "/clientspace/fundi/support",
     "/clientspace/fundi/userProfile",
   ].some((route) => path.startsWith(route))
   
@@ -97,6 +98,7 @@ export const config = {
     "/clientspace/fundi/job-listings/:path*",
     "/clientspace/fundi/saved-jobs/:path*",
     "/clientspace/fundi/subscription/:path*",
+    "/clientspace/fundi/support/:path*",
     "/clientspace/fundi/userProfile/:path*",
     "/auth/job-listing",
 

@@ -14,6 +14,7 @@ import adminRoute from "./routes/adminRoute.js"
 import adminAuthRoute from "./routes/adminAuthRoute.js"
 import adminManagementRoute from "./routes/adminManagementRoute.js" // Added admin management route import
 import adminSupportTicketsRoute from "./routes/adminSupportTickets.js" // Added admin support ticket routes import
+import ticketsFundiRoute from "./routes/ticketsFundiRoute.js" // Added fundi tickets route import
 
 // Load environment variables
 dotenv.config()
@@ -59,6 +60,9 @@ app.use("/api/admin/management", adminManagementRoute) // Added admin management
 
 // Admin Support Ticket Routes
 app.use("/api/admin/support", adminSupportTicketsRoute) // Added admin support ticket routes
+
+// Fundi Support Ticket Routes
+app.use("/api/fundi/tickets", ticketsFundiRoute) // Added fundi tickets routes
 
 // Start the server
 const PORT = process.env.PORT || 5000
