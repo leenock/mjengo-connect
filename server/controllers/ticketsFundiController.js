@@ -32,18 +32,19 @@ export const createFundiSupportTicketController = async (req, res) => {
  */
 export const getAllFundiSupportTicketsController = async (req, res) => {
   try {
-    const { status, priority, fundiId } = req.query
+    const { status, priority, fundiId, page = 1, limit = 10 } = req.query
     const filters = {}
 
     if (status) filters.status = status
     if (priority) filters.priority = priority
     if (fundiId) filters.fundiId = fundiId
 
-    const tickets = await getAllFundiSupportTickets(filters)
+    const result = await getAllFundiSupportTickets(filters, { page: Number(page), limit: Number(limit) })
     res.status(200).json({
       message: "Fundi support tickets retrieved successfully",
-      tickets,
-      count: tickets.length,
+      tickets: result.data,
+      pagination: result.pagination,
+      totalCount: result.totalCount,
     })
   } catch (error) {
     console.error("Get All Fundi Support Tickets Error:", error)

@@ -32,18 +32,29 @@ export const createSupportTicketController = async (req, res) => {
  */
 export const getAllSupportTicketsController = async (req, res) => {
   try {
-    const { status, priority, clientUserId } = req.query
+    const { status, priority, clientUserId, page = 1, limit = 10 } = req.query
     const filters = {}
 
     if (status) filters.status = status
     if (priority) filters.priority = priority
     if (clientUserId) filters.clientUserId = clientUserId
 
-    const tickets = await getAllSupportTickets(filters)
+    const result = await getAllSupportTickets(filters, { page: Number(page), limit: Number(limit) })
+    // Normalize response shape similar to fundi admin list
+    if (Array.isArray(result)) {
+      // Backward compatibility if service not updated
+      return res.status(200).json({
+        message: "Support tickets retrieved successfully",
+        tickets: result,
+        pagination: { page: Number(page), limit: Number(limit), totalPages: 1 },
+        totalCount: result.length,
+      })
+    }
     res.status(200).json({
       message: "Support tickets retrieved successfully",
-      tickets,
-      count: tickets.length,
+      tickets: result.data,
+      pagination: result.pagination,
+      totalCount: result.totalCount,
     })
   } catch (error) {
     console.error("Get All Support Tickets Error:", error)

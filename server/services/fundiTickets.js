@@ -52,8 +52,9 @@ export const createFundiSupportTicket = async (ticketData) => {
  * @param {Object} filters - Optional filters for status, priority, etc.
  * @returns {Promise<Array>} Array of support tickets.
  */
-export const getAllFundiSupportTickets = async (filters = {}) => {
+export const getAllFundiSupportTickets = async (filters = {}, pagination = {}) => {
   const { status, priority, fundiId } = filters
+  const { page = 1, limit = 10 } = pagination
 
   const whereClause = {}
 
@@ -62,26 +63,37 @@ export const getAllFundiSupportTickets = async (filters = {}) => {
   if (fundiId) whereClause.fundiId = fundiId
 
   try {
-    const tickets = await prisma.supportTicket.findMany({
-      where: whereClause,
-      include: {
-        fundi: {
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            firstName: true,
-            lastName: true,
-            primary_skill: true,
-            experience_level: true,
+    const [totalCount, data] = await Promise.all([
+      prisma.supportTicket.count({ where: whereClause }),
+      prisma.supportTicket.findMany({
+        where: whereClause,
+        include: {
+          fundi: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              firstName: true,
+              lastName: true,
+              primary_skill: true,
+              experience_level: true,
+            },
           },
         },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ])
+    return {
+      data,
+      totalCount,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit) || 1,
       },
-      orderBy: {
-        createdAt: "desc",
-      },
-    })
-    return tickets
+    }
   } catch (error) {
     console.error("Error fetching fundi support tickets:", error)
     throw new Error("Failed to fetch fundi support tickets")

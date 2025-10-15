@@ -1,88 +1,137 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import AdminSidebar from "@/components/admin/Sidebar"
 import { MessageSquare, Search, Menu, Clock, User, Mail, AlertTriangle, Eye, Reply, Archive } from "lucide-react"
+import Link from "next/link"
+import AdminAuthService from "@/app/services/admin_auth"
 
 export default function AdminSupportTickets() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [filterStatus, setFilterStatus] = useState("all")
   const [filterPriority, setFilterPriority] = useState("all")
+  const [search, setSearch] = useState("")
+  const [tickets, setTickets] = useState<any[]>([])
+  const [admins, setAdmins] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [assigningId, setAssigningId] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
 
-  const tickets = [
-    {
-      id: 1,
-      subject: "Unable to post job - Payment gateway error",
-      description: "I'm getting an error when trying to post a job. The payment gateway keeps failing.",
-      user: {
-        name: "John Kamau",
-        email: "john.kamau@email.com",
-        phone: "+254 712 345 678",
-        type: "Client",
-      },
-      status: "open",
-      priority: "high",
-      category: "Payment Issues",
-      createdAt: "2024-01-20 14:30",
-      lastReply: "2024-01-20 15:45",
-      replies: 3,
-      assignedTo: "Sarah Manager",
-    },
-    {
-      id: 2,
-      subject: "Profile verification taking too long",
-      description: "I submitted my documents for verification 5 days ago but haven't heard back.",
-      user: {
-        name: "Mary Wanjiku",
-        email: "mary.wanjiku@email.com",
-        phone: "+254 723 456 789",
-        type: "Fundi",
-      },
-      status: "in_progress",
-      priority: "medium",
-      category: "Account Verification",
-      createdAt: "2024-01-19 10:15",
-      lastReply: "2024-01-20 09:30",
-      replies: 5,
-      assignedTo: "Mike Moderator",
-    },
-    {
-      id: 3,
-      subject: "Inappropriate messages from client",
-      description: "A client is sending me inappropriate messages. I need help blocking them.",
-      user: {
-        name: "Peter Ochieng",
-        email: "peter.ochieng@email.com",
-        phone: "+254 734 567 890",
-        type: "Fundi",
-      },
-      status: "urgent",
-      priority: "urgent",
-      category: "Harassment Report",
-      createdAt: "2024-01-20 16:20",
-      lastReply: "2024-01-20 16:20",
-      replies: 1,
-      assignedTo: "Grace Support",
-    },
-    {
-      id: 4,
-      subject: "How to update my skills and portfolio",
-      description: "I want to add more skills to my profile and upload new portfolio images.",
-      user: {
-        name: "Grace Mutua",
-        email: "grace.mutua@email.com",
-        phone: "+254 745 678 901",
-        type: "Fundi",
-      },
-      status: "resolved",
-      priority: "low",
-      category: "General Inquiry",
-      createdAt: "2024-01-18 11:45",
-      lastReply: "2024-01-19 14:20",
-      replies: 4,
-      assignedTo: "Grace Support",
-    },
-  ]
+  const loadTickets = async (pageParam = 1) => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      if (filterStatus !== "all") params.set("status", filterStatus.toUpperCase())
+      if (filterPriority !== "all") params.set("priority", filterPriority.toUpperCase())
+      if (search.trim()) params.set("search", search.trim())
+      params.set("page", String(pageParam))
+      params.set("limit", "10")
+
+      const res = await fetch(`http://localhost:5000/api/admin/support/tickets?${params.toString()}`, {
+        headers: { ...AdminAuthService.getAuthHeaders() },
+        cache: "no-store",
+      })
+      const contentType = res.headers.get("content-type") || ""
+      const json = contentType.includes("application/json") ? await res.json() : { message: await res.text() }
+      if (res.ok && contentType.includes("application/json")) {
+        const uiTickets = (json.tickets || []).map((t: any) => ({
+          id: t.id,
+          subject: t.subject,
+          description: t.message,
+          user: t.client
+            ? {
+                name: `${t.client.firstName || ""} ${t.client.lastName || ""}`.trim() || t.client.email,
+                email: t.client.email,
+                phone: t.client.phone,
+                type: "Client",
+              }
+            : t.fundi
+            ? {
+                name: `${t.fundi.firstName || ""} ${t.fundi.lastName || ""}`.trim() || t.fundi.email,
+                email: t.fundi.email,
+                phone: t.fundi.phone,
+                type: "Fundi",
+              }
+            : { name: "—", email: "—", phone: "—", type: "—" },
+          status: String(t.status || "OPEN").toLowerCase(),
+          priority: String(t.priority || "LOW").toLowerCase(),
+          category: String(t.category || "GENERAL_INQUIRY").replaceAll("_", " "),
+          createdAt: new Date(t.createdAt).toLocaleString(),
+          replies: (t.replies || []).length || 0,
+          assignedTo: t.assignedTo?.fullName || "Unassigned",
+          raw: t,
+        }))
+        setTickets(uiTickets)
+        if (json.pagination) {
+          setPage(json.pagination.page || 1)
+          setTotalPages(json.pagination.totalPages || 1)
+        } else {
+          setPage(pageParam)
+          setTotalPages(1)
+        }
+      } else {
+        console.error("Failed to load tickets:", json)
+        setTickets([])
+        setPage(pageParam)
+        setTotalPages(1)
+      }
+    } catch (e) {
+      console.error("Tickets fetch error:", e)
+      setTickets([])
+      setPage(pageParam)
+      setTotalPages(1)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loadAdmins = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/getAllAdmins`, {
+        headers: { ...AdminAuthService.getAuthHeaders() },
+      })
+      const contentType = res.headers.get("content-type") || ""
+      const json = contentType.includes("application/json") ? await res.json() : { message: await res.text() }
+      if (res.ok && contentType.includes("application/json")) {
+        setAdmins(json.admins || json.data || [])
+      }
+    } catch (e) {
+      console.error("Admins fetch error:", e)
+    }
+  }
+
+  const assignTicket = async (ticketId: string, toAdminId: string) => {
+    if (!toAdminId) return
+    setAssigningId(ticketId)
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/support/tickets/${ticketId}/assign`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...AdminAuthService.getAuthHeaders() },
+        body: JSON.stringify({ assignedToId: toAdminId }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        alert(json.message || "Failed to assign ticket")
+      }
+      await loadTickets(page)
+    } catch (e) {
+      console.error("Assign ticket error:", e)
+    } finally {
+      setAssigningId(null)
+    }
+  }
+
+  useEffect(() => {
+    loadTickets(1)
+    loadAdmins()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Optional: Auto-reload on filter/search change (comment out if you prefer manual "Apply")
+  // useEffect(() => {
+  //   loadTickets(1)
+  // }, [filterStatus, filterPriority, search])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -168,6 +217,11 @@ export default function AdminSupportTickets() {
                   <input
                     type="text"
                     placeholder="Search tickets by subject, user, or description..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") loadTickets(1)
+                    }}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium"
                   />
                 </div>
@@ -204,6 +258,14 @@ export default function AdminSupportTickets() {
                     <option value="technical">Technical Support</option>
                   </select>
                 </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => loadTickets(1)}
+                    className="px-5 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-700 transition"
+                  >
+                    Apply
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -212,86 +274,163 @@ export default function AdminSupportTickets() {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900">Support Tickets</h2>
-              <div className="text-sm font-bold text-slate-600">{tickets.length} total tickets</div>
+              <div className="text-sm font-bold text-slate-600">{tickets.length} tickets on page {page}</div>
             </div>
 
-            <div className="space-y-4">
-              {tickets.map((ticket) => (
-                <div
-                  key={ticket.id}
-                  className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 overflow-hidden hover:shadow-xl transition-all duration-300"
-                >
-                  <div className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center text-white shadow-lg">
-                            <MessageSquare className="w-5 h-5" />
+            {loading ? (
+              <div className="text-center py-10 text-slate-500">Loading tickets...</div>
+            ) : tickets.length === 0 ? (
+              <div className="text-center py-10 text-slate-500 bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30">
+                No tickets found.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {tickets.map((ticket) => (
+                  <div
+                    key={ticket.id}
+                    className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 overflow-hidden hover:shadow-xl transition-all duration-300"
+                  >
+                    <div className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center text-white shadow-lg">
+                              <MessageSquare className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-slate-900 text-lg">{ticket.subject}</h3>
+                              <div className="flex items-center space-x-2 mt-1">
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(ticket.status)}`}
+                                >
+                                  {ticket.status.replace("_", " ").toUpperCase()}
+                                </span>
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-bold ${getPriorityColor(ticket.priority)}`}
+                                >
+                                  {ticket.priority.toUpperCase()}
+                                </span>
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-bold ${getCategoryColor(ticket.category)}`}
+                                >
+                                  {ticket.category}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-bold text-slate-900 text-lg">{ticket.subject}</h3>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <span
-                                className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(ticket.status)}`}
-                              >
-                                {ticket.status.replace("_", " ").toUpperCase()}
+                          <p className="text-slate-600 font-medium mb-4">{ticket.description}</p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                            <div className="flex items-center space-x-2">
+                              <User className="w-4 h-4 text-slate-400" />
+                              <span className="font-medium text-slate-600">
+                                {ticket.user.name} ({ticket.user.type})
                               </span>
-                              <span
-                                className={`px-3 py-1 rounded-full text-xs font-bold ${getPriorityColor(ticket.priority)}`}
-                              >
-                                {ticket.priority.toUpperCase()}
-                              </span>
-                              <span
-                                className={`px-3 py-1 rounded-full text-xs font-bold ${getCategoryColor(ticket.category)}`}
-                              >
-                                {ticket.category}
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Mail className="w-4 h-4 text-slate-400" />
+                              <span className="font-medium text-slate-600">{ticket.user.email}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Clock className="w-4 h-4 text-slate-400" />
+                              <span className="font-medium text-slate-600">Created: {ticket.createdAt}</span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <MessageSquare className="w-4 h-4 text-slate-400" />
+                              <span className="font-medium text-slate-600">
+                                {ticket.replies} replies • Assigned to {ticket.assignedTo}
                               </span>
                             </div>
                           </div>
                         </div>
-                        <p className="text-slate-600 font-medium mb-4">{ticket.description}</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                          <div className="flex items-center space-x-2">
-                            <User className="w-4 h-4 text-slate-400" />
-                            <span className="font-medium text-slate-600">
-                              {ticket.user.name} ({ticket.user.type})
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Mail className="w-4 h-4 text-slate-400" />
-                            <span className="font-medium text-slate-600">{ticket.user.email}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Clock className="w-4 h-4 text-slate-400" />
-                            <span className="font-medium text-slate-600">Created: {ticket.createdAt}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <MessageSquare className="w-4 h-4 text-slate-400" />
-                            <span className="font-medium text-slate-600">
-                              {ticket.replies} replies • Assigned to {ticket.assignedTo}
-                            </span>
+                        <div className="flex flex-col gap-2 min-w-[220px]">
+                          <Link
+                            href={`/administrator/tickets/${ticket.id}`}
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg"
+                          >
+                            <Eye className="w-4 h-4" />
+                            <span>View</span>
+                          </Link>
+                          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg">
+                            <Reply className="w-4 h-4" />
+                            <span>Reply</span>
+                          </button>
+                          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-500 to-slate-600 text-white rounded-xl font-bold hover:from-slate-600 hover:to-slate-700 transition-all duration-200 shadow-lg">
+                            <Archive className="w-4 h-4" />
+                            <span>Close</span>
+                          </button>
+                          <div className="flex items-center gap-2 mt-2">
+                            <select
+                              className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                              onChange={(e) => assignTicket(ticket.id, e.target.value)}
+                              disabled={assigningId === ticket.id}
+                              defaultValue=""
+                            >
+                              <option value="" disabled>
+                                Assign to...
+                              </option>
+                              {admins
+                                .filter((a: any) => a.status === "ACTIVE")
+                                .map((a: any) => (
+                                  <option key={a.id} value={a.id}>
+                                    {a.fullName} ({a.role})
+                                  </option>
+                                ))}
+                            </select>
                           </div>
                         </div>
                       </div>
-                      <div className="flex flex-row lg:flex-col gap-2">
-                        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg">
-                          <Eye className="w-4 h-4" />
-                          <span>View</span>
-                        </button>
-                        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg">
-                          <Reply className="w-4 h-4" />
-                          <span>Reply</span>
-                        </button>
-                        <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-500 to-slate-600 text-white rounded-xl font-bold hover:from-slate-600 hover:to-slate-700 transition-all duration-200 shadow-lg">
-                          <Archive className="w-4 h-4" />
-                          <span>Close</span>
-                        </button>
-                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                <button
+                  onClick={() => {
+                    if (page > 1) loadTickets(page - 1)
+                  }}
+                  disabled={page === 1}
+                  className={`px-4 py-2 rounded-lg font-medium ${
+                    page === 1
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      : "bg-white text-slate-700 hover:bg-slate-100 shadow"
+                  }`}
+                >
+                  Previous
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
+                  <button
+                    key={pageNum}
+                    onClick={() => loadTickets(pageNum)}
+                    className={`w-10 h-10 rounded-full font-medium ${
+                      page === pageNum
+                        ? "bg-emerald-600 text-white"
+                        : "bg-white text-slate-700 hover:bg-slate-100 shadow"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => {
+                    if (page < totalPages) loadTickets(page + 1)
+                  }}
+                  disabled={page === totalPages}
+                  className={`px-4 py-2 rounded-lg font-medium ${
+                    page === totalPages
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      : "bg-white text-slate-700 hover:bg-slate-100 shadow"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -136,11 +136,23 @@ export const assignSupportTicketController = async (req, res) => {
   const { assignedToId } = req.body
   try {
     const adminRole = req.admin?.role
+    const actingAdminId = req.admin?.id
 
     if (!hasPermission(adminRole, "support.assign")) {
       return res.status(403).json({
         message: "Access denied. Insufficient permissions.",
       })
+    }
+
+    // Enforce role rules:
+    // - SUPER_ADMIN and ADMIN: can assign to MODERATOR, SUPPORT, ADMIN, and themselves
+    // - MODERATOR and SUPPORT: cannot assign tickets to themselves
+    if (adminRole === "MODERATOR" || adminRole === "SUPPORT") {
+      if (assignedToId && actingAdminId && assignedToId === actingAdminId) {
+        return res.status(403).json({
+          message: "Moderators and Support cannot assign tickets to themselves.",
+        })
+      }
     }
 
     const updatedTicket = await assignSupportTicket(id, assignedToId)

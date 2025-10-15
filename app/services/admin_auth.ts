@@ -46,7 +46,8 @@ class AdminAuthService {
 
   static async logout(): Promise<void> {
     try {
-      await fetch("http://localhost:5000/api/admin/auth/logout", {
+      const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ""
+      await fetch(`${BASE_URL}/api/admin/auth/logout`, {
         method: "POST",
         headers: { Authorization: `Bearer ${this.getToken()}` },
       });

@@ -52,36 +52,84 @@ export const createSupportTicket = async (ticketData) => {
  * @param {Object} filters - Optional filters for status, priority, etc.
  * @returns {Promise<Array>} Array of support tickets.
  */
-export const getAllSupportTickets = async (filters = {}) => {
-  const { status, priority, clientId } = filters // Changed clientUserId to clientId
+export const getAllSupportTickets = async (filters = {}, pagination = {}) => {
+  const { status, priority, category, assignedToId, clientId, fundiId, search } = filters
+  const { page = 1, limit = 10 } = pagination
 
   const whereClause = {}
 
   if (status) whereClause.status = status
   if (priority) whereClause.priority = priority
-  if (clientId) whereClause.clientId = clientId // Use clientId here
+  if (category) whereClause.category = category
+  if (assignedToId) whereClause.assignedToId = assignedToId
+  if (clientId) whereClause.clientId = clientId
+  if (fundiId) whereClause.fundiId = fundiId
+
+  // Text search across subject, message, and user names/emails
+  if (search && typeof search === "string" && search.trim().length > 0) {
+    const q = search.trim()
+    whereClause.OR = [
+      { subject: { contains: q, mode: "insensitive" } },
+      { message: { contains: q, mode: "insensitive" } },
+      { client: { firstName: { contains: q, mode: "insensitive" } } },
+      { client: { lastName: { contains: q, mode: "insensitive" } } },
+      { client: { email: { contains: q, mode: "insensitive" } } },
+      { fundi: { firstName: { contains: q, mode: "insensitive" } } },
+      { fundi: { lastName: { contains: q, mode: "insensitive" } } },
+      { fundi: { email: { contains: q, mode: "insensitive" } } },
+    ]
+  }
 
   try {
-    const tickets = await prisma.supportTicket.findMany({
-      where: whereClause,
-      include: {
-        client: {
-          // Changed clientUser to client
-          select: {
-            id: true,
-            email: true,
-            phone: true,
-            firstName: true,
-            lastName: true,
-            company: true,
+    const [totalCount, data] = await Promise.all([
+      prisma.supportTicket.count({ where: whereClause }),
+      prisma.supportTicket.findMany({
+        where: whereClause,
+        include: {
+          client: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              firstName: true,
+              lastName: true,
+              company: true,
+            },
+          },
+          fundi: {
+            select: {
+              id: true,
+              email: true,
+              phone: true,
+              firstName: true,
+              lastName: true,
+              primary_skill: true,
+              experience_level: true,
+            },
+          },
+          assignedTo: {
+            select: {
+              id: true,
+              fullName: true,
+              role: true,
+            },
           },
         },
+        orderBy: { createdAt: "desc" },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ])
+
+    return {
+      data,
+      totalCount,
+      pagination: {
+        page,
+        limit,
+        totalPages: Math.ceil(totalCount / limit) || 1,
       },
-      orderBy: {
-        createdAt: "desc",
-      },
-    })
-    return tickets
+    }
   } catch (error) {
     console.error("Error fetching support tickets:", error)
     throw new Error("Failed to fetch support tickets")
@@ -111,6 +159,27 @@ export const getSupportTicketById = async (id) => {
           lastName: true,
           company: true,
         },
+      },
+      fundi: {
+        select: {
+          id: true,
+          email: true,
+          phone: true,
+          firstName: true,
+          lastName: true,
+          primary_skill: true,
+          experience_level: true,
+        },
+      },
+      assignedTo: {
+        select: {
+          id: true,
+          fullName: true,
+          role: true,
+        },
+      },
+      replies: {
+        orderBy: { createdAt: "asc" },
       },
     },
   })

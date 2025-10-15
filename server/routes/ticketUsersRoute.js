@@ -9,6 +9,7 @@ import {
 } from "../controllers/ticketsClientController.js"
 import { validate } from "../middleware/validate.js"
 import { authenticateToken } from "../middleware/auth.js" // Updated import path
+import { adminAuthMiddleware } from "../middleware/adminAuth.js"
 import { createSupportTicketSchema, updateSupportTicketSchema } from "../utils/validation/supportTicketValidation.js"
 
 const router = express.Router()
@@ -16,8 +17,8 @@ const router = express.Router()
 // Create a new support ticket - requires authentication
 router.post("/createTicket", authenticateToken, validate(createSupportTicketSchema), createSupportTicketController)
 
-// Get all support tickets (with optional filtering) - requires authentication
-router.get("/getAllTickets", authenticateToken, getAllSupportTicketsController)
+// Get all support tickets (with optional filtering) - temporarily public (no auth)
+router.get("/getAllTickets", adminAuthMiddleware, getAllSupportTicketsController)
 
 // Get a specific support ticket by ID - requires authentication
 router.get("/getTicket/:id", authenticateToken, getSupportTicketByIdController)

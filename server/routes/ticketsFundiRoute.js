@@ -31,10 +31,9 @@ router.post(
   createFundiSupportTicketController
 );
 
-// Get all fundi support tickets (with optional filtering) - requires authentication
+// Get all fundi support tickets (with optional filtering) - temporarily public (no auth)
 router.get(
   "/getAllFundiTickets",
-  authenticateFundiToken,
   getAllFundiSupportTicketsController
 );
 
