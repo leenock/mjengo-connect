@@ -1,180 +1,300 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import AdminSidebar from "@/components/admin/Sidebar"
-import { MessageSquare, Search, Menu, Clock, User, Mail, AlertTriangle, Eye, Reply, Archive } from "lucide-react"
-import Link from "next/link"
-import AdminAuthService from "@/app/services/admin_auth"
+import { useEffect, useState } from "react";
+import AdminSidebar from "@/components/admin/Sidebar";
+import {
+  MessageSquare,
+  Search,
+  Menu,
+  Clock,
+  User,
+  Mail,
+  AlertTriangle,
+  Eye,
+  Reply,
+  Archive,
+} from "lucide-react";
+import Link from "next/link";
+import AdminAuthService from "@/app/services/admin_auth";
+
+// ====== INTERFACES ======
+
+interface ClientOrFundi {
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  phone: string;
+}
+
+interface AssignedTo {
+  fullName: string;
+}
+
+interface ApiTicket {
+  id: string;
+  subject: string;
+  message: string;
+  status?: string;
+  priority?: string;
+  category?: string;
+  createdAt: string;
+  replies?: unknown[];
+  assignedTo?: AssignedTo;
+  client?: ClientOrFundi;
+  fundi?: ClientOrFundi;
+}
+
+interface UserDisplay {
+  name: string;
+  email: string;
+  phone: string;
+  type: "Client" | "Fundi" | "—";
+}
+
+type TicketStatus = "open" | "in_progress" | "urgent" | "resolved" | "closed";
+type TicketPriority = "urgent" | "high" | "medium" | "low";
+
+interface Ticket {
+  id: string;
+  subject: string;
+  description: string;
+  user: UserDisplay;
+  status: TicketStatus;
+  priority: TicketPriority;
+  category: string;
+  createdAt: string;
+  replies: number;
+  assignedTo: string;
+  raw: ApiTicket;
+}
+
+interface Admin {
+  id?: string;
+  _id?: string;
+  email?: string;
+  role?: string;
+  status?: string;
+  fullName?: string;
+}
+
+// =======================
 
 export default function AdminSupportTickets() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [filterStatus, setFilterStatus] = useState("all")
-  const [filterPriority, setFilterPriority] = useState("all")
-  const [search, setSearch] = useState("")
-  const [tickets, setTickets] = useState<any[]>([])
-  const [admins, setAdmins] = useState<any[]>([])
-  const [loading, setLoading] = useState(false)
-  const [assigningId, setAssigningId] = useState<string | null>(null)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterPriority, setFilterPriority] = useState("all");
+  const [search, setSearch] = useState("");
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [assigningId, setAssigningId] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const loadTickets = async (pageParam = 1) => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const params = new URLSearchParams()
-      if (filterStatus !== "all") params.set("status", filterStatus.toUpperCase())
-      if (filterPriority !== "all") params.set("priority", filterPriority.toUpperCase())
-      if (search.trim()) params.set("search", search.trim())
-      params.set("page", String(pageParam))
-      params.set("limit", "10")
+      const params = new URLSearchParams();
+      if (filterStatus !== "all")
+        params.set("status", filterStatus.toUpperCase());
+      if (filterPriority !== "all")
+        params.set("priority", filterPriority.toUpperCase());
+      if (search.trim()) params.set("search", search.trim());
+      params.set("page", String(pageParam));
+      params.set("limit", "10");
 
-      const res = await fetch(`http://localhost:5000/api/admin/support/tickets?${params.toString()}`, {
-        headers: { ...AdminAuthService.getAuthHeaders() },
-        cache: "no-store",
-      })
-      const contentType = res.headers.get("content-type") || ""
-      const json = contentType.includes("application/json") ? await res.json() : { message: await res.text() }
+      const res = await fetch(
+        `http://localhost:5000/api/admin/support/tickets?${params.toString()}`,
+        {
+          headers: { ...AdminAuthService.getAuthHeaders() },
+          cache: "no-store",
+        }
+      );
+      const contentType = res.headers.get("content-type") || "";
+      const json = contentType.includes("application/json")
+        ? await res.json()
+        : { message: await res.text() };
       if (res.ok && contentType.includes("application/json")) {
-        const uiTickets = (json.tickets || []).map((t: any) => ({
-          id: t.id,
-          subject: t.subject,
-          description: t.message,
-          user: t.client
-            ? {
-                name: `${t.client.firstName || ""} ${t.client.lastName || ""}`.trim() || t.client.email,
-                email: t.client.email,
-                phone: t.client.phone,
-                type: "Client",
-              }
-            : t.fundi
-            ? {
-                name: `${t.fundi.firstName || ""} ${t.fundi.lastName || ""}`.trim() || t.fundi.email,
-                email: t.fundi.email,
-                phone: t.fundi.phone,
-                type: "Fundi",
-              }
-            : { name: "—", email: "—", phone: "—", type: "—" },
-          status: String(t.status || "OPEN").toLowerCase(),
-          priority: String(t.priority || "LOW").toLowerCase(),
-          category: String(t.category || "GENERAL_INQUIRY").replaceAll("_", " "),
-          createdAt: new Date(t.createdAt).toLocaleString(),
-          replies: (t.replies || []).length || 0,
-          assignedTo: t.assignedTo?.fullName || "Unassigned",
-          raw: t,
-        }))
-        setTickets(uiTickets)
+        const uiTickets = (json.tickets || []).map((t: ApiTicket) => {
+          const baseUser = { name: "—", email: "—", phone: "—", type: "—" as const };
+          let user: UserDisplay = baseUser;
+
+          if (t.client) {
+            const name = `${t.client.firstName || ""} ${t.client.lastName || ""}`.trim() || t.client.email;
+            user = {
+              name,
+              email: t.client.email,
+              phone: t.client.phone,
+              type: "Client",
+            };
+          } else if (t.fundi) {
+            const name = `${t.fundi.firstName || ""} ${t.fundi.lastName || ""}`.trim() || t.fundi.email;
+            user = {
+              name,
+              email: t.fundi.email,
+              phone: t.fundi.phone,
+              type: "Fundi",
+            };
+          }
+
+          const status = (t.status || "OPEN").toLowerCase() as TicketStatus;
+          const priority = (t.priority || "LOW").toLowerCase() as TicketPriority;
+          const category = (t.category || "GENERAL_INQUIRY").replace(/_/g, " ");
+
+          return {
+            id: t.id,
+            subject: t.subject,
+            description: t.message,
+            user,
+            status,
+            priority,
+            category,
+            createdAt: new Date(t.createdAt).toLocaleString(),
+            replies: (t.replies || []).length,
+            assignedTo: t.assignedTo?.fullName || "Unassigned",
+            raw: t,
+          };
+        });
+        setTickets(uiTickets);
         if (json.pagination) {
-          setPage(json.pagination.page || 1)
-          setTotalPages(json.pagination.totalPages || 1)
+          setPage(json.pagination.page || 1);
+          setTotalPages(json.pagination.totalPages || 1);
         } else {
-          setPage(pageParam)
-          setTotalPages(1)
+          setPage(pageParam);
+          setTotalPages(1);
         }
       } else {
-        console.error("Failed to load tickets:", json)
-        setTickets([])
-        setPage(pageParam)
-        setTotalPages(1)
+        console.error("Failed to load tickets:", json);
+        setTickets([]);
+        setPage(pageParam);
+        setTotalPages(1);
       }
     } catch (e) {
-      console.error("Tickets fetch error:", e)
-      setTickets([])
-      setPage(pageParam)
-      setTotalPages(1)
+      console.error("Tickets fetch error:", e);
+      setTickets([]);
+      setPage(pageParam);
+      setTotalPages(1);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const loadAdmins = async () => {
     try {
       const res = await fetch(`http://localhost:5000/api/admin/getAllAdmins`, {
         headers: { ...AdminAuthService.getAuthHeaders() },
-      })
-      const contentType = res.headers.get("content-type") || ""
-      const json = contentType.includes("application/json") ? await res.json() : { message: await res.text() }
-      if (res.ok && contentType.includes("application/json")) {
-        setAdmins(json.admins || json.data || [])
+      });
+
+      if (!res.ok) {
+        console.error("Failed to fetch admins. Status:", res.status, res.statusText);
+        return;
       }
+
+      const contentType = res.headers.get("content-type") || "";
+      const json = contentType.includes("application/json") ? await res.json() : null;
+
+      if (!json) {
+        console.error("Admins response is not JSON");
+        return;
+      }
+
+      let adminList: Admin[] = [];
+      if (Array.isArray(json)) {
+        adminList = json;
+      } else if (Array.isArray(json.admins)) {
+        adminList = json.admins;
+      } else if (Array.isArray(json.data)) {
+        adminList = json.data;
+      } else {
+        console.warn("Admins data not found in expected format:", json);
+      }
+
+      setAdmins(adminList);
     } catch (e) {
-      console.error("Admins fetch error:", e)
+      console.error("Admins fetch error:", e);
     }
-  }
+  };
 
   const assignTicket = async (ticketId: string, toAdminId: string) => {
-    if (!toAdminId) return
-    setAssigningId(ticketId)
+    if (!toAdminId) return;
+    setAssigningId(ticketId);
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/support/tickets/${ticketId}/assign`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...AdminAuthService.getAuthHeaders() },
-        body: JSON.stringify({ assignedToId: toAdminId }),
-      })
-      const json = await res.json()
+      const res = await fetch(
+        `http://localhost:5000/api/admin/support/tickets/${ticketId}/assign`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...AdminAuthService.getAuthHeaders(),
+          },
+          body: JSON.stringify({ assignedToId: toAdminId }),
+        }
+      );
+      const json = await res.json();
       if (!res.ok) {
-        alert(json.message || "Failed to assign ticket")
+        alert(json.message || "Failed to assign ticket");
       }
-      await loadTickets(page)
+      await loadTickets(page);
     } catch (e) {
-      console.error("Assign ticket error:", e)
+      console.error("Assign ticket error:", e);
     } finally {
-      setAssigningId(null)
+      setAssigningId(null);
     }
-  }
+  };
 
   useEffect(() => {
-    loadTickets(1)
-    loadAdmins()
+    loadTickets(1);
+    loadAdmins();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Optional: Auto-reload on filter/search change (comment out if you prefer manual "Apply")
-  // useEffect(() => {
-  //   loadTickets(1)
-  // }, [filterStatus, filterPriority, search])
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "open":
-        return "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700"
+        return "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700";
       case "in_progress":
-        return "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700"
+        return "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700";
       case "urgent":
-        return "bg-gradient-to-r from-red-100 to-pink-100 text-red-700"
+        return "bg-gradient-to-r from-red-100 to-pink-100 text-red-700";
       case "resolved":
-        return "bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700"
+        return "bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700";
       case "closed":
-        return "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700"
+        return "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700";
       default:
-        return "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700"
+        return "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700";
     }
-  }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case "urgent":
-        return "bg-gradient-to-r from-red-500 to-pink-500 text-white"
+        return "bg-gradient-to-r from-red-500 to-pink-500 text-white";
       case "high":
-        return "bg-gradient-to-r from-orange-500 to-red-500 text-white"
+        return "bg-gradient-to-r from-orange-500 to-red-500 text-white";
       case "medium":
-        return "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700"
+        return "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700";
       case "low":
-        return "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700"
+        return "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700";
       default:
-        return "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700"
+        return "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700";
     }
-  }
+  };
 
   const getCategoryColor = (category: string) => {
-    const colors = {
-      "Payment Issues": "bg-gradient-to-r from-red-100 to-pink-100 text-red-700",
-      "Account Verification": "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700",
-      "Harassment Report": "bg-gradient-to-r from-purple-100 to-violet-100 text-purple-700",
-      "General Inquiry": "bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700",
-      "Technical Support": "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700",
-    }
-    return colors[category as keyof typeof colors] || "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700"
-  }
+    const colors: Record<string, string> = {
+      "Payment Issues":
+        "bg-gradient-to-r from-red-100 to-pink-100 text-red-700",
+      "Account Verification":
+        "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700",
+      "Harassment Report":
+        "bg-gradient-to-r from-purple-100 to-violet-100 text-purple-700",
+      "General Inquiry":
+        "bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700",
+      "Technical Support":
+        "bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700",
+    };
+    return colors[category] || "bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700";
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 lg:flex font-inter">
@@ -195,7 +315,9 @@ export default function AdminSupportTickets() {
                 <h1 className="text-3xl sm:text-2xl font-black bg-gradient-to-r from-slate-900 via-slate-800 to-slate-700 bg-clip-text text-transparent leading-tight">
                   Support Tickets
                 </h1>
-                <p className="text-slate-600 mt-2 text-base sm:text-lg font-bold">Manage customer support requests</p>
+                <p className="text-slate-600 mt-2 text-base sm:text-lg font-bold">
+                  Manage customer support requests
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2 px-4 py-2 bg-red-100 text-red-700 rounded-full text-sm font-bold">
@@ -207,8 +329,12 @@ export default function AdminSupportTickets() {
           {/* Search and Filters */}
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden mb-8">
             <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-green-50 to-emerald-50">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">Filter Tickets</h2>
-              <p className="text-slate-600 font-bold">Search and manage support tickets</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">
+                Filter Tickets
+              </h2>
+              <p className="text-slate-600 font-bold">
+                Search and manage support tickets
+              </p>
             </div>
             <div className="p-6 sm:p-8">
               <div className="flex flex-col gap-4">
@@ -220,7 +346,7 @@ export default function AdminSupportTickets() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") loadTickets(1)
+                      if (e.key === "Enter") loadTickets(1);
                     }}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium"
                   />
@@ -273,12 +399,18 @@ export default function AdminSupportTickets() {
           {/* Tickets List */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900">Support Tickets</h2>
-              <div className="text-sm font-bold text-slate-600">{tickets.length} tickets on page {page}</div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+                Support Tickets
+              </h2>
+              <div className="text-sm font-bold text-slate-600">
+                {tickets.length} tickets on page {page}
+              </div>
             </div>
 
             {loading ? (
-              <div className="text-center py-10 text-slate-500">Loading tickets...</div>
+              <div className="text-center py-10 text-slate-500">
+                Loading tickets...
+              </div>
             ) : tickets.length === 0 ? (
               <div className="text-center py-10 text-slate-500 bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30">
                 No tickets found.
@@ -298,27 +430,39 @@ export default function AdminSupportTickets() {
                               <MessageSquare className="w-5 h-5" />
                             </div>
                             <div>
-                              <h3 className="font-bold text-slate-900 text-lg">{ticket.subject}</h3>
+                              <h3 className="font-bold text-slate-900 text-lg">
+                                {ticket.subject}
+                              </h3>
                               <div className="flex items-center space-x-2 mt-1">
                                 <span
-                                  className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(ticket.status)}`}
+                                  className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusColor(
+                                    ticket.status
+                                  )}`}
                                 >
-                                  {ticket.status.replace("_", " ").toUpperCase()}
+                                  {ticket.status
+                                    .replace("_", " ")
+                                    .toUpperCase()}
                                 </span>
                                 <span
-                                  className={`px-3 py-1 rounded-full text-xs font-bold ${getPriorityColor(ticket.priority)}`}
+                                  className={`px-3 py-1 rounded-full text-xs font-bold ${getPriorityColor(
+                                    ticket.priority
+                                  )}`}
                                 >
                                   {ticket.priority.toUpperCase()}
                                 </span>
                                 <span
-                                  className={`px-3 py-1 rounded-full text-xs font-bold ${getCategoryColor(ticket.category)}`}
+                                  className={`px-3 py-1 rounded-full text-xs font-bold ${getCategoryColor(
+                                    ticket.category
+                                  )}`}
                                 >
                                   {ticket.category}
                                 </span>
                               </div>
                             </div>
                           </div>
-                          <p className="text-slate-600 font-medium mb-4">{ticket.description}</p>
+                          <p className="text-slate-600 font-medium mb-4">
+                            {ticket.description}
+                          </p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
                             <div className="flex items-center space-x-2">
                               <User className="w-4 h-4 text-slate-400" />
@@ -328,16 +472,21 @@ export default function AdminSupportTickets() {
                             </div>
                             <div className="flex items-center space-x-2">
                               <Mail className="w-4 h-4 text-slate-400" />
-                              <span className="font-medium text-slate-600">{ticket.user.email}</span>
+                              <span className="font-medium text-slate-600">
+                                {ticket.user.email}
+                              </span>
                             </div>
                             <div className="flex items-center space-x-2">
                               <Clock className="w-4 h-4 text-slate-400" />
-                              <span className="font-medium text-slate-600">Created: {ticket.createdAt}</span>
+                              <span className="font-medium text-slate-600">
+                                Created: {ticket.createdAt}
+                              </span>
                             </div>
                             <div className="flex items-center space-x-2">
                               <MessageSquare className="w-4 h-4 text-slate-400" />
                               <span className="font-medium text-slate-600">
-                                {ticket.replies} replies • Assigned to {ticket.assignedTo}
+                                {ticket.replies} replies • Assigned to{" "}
+                                {ticket.assignedTo}
                               </span>
                             </div>
                           </div>
@@ -361,18 +510,30 @@ export default function AdminSupportTickets() {
                           <div className="flex items-center gap-2 mt-2">
                             <select
                               className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
-                              onChange={(e) => assignTicket(ticket.id, e.target.value)}
+                              onChange={(e) =>
+                                assignTicket(ticket.id, e.target.value)
+                              }
                               disabled={assigningId === ticket.id}
                               defaultValue=""
                             >
                               <option value="" disabled>
-                                Assign to...
+                                {admins.length > 0
+                                  ? "Assign to..."
+                                  : "Loading admins..."}
                               </option>
                               {admins
-                                .filter((a: any) => a.status === "ACTIVE")
-                                .map((a: any) => (
-                                  <option key={a.id} value={a.id}>
-                                    {a.fullName} ({a.role})
+                                .filter((a) => {
+                                  const status = (a.status || "")
+                                    .toString()
+                                    .toLowerCase();
+                                  return status === "active";
+                                })
+                                .map((a) => (
+                                  <option
+                                    key={a.id || a._id}
+                                    value={a.id || a._id}
+                                  >
+                                    {a.email || "No email"} ({a.role || "Admin"})
                                   </option>
                                 ))}
                             </select>
@@ -390,7 +551,7 @@ export default function AdminSupportTickets() {
               <div className="flex justify-center items-center gap-2 mt-8">
                 <button
                   onClick={() => {
-                    if (page > 1) loadTickets(page - 1)
+                    if (page > 1) loadTickets(page - 1);
                   }}
                   disabled={page === 1}
                   className={`px-4 py-2 rounded-lg font-medium ${
@@ -402,23 +563,25 @@ export default function AdminSupportTickets() {
                   Previous
                 </button>
 
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
-                  <button
-                    key={pageNum}
-                    onClick={() => loadTickets(pageNum)}
-                    className={`w-10 h-10 rounded-full font-medium ${
-                      page === pageNum
-                        ? "bg-emerald-600 text-white"
-                        : "bg-white text-slate-700 hover:bg-slate-100 shadow"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => loadTickets(pageNum)}
+                      className={`w-10 h-10 rounded-full font-medium ${
+                        page === pageNum
+                          ? "bg-emerald-600 text-white"
+                          : "bg-white text-slate-700 hover:bg-slate-100 shadow"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  )
+                )}
 
                 <button
                   onClick={() => {
-                    if (page < totalPages) loadTickets(page + 1)
+                    if (page < totalPages) loadTickets(page + 1);
                   }}
                   disabled={page === totalPages}
                   className={`px-4 py-2 rounded-lg font-medium ${
@@ -435,5 +598,5 @@ export default function AdminSupportTickets() {
         </div>
       </div>
     </div>
-  )
+  );
 }
