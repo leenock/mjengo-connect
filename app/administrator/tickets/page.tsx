@@ -11,8 +11,7 @@ import {
   Mail,
   AlertTriangle,
   Eye,
-  Reply,
-  Archive,
+
 } from "lucide-react";
 import Link from "next/link";
 import AdminAuthService from "@/app/services/admin_auth";
@@ -485,7 +484,7 @@ export default function AdminSupportTickets() {
                             <div className="flex items-center space-x-2">
                               <MessageSquare className="w-4 h-4 text-slate-400" />
                               <span className="font-medium text-slate-600">
-                                {ticket.replies} replies • Assigned to{" "}
+                                 Assigned to{" "}
                                 {ticket.assignedTo}
                               </span>
                             </div>
@@ -499,14 +498,8 @@ export default function AdminSupportTickets() {
                             <Eye className="w-4 h-4" />
                             <span>View</span>
                           </Link>
-                          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 shadow-lg">
-                            <Reply className="w-4 h-4" />
-                            <span>Reply</span>
-                          </button>
-                          <button className="flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-500 to-slate-600 text-white rounded-xl font-bold hover:from-slate-600 hover:to-slate-700 transition-all duration-200 shadow-lg">
-                            <Archive className="w-4 h-4" />
-                            <span>Close</span>
-                          </button>
+                        
+                          
                           <div className="flex items-center gap-2 mt-2">
                             <select
                               className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"

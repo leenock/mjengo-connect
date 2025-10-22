@@ -5,7 +5,7 @@ import { use } from "react";
 import Link from "next/link";
 import AdminSidebar from "@/components/admin/Sidebar";
 import AdminAuthService from "@/app/services/admin_auth";
-import { ArrowLeft, User, Shield, MessageSquare, Loader2, Check } from "lucide-react";
+import { ArrowLeft, User, Shield, MessageSquare, Loader2, Check, Send } from "lucide-react";
 
 // ===== INTERFACES & TYPES =====
 type TicketStatus = "open" | "in_progress" | "resolved" | "closed";
@@ -60,6 +60,8 @@ export default function AdminTicketDetail({
   const [ticket, setTicket] = useState<Ticket | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<TicketStatus>("open");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [newComment, setNewComment] = useState(""); // New state for comment input
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false); // Loading state for comment
 
   const loadTicket = async () => {
     setLoading(true);
@@ -125,7 +127,6 @@ export default function AdminTicketDetail({
         }
       );
 
-      // 🔥 Read as text FIRST to handle HTML/plain text errors
       const textResponse = await res.text();
       console.log("📡 Raw response:", textResponse);
 
@@ -135,7 +136,6 @@ export default function AdminTicketDetail({
           const json = JSON.parse(textResponse);
           errorMessage = json.message || json.error || errorMessage;
         } catch {
-          // Handle HTML/plain text errors
           if (textResponse.includes("Cannot PATCH")) {
             errorMessage = "Request went to Next.js. Ensure backend is running on :5000";
           } else {
@@ -150,6 +150,54 @@ export default function AdminTicketDetail({
       setError(e instanceof Error ? e.message : "Update failed");
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  // ✅ NEW: Submit comment function
+  const submitComment = async () => {
+    if (!ticket || !newComment.trim()) return;
+    
+    setIsSubmittingComment(true);
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/admin/support/tickets/${id}/reply`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...AdminAuthService.getAuthHeaders(),
+          },
+          body: JSON.stringify({ message: newComment.trim() }),
+        }
+      );
+
+      const textResponse = await res.text();
+      if (!res.ok) {
+        let errorMessage = "Failed to send reply";
+        try {
+          const json = JSON.parse(textResponse);
+          errorMessage = json.message || errorMessage;
+        } catch {
+          errorMessage = textResponse || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+
+      // Clear input and refresh ticket
+      setNewComment("");
+      await loadTicket();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to send reply");
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  // ✅ Handle Enter key submission (without form)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submitComment();
     }
   };
 
@@ -277,11 +325,14 @@ export default function AdminTicketDetail({
                 </div>
               </div>
 
+              {/* ===== COMMENTS SECTION WITH INPUT ===== */}
               <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/30 p-6">
                 <h2 className="text-lg font-black text-slate-900 mb-4">
-                  Conversation
+                  Comments from Support Teams
                 </h2>
-                <div className="space-y-4">
+                
+                {/* Comments List */}
+                <div className="space-y-4 mb-6">
                   {ticket.replies.map((r) => (
                     <div
                       key={r.id}
@@ -291,14 +342,49 @@ export default function AdminTicketDetail({
                         <div className="font-bold">{r.authorName}</div>
                         <div>{new Date(r.createdAt).toLocaleString()}</div>
                       </div>
-                      <div className="text-slate-800">{r.message}</div>
+                      <div className="text-slate-800 whitespace-pre-wrap">{r.message}</div>
                     </div>
                   ))}
                   {ticket.replies.length === 0 && (
-                    <div className="text-sm text-slate-500">
-                      No replies yet.
+                    <div className="text-sm text-slate-500 py-4 text-center">
+                      No replies yet. Start the conversation!
                     </div>
                   )}
+                </div>
+
+                {/* Comment Input */}
+                <div className="border-t border-slate-200 pt-4">
+                  <div className="flex items-end gap-3">
+                    <div className="flex-1 relative">
+                      <textarea
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="Write a comment..."
+                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium resize-none"
+                        rows={3}
+                        disabled={isSubmittingComment}
+                      />
+                    </div>
+                    <button
+                      onClick={submitComment}
+                      disabled={!newComment.trim() || isSubmittingComment}
+                      className={`p-3 rounded-xl font-bold transition-all duration-200 shadow-lg flex items-center justify-center ${
+                        !newComment.trim() || isSubmittingComment
+                          ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                          : "bg-emerald-600 text-white hover:bg-emerald-700"
+                      }`}
+                    >
+                      {isSubmittingComment ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Send className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2 text-right">
+                    Press Enter to send (Shift+Enter for new line)
+                  </p>
                 </div>
               </div>
             </div>
