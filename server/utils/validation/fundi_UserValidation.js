@@ -68,15 +68,39 @@ export const updateFundiUserSchema = Joi.object({
     "string.min": "Primary skill must be at least 2 characters.",
     "string.max": "Primary skill must be at most 50 characters.",
   }),
-  experience_level: Joi.string().valid("BEGINNER", "INTERMEDIATE", "EXPERIENCED", "EXPERT").optional().messages({
-    "any.only": "Experience level must be one of: BEGINNER, INTERMEDIATE, EXPERIENCED, EXPERT",
-  }),
+  experience_level: Joi.string()
+    .valid("BEGINNER", "INTERMEDIATE", "EXPERIENCED", "EXPERT")
+    .optional()
+    .messages({
+      "any.only": "Experience level must be one of: BEGINNER, INTERMEDIATE, EXPERIENCED, EXPERT",
+    }),
   biography: Joi.string().min(10).max(500).optional().allow("").messages({
     "string.min": "Biography must be at least 10 characters.",
     "string.max": "Biography must be at most 500 characters.",
   }),
-})
 
+  // ✅ ADD THESE FIELDS:
+  accountStatus: Joi.string()
+    .valid("ACTIVE", "SUSPENDED", "PENDING")
+    .optional()
+    .messages({
+      "any.only": "Account status must be one of: ACTIVE, SUSPENDED, PENDING",
+    }),
+
+  subscriptionPlan: Joi.string()
+    .valid("FREE", "PREMIUM")
+    .optional()
+    .messages({
+      "any.only": "Subscription plan must be FREE or PREMIUM",
+    }),
+
+  subscriptionStatus: Joi.string()
+    .valid("TRIAL", "ACTIVE", "EXPIRED", "CANCELLED")
+    .optional()
+    .messages({
+      "any.only": "Subscription status must be one of: TRIAL, ACTIVE, EXPIRED, CANCELLED",
+    }),
+})
 export const loginFundiUserSchema = Joi.object({
   emailOrPhone: Joi.string().required().messages({
     "string.empty": "Email or phone cannot be empty.",

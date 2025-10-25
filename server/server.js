@@ -47,6 +47,9 @@ app.use("/api/support", ticketUsersRoute)
 // Fundi User Routes // Added fundi route usage
 app.use("/api/fundi", fundi_authRoute)
 
+// Fundi User Admin Route Path
+app.use("/api/fundi/admin", fundi_authRoute)
+
 // saved Job Routes
 app.use("/api/fundi/saved-jobs", savedJobRoutes)
 

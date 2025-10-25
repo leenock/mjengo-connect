@@ -21,6 +21,9 @@ import {
   loginFundiUserSchema,
 } from "../utils/validation/fundi_UserValidation.js";
 
+import { adminAuthMiddleware } from "../middleware/adminAuth.js";
+
+
 const router = express.Router();
 
 // Public routes (no authentication required)
@@ -37,11 +40,18 @@ router.post(
 );
 
 // Protected routes (authentication required)
-router.get("/getAllFundis", getAllFundiUsers);
-router.get("/getFundi/:id", authenticateFundiToken, getFundiUserById);
+router.get("/getAllFundis", adminAuthMiddleware, getAllFundiUsers);
+router.get("/getFundi/:id", getFundiUserById);
 router.put(
   "/updateFundi/:id",
   authenticateFundiToken,
+  validate(updateFundiUserSchema),
+  updateFundiUserController
+);
+// update fundi admin API 
+router.put(
+  "/updateFundiAdmin/:id",
+  adminAuthMiddleware,
   validate(updateFundiUserSchema),
   updateFundiUserController
 );
@@ -50,9 +60,11 @@ router.post(
   authenticateFundiToken,
   updateFundiPasswordController
 );
+
+// Delete fundi user (admin only)
 router.delete(
   "/deleteFundi/:id",
-  authenticateFundiToken,
+  adminAuthMiddleware,
   deleteFundiUserController
 );
 router.post("/logoutFundi", authenticateFundiToken, logoutFundiController);
