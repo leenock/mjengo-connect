@@ -60,7 +60,7 @@ export const createJob = async (jobData, postedById) => {
  */
 export const getAllJobs = async (filters = {}, pagination = {}) => {
   try {
-    const { page = 1, limit = 10 } = pagination
+    const { page = 1, limit = 11 } = pagination
     const skip = (page - 1) * limit
 
     const where = {}

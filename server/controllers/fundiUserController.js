@@ -129,10 +129,17 @@ export const deleteFundiUserController = async (req, res) => {
  * Login controller for fundi users
  */
 export const loginFundiController = async (req, res) => {
-  const { emailOrPhone, password } = req.body
+  const { emailOrPhone, password } = req.body;
+
+  // Validate required fields
+  if (!emailOrPhone || !password) {
+    return res.status(400).json({ 
+      message: "Email/phone and password are required" 
+    });
+  }
 
   try {
-    const { token, user } = await loginFundiUser({ emailOrPhone, password })
+    const { token, user } = await loginFundiUser({ emailOrPhone, password });
 
     const userSafe = {
       id: user.id,
@@ -150,19 +157,32 @@ export const loginFundiController = async (req, res) => {
       trialEndsAt: user.trialEndsAt?.toISOString(),
       createdAt: user.createdAt?.toISOString(),
       updatedAt: user.updatedAt?.toISOString(),
-    }
+    };
 
     res.status(200).json({
       message: "Login successful",
       token,
       user: userSafe,
-    })
+    });
   } catch (error) {
-    console.error("Fundi Login Error:", error)
-    res.status(401).json({ message: error.message || "Login failed" })
+    console.error("Fundi Login Error:", error);
+    
+    // Specific error handling for pending and suspended accounts
+    if (error.message.includes("suspended") || error.message.includes("pending approval")) {
+      return res.status(403).json({ 
+        message: error.message 
+      });
+    } else if (error.message.includes("not found") || error.message.includes("Invalid credentials")) {
+      return res.status(401).json({ 
+        message: "Invalid email/phone or password" 
+      });
+    } else {
+      return res.status(500).json({ 
+        message: error.message || "Login failed" 
+      });
+    }
   }
-}
-
+};
 /**
  * Logout controller for fundi users
  */

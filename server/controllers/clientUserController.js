@@ -105,10 +105,17 @@ export const deleteClientUserController = async (req, res) => {
   }
 };
 
-//****************************Client User Controlleer Login Functionality*****************************************/
+//****************************Client User Controller Login Functionality*****************************************/
 
 export const loginController = async (req, res) => {
   const { emailOrPhone, password } = req.body;
+
+  // Validate required fields
+  if (!emailOrPhone || !password) {
+    return res.status(400).json({ 
+      message: "Email/phone and password are required" 
+    });
+  }
 
   try {
     const { token, user } = await loginClientUser({ emailOrPhone, password });
@@ -122,6 +129,7 @@ export const loginController = async (req, res) => {
       company: user.company,
       location: user.location,
       isActive: user.isActive,
+      accountStatus: user.accountStatus,
       createdAt: user.createdAt?.toISOString(),
       updatedAt: user.updatedAt?.toISOString(),
     };
@@ -133,7 +141,24 @@ export const loginController = async (req, res) => {
     });
   } catch (error) {
     console.error("Login Error:", error);
-    res.status(401).json({ message: error.message || "Login failed" });
+    
+    // More specific error handling with appropriate status codes
+    if (error.message.includes("deactivated") || 
+        error.message.includes("suspended") || 
+        error.message.includes("pending") ||
+        error.message.includes("inactive")) {
+      return res.status(403).json({ 
+        message: error.message 
+      });
+    } else if (error.message.includes("not found") || error.message.includes("Invalid credentials")) {
+      return res.status(401).json({ 
+        message: "Invalid email/phone or password" 
+      });
+    } else {
+      return res.status(500).json({ 
+        message: error.message || "Login failed" 
+      });
+    }
   }
 };
 

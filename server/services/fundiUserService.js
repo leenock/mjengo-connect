@@ -283,19 +283,24 @@ export const loginFundiUser = async ({ emailOrPhone, password }) => {
     where: {
       OR: [{ email: emailOrPhone }, { phone: emailOrPhone }],
     },
-  })
+  });
 
   if (!user) {
-    throw new Error("User not found")
+    throw new Error("User not found");
   }
 
-  if (user.accountStatus !== "ACTIVE") {
-    throw new Error("Account is not active. Please contact support.")
+  // Check account status for pending and suspended only
+  if (user.accountStatus === "SUSPENDED") {
+    throw new Error("Your account has been suspended. Please contact support.");
   }
 
-  const isPasswordValid = await bcrypt.compare(password, user.password)
+  if (user.accountStatus === "PENDING" || user.accountStatus === "UNDER_REVIEW") {
+    throw new Error("Your account is pending approval. Please contact support.");
+  }
+
+  const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    throw new Error("Invalid credentials, please try again")
+    throw new Error("Invalid credentials, please try again");
   }
 
   const token = jwt.sign(
@@ -306,10 +311,10 @@ export const loginFundiUser = async ({ emailOrPhone, password }) => {
     },
     process.env.JWT_SECRET,
     { expiresIn: "24h" },
-  )
+  );
 
-  return { token, user }
-}
+  return { token, user };
+};
 
 /**
  * Logout fundi user

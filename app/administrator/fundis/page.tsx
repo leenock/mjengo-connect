@@ -109,10 +109,15 @@ export default function AdminManageFundis() {
     subscriptionStatus: "TRIAL",
   });
   const [isSaving, setIsSaving] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState<{ id: string; name: string } | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null);
 
   // ✅ Manual refresh trigger
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -151,15 +156,24 @@ export default function AdminManageFundis() {
 
       const normalizedFundis = fundisList.map((fundi) => {
         const accountStatus = fundi.accountStatus || fundi.status || "ACTIVE";
-        const normalizedStatus = ["ACTIVE", "SUSPENDED", "PENDING"].includes(accountStatus.toUpperCase())
+        const normalizedStatus = ["ACTIVE", "SUSPENDED", "PENDING"].includes(
+          accountStatus.toUpperCase()
+        )
           ? (accountStatus.toUpperCase() as AccountStatus)
           : "ACTIVE";
 
-        const subscriptionPlan = ["FREE", "PREMIUM"].includes((fundi.subscriptionPlan || "FREE").toUpperCase())
+        const subscriptionPlan = ["FREE", "PREMIUM"].includes(
+          (fundi.subscriptionPlan || "FREE").toUpperCase()
+        )
           ? (fundi.subscriptionPlan!.toUpperCase() as SubscriptionPlan)
           : "FREE";
 
-        const subscriptionStatus = ["TRIAL", "ACTIVE", "EXPIRED", "CANCELLED"].includes((fundi.subscriptionStatus || "TRIAL").toUpperCase())
+        const subscriptionStatus = [
+          "TRIAL",
+          "ACTIVE",
+          "EXPIRED",
+          "CANCELLED",
+        ].includes((fundi.subscriptionStatus || "TRIAL").toUpperCase())
           ? (fundi.subscriptionStatus!.toUpperCase() as SubscriptionStatus)
           : "TRIAL";
 
@@ -193,7 +207,7 @@ export default function AdminManageFundis() {
 
   // ✅ Manual refresh
   const handleManualRefresh = useCallback(() => {
-    setRefreshTrigger(prev => prev + 1);
+    setRefreshTrigger((prev) => prev + 1);
   }, []);
 
   // ✅ Export to CSV
@@ -214,10 +228,10 @@ export default function AdminManageFundis() {
       "Subscription Plan",
       "Subscription Status",
       "Created At",
-      "Last Login"
+      "Last Login",
     ];
 
-    const rows = allFundis.map(fundi => [
+    const rows = allFundis.map((fundi) => [
       `"${fundi.id}"`,
       `"${fundi.firstName}"`,
       `"${fundi.lastName}"`,
@@ -231,15 +245,21 @@ export default function AdminManageFundis() {
       fundi.subscriptionPlan,
       fundi.subscriptionStatus,
       `"${new Date(fundi.createdAt).toLocaleString()}"`,
-      fundi.lastLogin ? `"${new Date(fundi.lastLogin).toLocaleString()}"` : ""
+      fundi.lastLogin ? `"${new Date(fundi.lastLogin).toLocaleString()}"` : "",
     ]);
 
-    const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => row.join(",")),
+    ].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.setAttribute("href", url);
-    link.setAttribute("download", `fundis_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute(
+      "download",
+      `fundis_export_${new Date().toISOString().split("T")[0]}.csv`
+    );
     link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
@@ -359,32 +379,65 @@ export default function AdminManageFundis() {
     loadFundis();
   }, [loadFundis, refreshTrigger]);
 
+  useEffect(() => {
+  const fetchCurrentUser = async () => {
+    try {
+      const userData = AdminAuthService.getUserData();
+      if (!userData?.id) return;
+
+      const res = await fetch(`http://localhost:5000/api/admin/getAdmin/${userData.id}`, {
+        headers: { ...AdminAuthService.getAuthHeaders() },
+      });
+      if (res.ok) {
+        const admin = await res.json();
+        setCurrentUserRole(admin.role || null);
+      }
+    } catch (err) {
+      console.error("Failed to fetch current admin role", err);
+    }
+  };
+  fetchCurrentUser();
+}, []);
+
   // ===== UI HELPERS =====
   const getStatusColor = (accountStatus: AccountStatus) => {
     switch (accountStatus) {
-      case "ACTIVE": return "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg";
-      case "SUSPENDED": return "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg";
-      case "PENDING": return "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg";
-      default: return "bg-gradient-to-r from-slate-500 to-slate-600 text-white";
+      case "ACTIVE":
+        return "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg";
+      case "SUSPENDED":
+        return "bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-lg";
+      case "PENDING":
+        return "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg";
+      default:
+        return "bg-gradient-to-r from-slate-500 to-slate-600 text-white";
     }
   };
 
   const getStatusIcon = (accountStatus: AccountStatus) => {
     switch (accountStatus) {
-      case "ACTIVE": return <CheckCircle className="w-4 h-4" />;
-      case "SUSPENDED": return <Ban className="w-4 h-4" />;
-      case "PENDING": return <AlertTriangle className="w-4 h-4" />;
-      default: return <AlertTriangle className="w-4 h-4" />;
+      case "ACTIVE":
+        return <CheckCircle className="w-4 h-4" />;
+      case "SUSPENDED":
+        return <Ban className="w-4 h-4" />;
+      case "PENDING":
+        return <AlertTriangle className="w-4 h-4" />;
+      default:
+        return <AlertTriangle className="w-4 h-4" />;
     }
   };
 
   const getSubscriptionColor = (status: SubscriptionStatus) => {
     switch (status) {
-      case "ACTIVE": return "bg-gradient-to-r from-emerald-500 to-teal-500 text-white";
-      case "TRIAL": return "bg-gradient-to-r from-blue-500 to-indigo-500 text-white";
-      case "EXPIRED": return "bg-gradient-to-r from-amber-500 to-orange-500 text-white";
-      case "CANCELLED": return "bg-gradient-to-r from-rose-500 to-pink-500 text-white";
-      default: return "bg-gradient-to-r from-slate-500 to-slate-600 text-white";
+      case "ACTIVE":
+        return "bg-gradient-to-r from-emerald-500 to-teal-500 text-white";
+      case "TRIAL":
+        return "bg-gradient-to-r from-blue-500 to-indigo-500 text-white";
+      case "EXPIRED":
+        return "bg-gradient-to-r from-amber-500 to-orange-500 text-white";
+      case "CANCELLED":
+        return "bg-gradient-to-r from-rose-500 to-pink-500 text-white";
+      default:
+        return "bg-gradient-to-r from-slate-500 to-slate-600 text-white";
     }
   };
 
@@ -397,17 +450,25 @@ export default function AdminManageFundis() {
       "bg-gradient-to-r from-fuchsia-500 to-pink-500",
       "bg-gradient-to-r from-indigo-500 to-blue-500",
     ];
-    const index = skill.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
+    const index =
+      skill.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) %
+      colors.length;
     return `${colors[index]} text-white shadow-md`;
   };
 
   const getExperienceColor = (level: string) => {
     const levelLower = level.toLowerCase();
-    if (levelLower.includes('expert') || levelLower.includes('senior')) {
+    if (levelLower.includes("expert") || levelLower.includes("senior")) {
       return "bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white";
-    } else if (levelLower.includes('intermediate') || levelLower.includes('mid')) {
+    } else if (
+      levelLower.includes("intermediate") ||
+      levelLower.includes("mid")
+    ) {
       return "bg-gradient-to-r from-blue-500 to-indigo-500 text-white";
-    } else if (levelLower.includes('beginner') || levelLower.includes('junior')) {
+    } else if (
+      levelLower.includes("beginner") ||
+      levelLower.includes("junior")
+    ) {
       return "bg-gradient-to-r from-emerald-500 to-teal-500 text-white";
     }
     return "bg-gradient-to-r from-slate-500 to-slate-600 text-white";
@@ -471,7 +532,9 @@ export default function AdminManageFundis() {
             <Loader2 className="w-6 h-6 flex-shrink-0 animate-spin" />
             <div>
               <p className="font-bold text-sm">Processing...</p>
-              <p className="text-sm opacity-90">Please wait while we complete your request</p>
+              <p className="text-sm opacity-90">
+                Please wait while we complete your request
+              </p>
             </div>
           </div>
         </div>
@@ -520,8 +583,12 @@ export default function AdminManageFundis() {
           {/* Search & Filter */}
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden mb-8">
             <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-indigo-50 to-blue-50">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">Search & Filter</h2>
-              <p className="text-slate-600 font-extrabold">Find and manage fundis efficiently</p>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">
+                Search & Filter
+              </h2>
+              <p className="text-slate-600 font-extrabold">
+                Find and manage fundis efficiently
+              </p>
             </div>
             <div className="p-4 sm:p-6 lg:p-8">
               <div className="flex flex-col sm:flex-row gap-4">
@@ -538,7 +605,9 @@ export default function AdminManageFundis() {
                 <div className="flex flex-wrap gap-3">
                   <select
                     value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value as FilterStatus)}
+                    onChange={(e) =>
+                      setFilterStatus(e.target.value as FilterStatus)
+                    }
                     className="w-full sm:w-auto px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                   >
                     <option value="all">All Status</option>
@@ -546,7 +615,7 @@ export default function AdminManageFundis() {
                     <option value="PENDING">Pending</option>
                     <option value="SUSPENDED">Suspended</option>
                   </select>
-                  <button 
+                  <button
                     onClick={handleManualRefresh}
                     disabled={loading}
                     className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl font-bold hover:from-blue-600 hover:to-indigo-600 transition-all duration-300 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2 disabled:opacity-50"
@@ -568,7 +637,9 @@ export default function AdminManageFundis() {
           {/* Fundis Table */}
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900">Fundis Directory</h2>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+                Fundis Directory
+              </h2>
               <div className="flex items-center gap-3">
                 <button
                   onClick={exportToCSV}
@@ -616,14 +687,18 @@ export default function AdminManageFundis() {
                             <span>Skills</span>
                           </div>
                         </th>
-                        <th className="text-left py-5 px-6 font-black text-white text-sm uppercase tracking-wider">Status</th>
-                        <th className="text-left py-5 px-6 font-black text-white text-sm uppercase tracking-wider">Actions</th>
+                        <th className="text-left py-5 px-6 font-black text-white text-sm uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="text-left py-5 px-6 font-black text-white text-sm uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {currentFundis.map((fundi) => (
-                        <tr 
-                          key={fundi.id} 
+                        <tr
+                          key={fundi.id}
                           className="hover:bg-gradient-to-r hover:from-blue-50/50 hover:to-indigo-50/50 transition-all duration-300 group border-l-4 border-l-transparent hover:border-l-blue-500"
                         >
                           <td className="py-5 px-6">
@@ -633,10 +708,15 @@ export default function AdminManageFundis() {
                                   {getAvatarInitials(fundi)}
                                 </div>
                                 <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full border-2 border-white flex items-center justify-center">
-                                  <div className={`w-2 h-2 rounded-full ${
-                                    fundi.accountStatus === "ACTIVE" ? "bg-emerald-500" :
-                                    fundi.accountStatus === "PENDING" ? "bg-amber-500" : "bg-rose-500"
-                                  }`} />
+                                  <div
+                                    className={`w-2 h-2 rounded-full ${
+                                      fundi.accountStatus === "ACTIVE"
+                                        ? "bg-emerald-500"
+                                        : fundi.accountStatus === "PENDING"
+                                        ? "bg-amber-500"
+                                        : "bg-rose-500"
+                                    }`}
+                                  />
                                 </div>
                               </div>
                               <div className="min-w-0 flex-1">
@@ -645,11 +725,16 @@ export default function AdminManageFundis() {
                                 </p>
                                 <div className="flex items-center space-x-2 text-sm mt-1">
                                   <MapPin className="w-4 h-4 text-slate-400 flex-shrink-0" />
-                                  <span className="font-medium text-slate-600 truncate">{fundi.location || "N/A"}</span>
+                                  <span className="font-medium text-slate-600 truncate">
+                                    {fundi.location || "N/A"}
+                                  </span>
                                 </div>
                                 <p className="text-xs text-slate-500 mt-1 flex items-center">
                                   <Calendar className="w-3 h-3 mr-1" />
-                                  Joined: {new Date(fundi.createdAt).toLocaleDateString()}
+                                  Joined:{" "}
+                                  {new Date(
+                                    fundi.createdAt
+                                  ).toLocaleDateString()}
                                 </p>
                               </div>
                             </div>
@@ -672,20 +757,32 @@ export default function AdminManageFundis() {
                           </td>
                           <td className="py-5 px-6 hidden lg:table-cell">
                             <div className="flex flex-wrap gap-2 max-w-xs">
-                              <span className={`px-3 py-1.5 text-xs font-bold rounded-full ${getSkillBadgeColor(fundi.primary_skill)}`}>
+                              <span
+                                className={`px-3 py-1.5 text-xs font-bold rounded-full ${getSkillBadgeColor(
+                                  fundi.primary_skill
+                                )}`}
+                              >
                                 {fundi.primary_skill || "N/A"}
                               </span>
-                              <span className={`px-3 py-1.5 text-xs font-bold rounded-full ${getExperienceColor(fundi.experience_level)}`}>
+                              <span
+                                className={`px-3 py-1.5 text-xs font-bold rounded-full ${getExperienceColor(
+                                  fundi.experience_level
+                                )}`}
+                              >
                                 {fundi.experience_level || "N/A"}
                               </span>
                             </div>
                           </td>
                           <td className="py-5 px-6">
                             <div
-                              className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(fundi.accountStatus)} shadow-md hover:shadow-lg transition-shadow`}
+                              className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-bold ${getStatusColor(
+                                fundi.accountStatus
+                              )} shadow-md hover:shadow-lg transition-shadow`}
                             >
                               {getStatusIcon(fundi.accountStatus)}
-                              <span className="capitalize font-bold">{fundi.accountStatus.toLowerCase()}</span>
+                              <span className="capitalize font-bold">
+                                {fundi.accountStatus.toLowerCase()}
+                              </span>
                             </div>
                           </td>
                           <td className="py-5 px-6">
@@ -704,18 +801,27 @@ export default function AdminManageFundis() {
                               >
                                 <Edit className="w-4 h-4" />
                               </button>
-                              <button
-                                onClick={() => setDeleteConfirmation({ id: fundi.id, name: getFullName(fundi) })}
-                                disabled={deletingId === fundi.id || isProcessing}
-                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600 transition-all duration-300 shadow-md hover:shadow-lg group-hover:scale-110 disabled:opacity-50"
-                                title="Delete fundi"
-                              >
-                                {deletingId === fundi.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="w-4 h-4" />
-                                )}
-                              </button>
+                              {currentUserRole === "SUPER_ADMIN" && (
+                                <button
+                                  onClick={() =>
+                                    setDeleteConfirmation({
+                                      id: fundi.id,
+                                      name: getFullName(fundi),
+                                    })
+                                  }
+                                  disabled={
+                                    deletingId === fundi.id || isProcessing
+                                  }
+                                  className="w-10 h-10 flex items-center justify-center rounded-xl bg-gradient-to-r from-rose-500 to-pink-500 text-white hover:from-rose-600 hover:to-pink-600 transition-all duration-300 shadow-md hover:shadow-lg group-hover:scale-110 disabled:opacity-50"
+                                  title="Delete fundi"
+                                >
+                                  {deletingId === fundi.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Trash2 className="w-4 h-4" />
+                                  )}
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -729,11 +835,14 @@ export default function AdminManageFundis() {
                   <div className="px-4 sm:px-6 py-6 bg-gradient-to-r from-slate-50 to-slate-100 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-sm font-medium text-slate-600">
                       Showing {(currentPage - 1) * itemsPerPage + 1}–
-                      {Math.min(currentPage * itemsPerPage, allFundis.length)} of {allFundis.length} fundis
+                      {Math.min(currentPage * itemsPerPage, allFundis.length)}{" "}
+                      of {allFundis.length} fundis
                     </div>
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       <button
-                        onClick={() => setCurrentPage(Math.max(currentPage - 1, 1))}
+                        onClick={() =>
+                          setCurrentPage(Math.max(currentPage - 1, 1))
+                        }
                         disabled={currentPage === 1}
                         className="px-4 py-2 rounded-xl font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
                       >
@@ -741,7 +850,12 @@ export default function AdminManageFundis() {
                       </button>
                       {getPageNumbers().map((pageNum, index) =>
                         pageNum === -1 ? (
-                          <span key={`ellipsis-${index}`} className="px-3 py-2 text-slate-400 font-bold">...</span>
+                          <span
+                            key={`ellipsis-${index}`}
+                            className="px-3 py-2 text-slate-400 font-bold"
+                          >
+                            ...
+                          </span>
                         ) : (
                           <button
                             key={pageNum}
@@ -757,7 +871,9 @@ export default function AdminManageFundis() {
                         )
                       )}
                       <button
-                        onClick={() => setCurrentPage(Math.min(currentPage + 1, totalPages))}
+                        onClick={() =>
+                          setCurrentPage(Math.min(currentPage + 1, totalPages))
+                        }
                         disabled={currentPage === totalPages}
                         className="px-4 py-2 rounded-xl font-medium text-slate-600 hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1"
                       >
@@ -774,13 +890,15 @@ export default function AdminManageFundis() {
 
       {/* ===== VIEW MODAL ===== */}
       {viewFundi && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={handleBackdropClick}
         >
           <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/30 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-gradient-to-r from-indigo-50 to-blue-50 border-b border-white/30 p-6 flex items-center justify-between">
-              <h2 className="text-2xl font-black text-slate-900">Fundi Details</h2>
+              <h2 className="text-2xl font-black text-slate-900">
+                Fundi Details
+              </h2>
               <button
                 onClick={() => setViewFundi(null)}
                 className="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center transition-colors"
@@ -794,10 +912,18 @@ export default function AdminManageFundis() {
                   {getAvatarInitials(viewFundi)}
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-slate-900">{getFullName(viewFundi)}</h3>
-                  <div className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-bold ${getStatusColor(viewFundi.accountStatus)}`}>
+                  <h3 className="text-xl font-bold text-slate-900">
+                    {getFullName(viewFundi)}
+                  </h3>
+                  <div
+                    className={`inline-flex items-center space-x-2 px-3 py-1.5 rounded-full text-xs font-bold ${getStatusColor(
+                      viewFundi.accountStatus
+                    )}`}
+                  >
                     {getStatusIcon(viewFundi.accountStatus)}
-                    <span className="capitalize">{viewFundi.accountStatus.toLowerCase()}</span>
+                    <span className="capitalize">
+                      {viewFundi.accountStatus.toLowerCase()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -806,21 +932,27 @@ export default function AdminManageFundis() {
                   <Mail className="w-5 h-5 text-slate-400" />
                   <div>
                     <p className="text-xs text-slate-500">Email</p>
-                    <p className="font-medium text-slate-700">{viewFundi.email}</p>
+                    <p className="font-medium text-slate-700">
+                      {viewFundi.email}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl">
                   <Phone className="w-5 h-5 text-slate-400" />
                   <div>
                     <p className="text-xs text-slate-500">Phone</p>
-                    <p className="font-medium text-slate-700">{viewFundi.phone || "N/A"}</p>
+                    <p className="font-medium text-slate-700">
+                      {viewFundi.phone || "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl">
                   <MapPin className="w-5 h-5 text-slate-400" />
                   <div>
                     <p className="text-xs text-slate-500">Location</p>
-                    <p className="font-medium text-slate-700">{viewFundi.location || "N/A"}</p>
+                    <p className="font-medium text-slate-700">
+                      {viewFundi.location || "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl">
@@ -834,12 +966,22 @@ export default function AdminManageFundis() {
                 </div>
               </div>
               <div className="p-4 bg-slate-50 rounded-xl">
-                <h4 className="font-bold text-slate-900 mb-3">Skills & Experience</h4>
+                <h4 className="font-bold text-slate-900 mb-3">
+                  Skills & Experience
+                </h4>
                 <div className="flex flex-wrap gap-2">
-                  <span className={`px-3 py-1.5 text-sm font-bold rounded-full ${getSkillBadgeColor(viewFundi.primary_skill)}`}>
+                  <span
+                    className={`px-3 py-1.5 text-sm font-bold rounded-full ${getSkillBadgeColor(
+                      viewFundi.primary_skill
+                    )}`}
+                  >
                     {viewFundi.primary_skill || "N/A"}
                   </span>
-                  <span className={`px-3 py-1.5 text-sm font-bold rounded-full ${getExperienceColor(viewFundi.experience_level)}`}>
+                  <span
+                    className={`px-3 py-1.5 text-sm font-bold rounded-full ${getExperienceColor(
+                      viewFundi.experience_level
+                    )}`}
+                  >
                     {viewFundi.experience_level || "N/A"}
                   </span>
                 </div>
@@ -849,14 +991,22 @@ export default function AdminManageFundis() {
                   <Sparkles className="w-5 h-5 text-slate-400" />
                   <div>
                     <p className="text-xs text-slate-500">Subscription Plan</p>
-                    <p className="font-medium text-slate-700 capitalize">{viewFundi.subscriptionPlan.toLowerCase()}</p>
+                    <p className="font-medium text-slate-700 capitalize">
+                      {viewFundi.subscriptionPlan.toLowerCase()}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl">
                   <CheckCircle className="w-5 h-5 text-slate-400" />
                   <div>
-                    <p className="text-xs text-slate-500">Subscription Status</p>
-                    <p className={`font-medium ${getSubscriptionColor(viewFundi.subscriptionStatus)} px-2 py-0.5 rounded-full`}>
+                    <p className="text-xs text-slate-500">
+                      Subscription Status
+                    </p>
+                    <p
+                      className={`font-medium ${getSubscriptionColor(
+                        viewFundi.subscriptionStatus
+                      )} px-2 py-0.5 rounded-full`}
+                    >
                       {viewFundi.subscriptionStatus}
                     </p>
                   </div>
@@ -886,7 +1036,7 @@ export default function AdminManageFundis() {
 
       {/* ===== EDIT MODAL ===== */}
       {editFundi && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={handleBackdropClick}
         >
@@ -903,76 +1053,129 @@ export default function AdminManageFundis() {
             <div className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">First Name</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    First Name
+                  </label>
                   <input
                     type="text"
                     value={editFormData.firstName}
-                    onChange={(e) => setEditFormData({...editFormData, firstName: e.target.value})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        firstName: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Last Name</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Last Name
+                  </label>
                   <input
                     type="text"
                     value={editFormData.lastName}
-                    onChange={(e) => setEditFormData({...editFormData, lastName: e.target.value})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        lastName: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Email</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Email
+                  </label>
                   <input
                     type="email"
                     value={editFormData.email}
-                    onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        email: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Phone</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Phone
+                  </label>
                   <input
                     type="tel"
                     value={editFormData.phone}
-                    onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        phone: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Location</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Location
+                  </label>
                   <input
                     type="text"
                     value={editFormData.location}
-                    onChange={(e) => setEditFormData({...editFormData, location: e.target.value})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        location: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Primary Skill</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Primary Skill
+                  </label>
                   <input
                     type="text"
                     value={editFormData.primary_skill}
-                    onChange={(e) => setEditFormData({...editFormData, primary_skill: e.target.value})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        primary_skill: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Experience Level</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Experience Level
+                  </label>
                   <input
                     type="text"
                     value={editFormData.experience_level}
-                    onChange={(e) => setEditFormData({...editFormData, experience_level: e.target.value})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        experience_level: e.target.value,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Account Status</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Account Status
+                  </label>
                   <select
                     value={editFormData.accountStatus}
-                    onChange={(e) => setEditFormData({
-                      ...editFormData, 
-                      accountStatus: e.target.value as AccountStatus
-                    })}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        accountStatus: e.target.value as AccountStatus,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="ACTIVE">Active</option>
@@ -981,19 +1184,33 @@ export default function AdminManageFundis() {
                   </select>
                 </div>
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Biography</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Biography
+                  </label>
                   <textarea
                     value={editFormData.biography}
-                    onChange={(e) => setEditFormData({...editFormData, biography: e.target.value})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        biography: e.target.value,
+                      })
+                    }
                     rows={3}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Subscription Plan</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Subscription Plan
+                  </label>
                   <select
                     value={editFormData.subscriptionPlan}
-                    onChange={(e) => setEditFormData({...editFormData, subscriptionPlan: e.target.value as SubscriptionPlan})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        subscriptionPlan: e.target.value as SubscriptionPlan,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="FREE">Free</option>
@@ -1001,10 +1218,18 @@ export default function AdminManageFundis() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Subscription Status</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Subscription Status
+                  </label>
                   <select
                     value={editFormData.subscriptionStatus}
-                    onChange={(e) => setEditFormData({...editFormData, subscriptionStatus: e.target.value as SubscriptionStatus})}
+                    onChange={(e) =>
+                      setEditFormData({
+                        ...editFormData,
+                        subscriptionStatus: e.target
+                          .value as SubscriptionStatus,
+                      })
+                    }
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="TRIAL">Trial</option>
@@ -1043,7 +1268,7 @@ export default function AdminManageFundis() {
 
       {/* ===== DELETE CONFIRMATION MODAL ===== */}
       {deleteConfirmation && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={handleBackdropClick}
         >
@@ -1057,15 +1282,23 @@ export default function AdminManageFundis() {
                 )}
               </div>
               <h3 className="text-xl font-black text-slate-900 mb-2">
-                {deletingId === deleteConfirmation.id ? "Deleting Fundi..." : "Delete Fundi?"}
+                {deletingId === deleteConfirmation.id
+                  ? "Deleting Fundi..."
+                  : "Delete Fundi?"}
               </h3>
               <p className="text-slate-600 mb-6">
                 {deletingId === deleteConfirmation.id ? (
                   "Please wait while we delete the fundi..."
                 ) : (
                   <>
-                    Are you sure you want to delete <span className="font-bold text-slate-900">{deleteConfirmation.name}</span>?<br />
-                    <span className="text-red-600 font-medium">This action cannot be undone.</span>
+                    Are you sure you want to delete{" "}
+                    <span className="font-bold text-slate-900">
+                      {deleteConfirmation.name}
+                    </span>
+                    ?<br />
+                    <span className="text-red-600 font-medium">
+                      This action cannot be undone.
+                    </span>
                   </>
                 )}
               </p>
@@ -1079,7 +1312,9 @@ export default function AdminManageFundis() {
                   </button>
                   <button
                     onClick={() => deleteFundi(deleteConfirmation.id)}
-                    disabled={deletingId === deleteConfirmation.id || isProcessing}
+                    disabled={
+                      deletingId === deleteConfirmation.id || isProcessing
+                    }
                     className="px-6 py-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl font-bold hover:from-red-600 hover:to-pink-600 transition-all duration-300 shadow-lg disabled:opacity-50 flex items-center gap-2"
                   >
                     {deletingId === deleteConfirmation.id ? (

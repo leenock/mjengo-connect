@@ -93,6 +93,11 @@ export const updateClientUser = async (id, userData) => {
     userData.password = await bcrypt.hash(userData.password, saltRounds);
   }
 
+  // Automatically sync isActive with accountStatus
+  if (userData.accountStatus !== undefined) {
+    userData.isActive = userData.accountStatus === "ACTIVE";
+  }
+
   const updatedUser = await prisma.client_User.update({
     where: { id },
     data: userData,
@@ -189,14 +194,33 @@ export const loginClientUser = async ({ emailOrPhone, password }) => {
     throw new Error("User not found");
   }
 
+  // Check if account is active (both isActive and accountStatus)
+  if (!user.isActive) {
+    throw new Error("Account is deactivated. Please contact support.");
+  }
+
+  // Check account status
+  if (user.accountStatus && user.accountStatus !== "ACTIVE") {
+    const statusMessage = {
+      "SUSPENDED": "Account is suspended. Please contact support.",
+      "PENDING": "Account is pending approval. Please contact support.",
+      "INACTIVE": "Account is inactive. Please contact support.",
+      "DEACTIVATED": "Account is deactivated. Please contact support."
+    }[user.accountStatus] || `Account is ${user.accountStatus.toLowerCase()}. Please contact support.`;
+    
+    throw new Error(statusMessage);
+  }
+
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     throw new Error("Invalid credentials, please try again");
   }
 
   const token = jwt.sign(
-    { id: user.id,
-      email: user.email },
+    { 
+      id: user.id,
+      email: user.email 
+    },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }
   );

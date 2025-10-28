@@ -750,19 +750,19 @@ export default function AdminSettings() {
                             {canEditUser(user) && (
                               <button
                                 onClick={() => handleEditUser(user)}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-blue-100 transition-colors opacity-0 group-hover:opacity-100"
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 shadow-md hover:shadow-lg"
                                 title="Edit user"
                               >
-                                <Edit className="w-4 h-4 text-blue-600" />
+                                <Edit className="w-4 h-4" />
                               </button>
                             )}
                             {canDeleteUser(user) && (
                               <button
                                 onClick={() => handleDeleteUser(user)}
-                                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-100 transition-colors opacity-0 group-hover:opacity-100"
+                                className="w-8 h-8 flex items-center justify-center rounded-lg bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 transition-all duration-300 shadow-md hover:shadow-lg"
                                 title="Delete user"
                               >
-                                <Trash2 className="w-4 h-4 text-red-600" />
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             )}
                             {!canEditUser(user) && !canDeleteUser(user) && (

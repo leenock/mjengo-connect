@@ -64,6 +64,15 @@ export const updateFundiUserSchema = Joi.object({
     "string.min": "Location must be at least 2 characters.",
     "string.max": "Location must be at most 100 characters.",
   }),
+  // phone number is not updatable
+  phone: Joi.string()
+    .pattern(/^\d{10,15}$/)
+    .required()
+    .messages({
+      "string.pattern.base": "Phone must be a valid number between 10 to 15 digits.",
+      "string.empty": "Phone cannot be empty.",
+      "any.required": "Phone is required.",
+    }),
   primary_skill: Joi.string().min(2).max(50).optional().messages({
     "string.min": "Primary skill must be at least 2 characters.",
     "string.max": "Primary skill must be at most 50 characters.",

@@ -21,7 +21,7 @@ import {
   loginFundiUserSchema,
 } from "../utils/validation/fundi_UserValidation.js";
 
-import { adminAuthMiddleware } from "../middleware/adminAuth.js";
+import { adminAuthMiddleware, superAdminMiddleware } from "../middleware/adminAuth.js";
 
 
 const router = express.Router();
@@ -64,7 +64,7 @@ router.post(
 // Delete fundi user (admin only)
 router.delete(
   "/deleteFundi/:id",
-  adminAuthMiddleware,
+  adminAuthMiddleware,superAdminMiddleware,
   deleteFundiUserController
 );
 router.post("/logoutFundi", authenticateFundiToken, logoutFundiController);

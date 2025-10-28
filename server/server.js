@@ -17,6 +17,8 @@ import adminSupportTicketsRoute from "./routes/adminSupportTickets.js" // Added 
 import ticketsFundiRoute from "./routes/ticketsFundiRoute.js" // Added fundi tickets route import
 import ticketSupportRoute from "./routes/ticketSupportRoute.js" // Added ticket support route import
 
+import adminJobRoutes from './routes/adminJobRoutes.js'; // Import admin job routes
+
 // Load environment variables
 dotenv.config()
 
@@ -40,6 +42,9 @@ app.use("/api/client/auth", client_authRoute)
 
 // Job Routes
 app.use("/api/client", jobRoute)
+
+// Use admin routes
+app.use('/api/admin/jobs', adminJobRoutes);
 
 // Support Ticket Routes
 app.use("/api/support", ticketUsersRoute)

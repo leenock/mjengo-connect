@@ -10,6 +10,10 @@ import {
 import { validate } from "../middleware/validate.js";
 import { registerClientUserSchema } from "../utils/validation/client_UserValidation.js";
 
+import { adminAuthMiddleware, superAdminMiddleware } from "../middleware/adminAuth.js";
+
+
+
 const router = express.Router();
 
 router.post(
@@ -17,10 +21,10 @@ router.post(
   validate(registerClientUserSchema),
   registerClientUser
 );
-router.get("/getAllClientUsers", getAllClientUsers);
+router.get("/getAllClientUsers", adminAuthMiddleware, getAllClientUsers);
 router.get("/getAllClientUsers/:id", getClientuserById);
 router.put("/updateClientUser/:id", updateClientUserController);
 router.post("/updatePassword", updatePasswordController);
-router.delete("/deleteClientUser/:id", deleteClientUserController);
+router.delete("/deleteClientUser/:id",adminAuthMiddleware, superAdminMiddleware, deleteClientUserController);
 
 export default router;

@@ -13,11 +13,15 @@ import { validate } from "../middleware/validate.js"
 import { authenticateToken } from "../middleware/auth.js"
 import { createJobSchema, updateJobSchema, updateJobStatusSchema } from "../utils/validation/jobValidation.js"
 
+//import { adminAuthMiddleware } from "../middleware/adminAuth.js";
+
+
 const router = express.Router()
 
 // Public routes
 router.get("/jobs", getAllJobsController) // Get all jobs (public)
 router.get("/jobs/:id", getJobByIdController) // Get job by ID (public)
+
 
 // Protected routes (require authentication)
 router.post("/jobs", authenticateToken, validate(createJobSchema), createJobController) // Create job
