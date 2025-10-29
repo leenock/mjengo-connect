@@ -60,7 +60,7 @@ export const createJob = async (jobData, postedById) => {
  */
 export const getAllJobs = async (filters = {}, pagination = {}) => {
   try {
-    const { page = 1, limit = 11 } = pagination
+    const { page = 1, limit = 110 } = pagination
     const skip = (page - 1) * limit
 
     const where = {}
@@ -218,6 +218,7 @@ export const updateJob = async (jobId, clientId, updateData) => {
     if (existingJob.postedById !== clientId) {
       throw new Error("Unauthorized: You can only update your own jobs")
     }
+    
 
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
@@ -238,7 +239,7 @@ export const updateJob = async (jobId, clientId, updateData) => {
         email: updateData.email,
         preferredContact: updateData.preferredContact,
         isUrgent: updateData.isUrgent,
-        status: updateData.status,
+     //   status: updateData.status,
       },
       include: {
         postedBy: {

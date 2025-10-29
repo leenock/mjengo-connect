@@ -209,15 +209,15 @@ export default function AdminManageJobs() {
       setTimeout(() => {
         setShowSuccess(false);
         setSuccessMessage(null);
-      }, 3000);
-    }, 500);
+      }, 4000);
+    }, 5000);
   };
 
   const deleteJob = async (id: string) => {
     setDeletingId(id);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/client/AdminDeletejobs/${id}`,
+        ` http://localhost:5000/api/admin/jobs/jobs/${id}`,
         {
           method: "DELETE",
           headers: { ...AdminAuthService.getAuthHeaders() },
@@ -271,7 +271,7 @@ export default function AdminManageJobs() {
     setIsSaving(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/client/jobs/${editJob.id}`,
+        ` http://localhost:5000/api/admin/jobs/jobs/${editJob.id}`,
         {
           method: "PUT",
           headers: {

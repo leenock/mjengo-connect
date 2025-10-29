@@ -163,10 +163,10 @@ export const updateJobSchema = Joi.object({
 
 export const updateJobStatusSchema = Joi.object({
   status: Joi.string()
-    .valid("PENDING", "ACTIVE", "CLOSED", "EXPIRED")
+    .valid("PENDING", "ACTIVE", "CLOSED", "EXPIRED", "REJECTED")
     .required()
     .messages({
-      "any.only": "Status must be one of: PENDING, ACTIVE, CLOSED, EXPIRED.",
+      "any.only": "Status must be one of: PENDING, ACTIVE, CLOSED, EXPIRED, REJECTED.",
       "any.required": "Status is required.",
     }),
 });

@@ -45,6 +45,7 @@ export function middleware(req: NextRequest) {
     "/administrator/clients",
     "/administrator/postJob",
     "/administrator/reports",
+    "/administrator/jobListings",
     "/administrator/tickets",
     "/administrator/moderation",
     "/administrator/system_logs",

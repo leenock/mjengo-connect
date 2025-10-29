@@ -45,7 +45,7 @@ interface Job {
   preferredContact: string
   isUrgent: boolean
   isPaid: boolean
-  status: "PENDING" | "ACTIVE" | "CLOSED" | "EXPIRED"
+  status: "PENDING" | "ACTIVE" | "CLOSED" | "EXPIRED" | "REJECTED"
   timePosted: string
   clickCount: number
   postedBy: {
@@ -320,7 +320,6 @@ export default function EditJobPage() {
             email: jobDetails.email,
             preferredContact: jobDetails.preferredContact,
             isUrgent: jobDetails.isUrgent,
-            status: jobDetails.status,
           }),
         })
         if (!response.ok) {
@@ -866,26 +865,7 @@ export default function EditJobPage() {
                       </div>
                       
                       {/* Job Status Select */}
-                      <div>
-                        <label
-                          htmlFor="status"
-                          className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide"
-                        >
-                          Job Status
-                        </label>
-                        <select
-                          id="status"
-                          name="status"
-                          value={jobDetails.status}
-                          onChange={handleSelectChange}
-                          className="flex h-auto w-full items-center justify-between rounded-xl border-2 border-slate-200 bg-white/60 px-4 py-4 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-violet-500/20 focus:border-violet-500 transition-all duration-200 text-slate-900 font-medium hover:border-slate-300 shadow-sm"
-                        >
-                          <option value="PENDING">Pending</option>
-                          <option value="ACTIVE">Active</option>
-                          <option value="CLOSED">Closed</option>
-                          <option value="EXPIRED">Expired</option>
-                        </select>
-                      </div>
+                    
                       
                       {/* Validation Notice */}
                       <div className="bg-gradient-to-r from-blue-100 to-indigo-100 border-2 border-blue-300 rounded-2xl p-6">

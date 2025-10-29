@@ -44,7 +44,7 @@ interface Job {
   preferredContact: string
   isUrgent: boolean
   isPaid: boolean
-  status: "PENDING" | "ACTIVE" | "CLOSED" | "EXPIRED"
+  status: "PENDING" | "ACTIVE" | "CLOSED" | "EXPIRED" | "REJECTED"
   timePosted: string
   clickCount: number
   postedBy: {
@@ -185,6 +185,12 @@ export default function MyJobsPage() {
         return (
           <span className="px-3 py-1 bg-gradient-to-r from-red-100 to-pink-100 text-red-700 text-xs font-bold rounded-full flex items-center gap-1 border border-red-200">
             <XCircle className="w-3 h-3" /> Expired
+          </span>
+        )
+      case "REJECTED":
+        return (
+          <span className="px-3 py-1 bg-gradient-to-r from-red-100 to-pink-100 text-red-700 text-xs font-bold rounded-full flex items-center gap-1 border border-red-200">
+            <XCircle className="w-3 h-3" /> Rejected
           </span>
         )
       default:

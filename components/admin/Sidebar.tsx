@@ -280,7 +280,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
           const counts: FundiCounts = {
             total: fundisList.length,
-            active: fundisList.filter((fundi: SidebarFundi) => fundi.status === 'ACTIVE' || fundi.status === 'active').length,
+            active: fundisList.filter((fundi: SidebarFundi) => fundi.status === 'ACTIVE' || fundi.status === 'ACTIVE').length,
             verified: fundisList.filter((fundi: SidebarFundi) => fundi.isVerified === true).length,
             available: fundisList.filter((fundi: SidebarFundi) => fundi.availability === 'available' || fundi.availability === 'AVAILABLE').length,
             busy: fundisList.filter((fundi: SidebarFundi) => fundi.availability === 'busy' || fundi.availability === 'BUSY').length
