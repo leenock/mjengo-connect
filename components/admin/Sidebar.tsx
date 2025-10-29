@@ -37,16 +37,15 @@ interface JobCounts {
 interface ClientCounts {
   total: number
   active: number
-  verified: number
-  unverified: number
+  suspended: number
+  pending: number
 }
 
 interface FundiCounts {
   total: number
   active: number
-  verified: number
-  available: number
-  busy: number
+  suspended: number
+  pending: number
 }
 
 interface UserCounts {
@@ -55,6 +54,7 @@ interface UserCounts {
   admins: number
   moderators: number
   support: number
+  super_admin: number
 }
 
 interface MessageCounts {
@@ -64,30 +64,27 @@ interface MessageCounts {
   resolved: number
 }
 
-// Reuse the JobStatus type from your main component
-type JobStatus = "PENDING" | "ACTIVE" | "CLOSED" | "REJECTED" | "EXPIRED";
-
-// Minimal interfaces for sidebar
+// Updated interfaces for sidebar with string types for flexibility
 interface SidebarJob {
-  status: JobStatus;
+  status: string;
 }
 
 interface SidebarClient {
   id: string;
-  status: string;
-  isVerified: boolean;
+  accountStatus?: string;
+  status?: string;
 }
 
 interface SidebarFundi {
   id: string;
-  status: string;
-  isVerified: boolean;
-  availability: string;
+  accountStatus?: string;
+  status?: string;
 }
 
 interface SidebarUser {
   id: string;
-  status: string;
+  accountStatus?: string;
+  status?: string;
   role: string;
 }
 
@@ -95,6 +92,7 @@ interface SidebarMessage {
   id: string;
   status: string;
   isRead: boolean;
+  read?: boolean;
 }
 
 export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
@@ -116,22 +114,22 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   const [clientCounts, setClientCounts] = useState<ClientCounts>({
     total: 0,
     active: 0,
-    verified: 0,
-    unverified: 0
+    suspended: 0,
+    pending: 0
   })
   const [fundiCounts, setFundiCounts] = useState<FundiCounts>({
     total: 0,
     active: 0,
-    verified: 0,
-    available: 0,
-    busy: 0
+    suspended: 0,
+    pending: 0
   })
   const [userCounts, setUserCounts] = useState<UserCounts>({
     total: 0,
     active: 0,
     admins: 0,
     moderators: 0,
-    support: 0
+    support: 0,
+    super_admin:  0
   })
   const [messageCounts, setMessageCounts] = useState<MessageCounts>({
     total: 0,
@@ -162,7 +160,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchJobCounts = async () => {
       try {
         setLoadingJobs(true)
-        const response = await fetch('http://localhost:5000/api/client/jobs/', {
+        const response = await fetch('http://localhost:5000/api/admin/jobs/jobs', {
           headers: { 
             "Content-Type": "application/json",
             ...AdminAuthService.getAuthHeaders() 
@@ -172,6 +170,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
         if (response.ok) {
           const data = await response.json()
+          console.log('Jobs API Response:', data);
           
           let jobsList: SidebarJob[] = []
           if (Array.isArray(data)) {
@@ -184,16 +183,29 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             jobsList = [data]
           }
 
+          // Convert all statuses to uppercase for consistent comparison
           const counts: JobCounts = {
             total: jobsList.length,
-            active: jobsList.filter((job: SidebarJob) => job.status === 'ACTIVE').length,
-            pending: jobsList.filter((job: SidebarJob) => job.status === 'PENDING').length,
-            closed: jobsList.filter((job: SidebarJob) => job.status === 'CLOSED').length,
-            rejected: jobsList.filter((job: SidebarJob) => job.status === 'REJECTED').length,
-            expired: jobsList.filter((job: SidebarJob) => job.status === 'EXPIRED').length
+            active: jobsList.filter((job: SidebarJob) => 
+              job.status.toUpperCase() === 'ACTIVE'
+            ).length,
+            pending: jobsList.filter((job: SidebarJob) => 
+              job.status.toUpperCase() === 'PENDING'
+            ).length,
+            closed: jobsList.filter((job: SidebarJob) => 
+              job.status.toUpperCase() === 'CLOSED'
+            ).length,
+            rejected: jobsList.filter((job: SidebarJob) => 
+              job.status.toUpperCase() === 'REJECTED'
+            ).length,
+            expired: jobsList.filter((job: SidebarJob) => 
+              job.status.toUpperCase() === 'EXPIRED'
+            ).length
           }
 
           setJobCounts(counts)
+        } else {
+          console.error('Failed to fetch jobs:', response.status);
         }
       } catch (error) {
         console.error('Failed to fetch job counts:', error)
@@ -205,7 +217,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     fetchJobCounts()
   }, [])
 
-  // Fetch client counts
+  // Fetch client counts - Updated with correct status types
   useEffect(() => {
     const fetchClientCounts = async () => {
       try {
@@ -220,6 +232,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
         if (response.ok) {
           const data = await response.json()
+          console.log('Clients API Response:', data);
           
           let clientsList: SidebarClient[] = []
           if (Array.isArray(data)) {
@@ -232,14 +245,26 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             clientsList = [data]
           }
 
+          // Handle client account status: ACTIVE, SUSPENDED, PENDING
           const counts: ClientCounts = {
             total: clientsList.length,
-            active: clientsList.filter((client: SidebarClient) => client.status === 'ACTIVE' || client.status === 'active').length,
-            verified: clientsList.filter((client: SidebarClient) => client.isVerified === true).length,
-            unverified: clientsList.filter((client: SidebarClient) => client.isVerified === false).length
+            active: clientsList.filter((client: SidebarClient) => {
+              const status = client.accountStatus || client.status || '';
+              return status.toUpperCase() === 'ACTIVE';
+            }).length,
+            suspended: clientsList.filter((client: SidebarClient) => {
+              const status = client.accountStatus || client.status || '';
+              return status.toUpperCase() === 'SUSPENDED';
+            }).length,
+            pending: clientsList.filter((client: SidebarClient) => {
+              const status = client.accountStatus || client.status || '';
+              return status.toUpperCase() === 'PENDING';
+            }).length
           }
 
           setClientCounts(counts)
+        } else {
+          console.error('Failed to fetch clients:', response.status);
         }
       } catch (error) {
         console.error('Failed to fetch client counts:', error)
@@ -251,7 +276,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     fetchClientCounts()
   }, [])
 
-  // Fetch fundi counts
+  // Fetch fundi counts - Updated with correct status types
   useEffect(() => {
     const fetchFundiCounts = async () => {
       try {
@@ -266,6 +291,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
         if (response.ok) {
           const data = await response.json()
+          console.log('Fundis API Response:', data);
           
           let fundisList: SidebarFundi[] = []
           if (Array.isArray(data)) {
@@ -278,15 +304,26 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             fundisList = [data]
           }
 
+          // Handle fundi account status: ACTIVE, SUSPENDED, PENDING
           const counts: FundiCounts = {
             total: fundisList.length,
-            active: fundisList.filter((fundi: SidebarFundi) => fundi.status === 'ACTIVE' || fundi.status === 'ACTIVE').length,
-            verified: fundisList.filter((fundi: SidebarFundi) => fundi.isVerified === true).length,
-            available: fundisList.filter((fundi: SidebarFundi) => fundi.availability === 'available' || fundi.availability === 'AVAILABLE').length,
-            busy: fundisList.filter((fundi: SidebarFundi) => fundi.availability === 'busy' || fundi.availability === 'BUSY').length
+            active: fundisList.filter((fundi: SidebarFundi) => {
+              const status = fundi.accountStatus || fundi.status || '';
+              return status.toUpperCase() === 'ACTIVE';
+            }).length,
+            suspended: fundisList.filter((fundi: SidebarFundi) => {
+              const status = fundi.accountStatus || fundi.status || '';
+              return status.toUpperCase() === 'SUSPENDED';
+            }).length,
+            pending: fundisList.filter((fundi: SidebarFundi) => {
+              const status = fundi.accountStatus || fundi.status || '';
+              return status.toUpperCase() === 'PENDING';
+            }).length
           }
 
           setFundiCounts(counts)
+        } else {
+          console.error('Failed to fetch fundis:', response.status);
         }
       } catch (error) {
         console.error('Failed to fetch fundi counts:', error)
@@ -313,6 +350,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
         if (response.ok) {
           const data = await response.json()
+          console.log('Users API Response:', data);
           
           let usersList: SidebarUser[] = []
           if (Array.isArray(data)) {
@@ -321,19 +359,35 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
             usersList = data.users
           } else if (data && Array.isArray(data.data)) {
             usersList = data.data
+          } else if (data && Array.isArray(data.admins)) {
+            usersList = data.admins
           } else if (data && typeof data === 'object') {
             usersList = [data]
           }
 
           const counts: UserCounts = {
             total: usersList.length,
-            active: usersList.filter((user: SidebarUser) => user.status === 'ACTIVE' || user.status === 'active').length,
-            admins: usersList.filter((user: SidebarUser) => user.role === 'ADMIN' || user.role === 'SUPER_ADMIN').length,
-            moderators: usersList.filter((user: SidebarUser) => user.role === 'MODERATOR').length,
-            support: usersList.filter((user: SidebarUser) => user.role === 'SUPPORT').length
+            active: usersList.filter((user: SidebarUser) => {
+              const status = user.accountStatus || user.status || '';
+              return status.toUpperCase() === 'ACTIVE';
+            }).length,
+            admins: usersList.filter((user: SidebarUser) => 
+              user.role.toUpperCase() === 'ADMIN' 
+            ).length,
+            moderators: usersList.filter((user: SidebarUser) => 
+              user.role.toUpperCase() === 'MODERATOR'
+            ).length,
+            support: usersList.filter((user: SidebarUser) => 
+              user.role.toUpperCase() === 'SUPPORT'
+            ).length,
+            super_admin: usersList.filter((user: SidebarUser) => 
+              user.role.toUpperCase() === 'SUPER_ADMIN'
+            ).length
           }
 
           setUserCounts(counts)
+        } else {
+          console.error('Failed to fetch users:', response.status);
         }
       } catch (error) {
         console.error('Failed to fetch user counts:', error)
@@ -360,6 +414,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
         if (response.ok) {
           const data = await response.json()
+          console.log('Messages API Response:', data);
           
           let messagesList: SidebarMessage[] = []
           if (Array.isArray(data)) {
@@ -376,12 +431,20 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
 
           const counts: MessageCounts = {
             total: messagesList.length,
-            unread: messagesList.filter((message: SidebarMessage) => message.isRead === false).length,
-            pending: messagesList.filter((message: SidebarMessage) => message.status === 'PENDING' || message.status === 'OPEN').length,
-            resolved: messagesList.filter((message: SidebarMessage) => message.status === 'RESOLVED' || message.status === 'CLOSED').length
+            unread: messagesList.filter((message: SidebarMessage) => 
+              message.isRead === false || message.read === false
+            ).length,
+            pending: messagesList.filter((message: SidebarMessage) => 
+              message.status.toUpperCase() === 'PENDING' || message.status.toUpperCase() === 'OPEN'
+            ).length,
+            resolved: messagesList.filter((message: SidebarMessage) => 
+              message.status.toUpperCase() === 'RESOLVED' || message.status.toUpperCase() === 'CLOSED'
+            ).length
           }
 
           setMessageCounts(counts)
+        } else {
+          console.error('Failed to fetch messages:', response.status);
         }
       } catch (error) {
         console.error('Failed to fetch message counts:', error)
@@ -405,28 +468,28 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
       href: "/administrator/settings",
       icon: Users,
       badge: loadingUsers ? "..." : userCounts.total.toString(),
-      description: `Admins: ${userCounts.admins}, Mods: ${userCounts.moderators}`,
+      description: `Admins: ${userCounts.admins}, Mods: ${userCounts.moderators}, Support: ${userCounts.support}, Active: ${userCounts.active}, SuperAdmins: ${userCounts.admins}`,
     },
     {
       name: "Manage Fundis",
       href: "/administrator/fundis",
       icon: UserCheck,
       badge: loadingFundis ? "..." : fundiCounts.total.toString(),
-      description: `Verified: ${fundiCounts.verified}, Available: ${fundiCounts.available}`,
+      description: `Active: ${fundiCounts.active}, Suspended: ${fundiCounts.suspended}, Pending: ${fundiCounts.pending}`,
     },
     {
       name: "Manage Clients",
       href: "/administrator/clients",
       icon: Users,
       badge: loadingClients ? "..." : clientCounts.total.toString(),
-      description: `Active: ${clientCounts.active}, Verified: ${clientCounts.verified}`,
+      description: `Active: ${clientCounts.active}, Pending: ${clientCounts.pending}, Suspended: ${clientCounts.suspended}`,
     },
     {
       name: "Job Listings",
       href: "/administrator/jobListings",
       icon: Building2,
       badge: loadingJobs ? "..." : jobCounts.total.toString(),
-      description: `Active: ${jobCounts.active}, Pending: ${jobCounts.pending}`,
+      description: `Active: ${jobCounts.active}, Pending: ${jobCounts.pending}, Closed: ${jobCounts.closed}, Rejected: ${jobCounts.rejected}, Expired: ${jobCounts.expired}`,
     },
     {
       name: "Post New Job",
@@ -444,7 +507,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
       name: "Messages",
       href: "/administrator/tickets",
       icon: MessageSquare,
-      badge: loadingMessages ? "..." : messageCounts.unread.toString(),
+      badge: loadingMessages ? "..." : (messageCounts.unread > 0 ? messageCounts.unread.toString() : ""),
       description: `Pending: ${messageCounts.pending}, Total: ${messageCounts.total}`,
     },
     {
@@ -480,7 +543,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   // Determine role classes
   const roleColorClasses = (role: string | null) => {
     if (!role) return "bg-slate-500/20 text-slate-300"
-    switch (role) {
+    switch (role.toUpperCase()) {
       case "SUPER_ADMIN":
         return "bg-purple-500/20 text-purple-300"
       case "ADMIN":
@@ -601,7 +664,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
                     </div>
                     {item.badge && (
                       <div
-                        className={`px-3 py-1 text-xs font-black rounded-full ${
+                        className={`px-3 py-1 text-xs font-black rounded-full min-w-8 text-center ${
                           active
                             ? "bg-white/30 text-white"
                             : "bg-gradient-to-r from-purple-500/20 to-blue-500/20 text-purple-300 shadow-sm"

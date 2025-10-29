@@ -144,7 +144,7 @@ export default function AdminManageJobs() {
       console.log("🔄 Fetching jobs from API...");
       
       const response = await fetch(
-        `http://localhost:5000/api/client/jobs/?${params.toString()}`,
+        `http://localhost:5000/api/admin/jobs/jobs/?${params.toString()}`,
         {
           headers: { 
             "Content-Type": "application/json",
@@ -351,7 +351,7 @@ export default function AdminManageJobs() {
   useEffect(() => {
     const timer = setTimeout(() => {
       loadJobs();
-    }, 300);
+    }, 500);
     return () => clearTimeout(timer);
   }, [searchTerm, filterStatus, loadJobs]);
 

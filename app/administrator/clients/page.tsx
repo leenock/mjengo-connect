@@ -104,37 +104,33 @@ export default function AdminManageClients() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Fetch current admin role
- useEffect(() => {
-  const fetchCurrentUser = async () => {
-    try {
-      const userData = AdminAuthService.getUserData();
-      if (!userData?.id) return;
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const userData = AdminAuthService.getUserData();
+        if (!userData?.id) return;
 
-      const res = await fetch(`http://localhost:5000/api/admin/getAdmin/${userData.id}`, {
-        headers: { ...AdminAuthService.getAuthHeaders() },
-      });
-      if (res.ok) {
-        const admin = await res.json();
-        setCurrentUserRole(admin.role || null);
+        const res = await fetch(`http://localhost:5000/api/admin/getAdmin/${userData.id}`, {
+          headers: { ...AdminAuthService.getAuthHeaders() },
+        });
+        if (res.ok) {
+          const admin = await res.json();
+          setCurrentUserRole(admin.role || null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch current admin role", err);
       }
-    } catch (err) {
-      console.error("Failed to fetch current admin role", err);
-    }
-  };
-  fetchCurrentUser();
-}, []);
+    };
+    fetchCurrentUser();
+  }, []);
 
-  // Load clients
+  // Load clients - No search parameters in API call
   const loadClients = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams();
-      if (searchTerm.trim()) params.set("search", searchTerm.trim());
-      if (filterStatus !== "all") params.set("accountStatus", filterStatus);
-
       const res = await fetch(
-        `http://localhost:5000/api/client/getAllClientUsers?${params.toString()}`,
+        `http://localhost:5000/api/client/getAllClientUsers`,
         {
           headers: { ...AdminAuthService.getAuthHeaders() },
           cache: "no-store",
@@ -177,18 +173,44 @@ export default function AdminManageClients() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filterStatus]);
+  }, []); // No dependencies since we're loading all data once
 
   const handleManualRefresh = useCallback(() => {
     setRefreshTrigger((prev) => prev + 1);
   }, []);
 
+  // Client-side search and filtering
+  const filteredClients = useMemo(() => {
+    let filtered = allClients;
+    
+    // Apply search filter
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filtered = filtered.filter(client => 
+        client.firstName.toLowerCase().includes(searchLower) ||
+        client.lastName.toLowerCase().includes(searchLower) ||
+        client.email.toLowerCase().includes(searchLower) ||
+        client.phone.toLowerCase().includes(searchLower) ||
+        client.company.toLowerCase().includes(searchLower) ||
+        client.location.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    // Apply status filter
+    if (filterStatus !== "all") {
+      filtered = filtered.filter(client => client.accountStatus === filterStatus);
+    }
+    
+    return filtered;
+  }, [allClients, searchTerm, filterStatus]);
+
+  // Paginate the filtered results
   const currentClients = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return allClients.slice(startIndex, startIndex + itemsPerPage);
-  }, [allClients, currentPage, itemsPerPage]);
+    return filteredClients.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredClients, currentPage, itemsPerPage]);
 
-  const totalPages = Math.ceil(allClients.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredClients.length / itemsPerPage);
 
   const showSuccessNotification = (message: string) => {
     setIsProcessing(true);
@@ -200,7 +222,7 @@ export default function AdminManageClients() {
         setShowSuccess(false);
         setSuccessMessage(null);
       }, 3000);
-    }, 5000);
+    }, 500);
   };
 
   const deleteClient = async (id: string) => {
@@ -245,38 +267,38 @@ export default function AdminManageClients() {
     });
   };
 
- const saveClient = async () => {
-  if (!editClient) return;
-  setIsSaving(true);
-  try {
-    const res = await fetch(
-      `http://localhost:5000/api/client/updateClientUser/${editClient.id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...AdminAuthService.getAuthHeaders(),
-        },
-        body: JSON.stringify(editFormData), // ✅ Just send editFormData directly
+  const saveClient = async () => {
+    if (!editClient) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/client/updateClientUser/${editClient.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...AdminAuthService.getAuthHeaders(),
+          },
+          body: JSON.stringify(editFormData),
+        }
+      );
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || "Failed to update client");
       }
-    );
-    if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.message || "Failed to update client");
+      await loadClients();
+      setEditClient(null);
+      showSuccessNotification("Client updated successfully!");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update client");
+      setIsProcessing(false);
+    } finally {
+      setIsSaving(false);
     }
-    await loadClients();
-    setEditClient(null);
-    showSuccessNotification("Client updated successfully!");
-  } catch (err) {
-    setError(err instanceof Error ? err.message : "Failed to update client");
-    setIsProcessing(false);
-  } finally {
-    setIsSaving(false);
-  }
-};
+  };
 
   const exportToCSV = () => {
-    if (allClients.length === 0) return;
+    if (filteredClients.length === 0) return;
     const headers = [
       "ID",
       "First Name",
@@ -289,7 +311,7 @@ export default function AdminManageClients() {
       "Created At",
       "Last Login",
     ];
-    const rows = allClients.map((client) => [
+    const rows = filteredClients.map((client) => [
       `"${client.id}"`,
       `"${client.firstName}"`,
       `"${client.lastName}"`,
@@ -314,15 +336,7 @@ export default function AdminManageClients() {
     URL.revokeObjectURL(url);
   };
 
-  // Auto-search with debounce
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      loadClients();
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm, filterStatus, loadClients]);
-
-  // Initial + manual refresh
+  // Initial load and manual refresh only
   useEffect(() => {
     loadClients();
   }, [loadClients, refreshTrigger]);
@@ -452,7 +466,7 @@ export default function AdminManageClients() {
                   Manage Clients
                 </h1>
                 <p className="text-slate-600 mt-2 text-base sm:text-lg font-extrabold">
-                  {allClients.length} registered job posters
+                  {filteredClients.length} of {allClients.length} clients match your search
                 </p>
               </div>
             </div>
@@ -470,7 +484,7 @@ export default function AdminManageClients() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search clients by name, email, or company..."
+                    placeholder="Search clients by name, email, phone, company, or location..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium"
@@ -497,12 +511,30 @@ export default function AdminManageClients() {
                     ) : (
                       <>
                         <Filter className="w-5 h-5" />
-                        <span>Apply</span>
+                        <span>Refresh</span>
                       </>
                     )}
                   </button>
                 </div>
               </div>
+              {(searchTerm || filterStatus !== "all") && (
+                <div className="mt-4 flex items-center justify-between">
+                  <p className="text-sm text-slate-600">
+                    Showing {filteredClients.length} of {allClients.length} clients
+                    {searchTerm && ` matching "${searchTerm}"`}
+                    {filterStatus !== "all" && ` with status "${filterStatus.toLowerCase()}"`}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchTerm("");
+                      setFilterStatus("all");
+                    }}
+                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -513,7 +545,8 @@ export default function AdminManageClients() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={exportToCSV}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-lg"
+                  disabled={filteredClients.length === 0}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-lg disabled:opacity-50"
                 >
                   <Download className="w-4 h-4" />
                   <span className="hidden sm:inline">Export</span>
@@ -524,16 +557,54 @@ export default function AdminManageClients() {
             {loading ? (
               <div className="flex justify-center items-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+                <span className="ml-3 text-slate-600 font-medium">Loading clients...</span>
               </div>
             ) : error ? (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 font-medium">{error}</div>
-            ) : allClients.length === 0 ? (
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8 text-center">
-                <p className="text-slate-600 font-medium">No clients found.</p>
+              <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+                <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                <h3 className="text-lg font-bold text-red-800 mb-2">Failed to Load Clients</h3>
+                <p className="text-red-700 mb-4">{error}</p>
+                <button
+                  onClick={handleManualRefresh}
+                  className="px-4 py-2 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            ) : filteredClients.length === 0 ? (
+              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-12 text-center">
+                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-8 h-8 text-orange-500" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">No Clients Found</h3>
+                <p className="text-slate-600 mb-6">
+                  {searchTerm || filterStatus !== "all" 
+                    ? "No clients match your search criteria. Try adjusting your filters."
+                    : "There are no clients registered in the system yet."
+                  }
+                </p>
+                <div className="flex justify-center gap-3">
+                  {(searchTerm || filterStatus !== "all") && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm("");
+                        setFilterStatus("all");
+                      }}
+                      className="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition-colors"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                  <button
+                    onClick={handleManualRefresh}
+                    className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl font-bold hover:from-emerald-600 hover:to-teal-600 transition-all duration-300"
+                  >
+                    Refresh
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
-                {/* Improved Table Layout */}
                 <div className="overflow-x-visible">
                   <table className="w-full table-auto min-w-full">
                     <thead className="bg-gradient-to-r from-emerald-500 to-teal-500">
@@ -691,7 +762,7 @@ export default function AdminManageClients() {
                   <div className="px-4 sm:px-6 py-6 bg-gradient-to-r from-slate-50 to-slate-100 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-sm font-medium text-slate-600">
                       Showing {(currentPage - 1) * itemsPerPage + 1}–
-                      {Math.min(currentPage * itemsPerPage, allClients.length)} of {allClients.length} clients
+                      {Math.min(currentPage * itemsPerPage, filteredClients.length)} of {filteredClients.length} clients
                     </div>
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       <button

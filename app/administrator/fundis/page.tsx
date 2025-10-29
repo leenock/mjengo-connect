@@ -21,6 +21,8 @@ import {
   Clock,
   User,
   Sparkles,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import AdminAuthService from "@/app/services/admin_auth";
 
@@ -79,18 +81,45 @@ interface EditFormData {
 }
 
 type FilterStatus = "all" | AccountStatus;
+
+// Enhanced filter interface
+interface FilterOptions {
+  searchTerm: string;
+  status: FilterStatus;
+  subscriptionPlan: "all" | SubscriptionPlan;
+  subscriptionStatus: "all" | SubscriptionStatus;
+  experienceLevel: string;
+  location: string;
+  dateRange: {
+    start: string;
+    end: string;
+  };
+}
 // =====================
 
 export default function AdminManageFundis() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
   const [allFundis, setAllFundis] = useState<Fundi[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const itemsPerPage = 10;
+
+  // Enhanced filter states
+  const [filters, setFilters] = useState<FilterOptions>({
+    searchTerm: "",
+    status: "all",
+    subscriptionPlan: "all",
+    subscriptionStatus: "all",
+    experienceLevel: "",
+    location: "",
+    dateRange: {
+      start: "",
+      end: "",
+    },
+  });
 
   // Modal states
   const [viewFundi, setViewFundi] = useState<Fundi | null>(null);
@@ -128,8 +157,8 @@ export default function AdminManageFundis() {
     setError(null);
     try {
       const params = new URLSearchParams();
-      if (searchTerm.trim()) params.set("search", searchTerm.trim());
-      if (filterStatus !== "all") params.set("accountStatus", filterStatus); // ✅ Correct field name
+      if (filters.searchTerm.trim()) params.set("search", filters.searchTerm.trim());
+      if (filters.status !== "all") params.set("accountStatus", filters.status);
 
       const res = await fetch(
         `http://localhost:5000/api/fundi/getAllFundis?${params.toString()}`,
@@ -203,16 +232,125 @@ export default function AdminManageFundis() {
     } finally {
       setLoading(false);
     }
-  }, [searchTerm, filterStatus]);
+  }, [filters.searchTerm, filters.status]);
+
+  // ✅ Enhanced filtering function
+  const filteredFundis = useMemo(() => {
+    return allFundis.filter((fundi) => {
+      // Search term filter
+      if (filters.searchTerm) {
+        const searchLower = filters.searchTerm.toLowerCase();
+        const searchFields = [
+          fundi.firstName,
+          fundi.lastName,
+          fundi.email,
+          fundi.phone,
+          fundi.location,
+          fundi.primary_skill,
+          fundi.experience_level,
+          fundi.biography,
+        ];
+        
+        const matchesSearch = searchFields.some(field => 
+          field?.toLowerCase().includes(searchLower)
+        );
+        if (!matchesSearch) return false;
+      }
+
+      // Status filter
+      if (filters.status !== "all" && fundi.accountStatus !== filters.status) {
+        return false;
+      }
+
+      // Subscription plan filter
+      if (filters.subscriptionPlan !== "all" && fundi.subscriptionPlan !== filters.subscriptionPlan) {
+        return false;
+      }
+
+      // Subscription status filter
+      if (filters.subscriptionStatus !== "all" && fundi.subscriptionStatus !== filters.subscriptionStatus) {
+        return false;
+      }
+
+      // Experience level filter
+      if (filters.experienceLevel && !fundi.experience_level.toLowerCase().includes(filters.experienceLevel.toLowerCase())) {
+        return false;
+      }
+
+      // Location filter
+      if (filters.location && !fundi.location.toLowerCase().includes(filters.location.toLowerCase())) {
+        return false;
+      }
+
+      // Date range filter
+      if (filters.dateRange.start) {
+        const createdDate = new Date(fundi.createdAt);
+        const startDate = new Date(filters.dateRange.start);
+        if (createdDate < startDate) return false;
+      }
+
+      if (filters.dateRange.end) {
+        const createdDate = new Date(fundi.createdAt);
+        const endDate = new Date(filters.dateRange.end);
+        endDate.setHours(23, 59, 59, 999); // End of day
+        if (createdDate > endDate) return false;
+      }
+
+      return true;
+    });
+  }, [allFundis, filters]);
 
   // ✅ Manual refresh
   const handleManualRefresh = useCallback(() => {
     setRefreshTrigger((prev) => prev + 1);
   }, []);
 
+  // ✅ Update individual filter with proper typing
+  const updateFilter = <K extends keyof FilterOptions>(
+    key: K, 
+    value: FilterOptions[K]
+  ) => {
+    setFilters(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  };
+
+  // ✅ Update date range filter with proper typing
+  const updateDateRange = (
+    key: keyof FilterOptions['dateRange'], 
+    value: string
+  ) => {
+    setFilters(prev => ({
+      ...prev,
+      dateRange: {
+        ...prev.dateRange,
+        [key]: value
+      }
+    }));
+  };
+
+  // ✅ Reset all filters
+  const resetFilters = () => {
+    setFilters({
+      searchTerm: "",
+      status: "all",
+      subscriptionPlan: "all",
+      subscriptionStatus: "all",
+      experienceLevel: "",
+      location: "",
+      dateRange: {
+        start: "",
+        end: "",
+      },
+    });
+  };
+
   // ✅ Export to CSV
   const exportToCSV = () => {
-    if (allFundis.length === 0) return;
+    const dataToExport = filteredFundis.length > 0 ? filteredFundis : allFundis;
+    
+    if (dataToExport.length === 0) return;
 
     const headers = [
       "ID",
@@ -231,7 +369,7 @@ export default function AdminManageFundis() {
       "Last Login",
     ];
 
-    const rows = allFundis.map((fundi) => [
+    const rows = dataToExport.map((fundi) => [
       `"${fundi.id}"`,
       `"${fundi.firstName}"`,
       `"${fundi.lastName}"`,
@@ -269,10 +407,10 @@ export default function AdminManageFundis() {
 
   const currentFundis = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return allFundis.slice(startIndex, startIndex + itemsPerPage);
-  }, [allFundis, currentPage, itemsPerPage]);
+    return filteredFundis.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredFundis, currentPage, itemsPerPage]);
 
-  const totalPages = Math.ceil(allFundis.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredFundis.length / itemsPerPage);
 
   const showSuccessNotification = (message: string) => {
     setIsProcessing(true);
@@ -372,7 +510,7 @@ export default function AdminManageFundis() {
       loadFundis();
     }, 300);
     return () => clearTimeout(timer);
-  }, [searchTerm, filterStatus, loadFundis]);
+  }, [filters.searchTerm, filters.status, loadFundis]);
 
   // Initial + manual refresh
   useEffect(() => {
@@ -380,24 +518,24 @@ export default function AdminManageFundis() {
   }, [loadFundis, refreshTrigger]);
 
   useEffect(() => {
-  const fetchCurrentUser = async () => {
-    try {
-      const userData = AdminAuthService.getUserData();
-      if (!userData?.id) return;
+    const fetchCurrentUser = async () => {
+      try {
+        const userData = AdminAuthService.getUserData();
+        if (!userData?.id) return;
 
-      const res = await fetch(`http://localhost:5000/api/admin/getAdmin/${userData.id}`, {
-        headers: { ...AdminAuthService.getAuthHeaders() },
-      });
-      if (res.ok) {
-        const admin = await res.json();
-        setCurrentUserRole(admin.role || null);
+        const res = await fetch(`http://localhost:5000/api/admin/getAdmin/${userData.id}`, {
+          headers: { ...AdminAuthService.getAuthHeaders() },
+        });
+        if (res.ok) {
+          const admin = await res.json();
+          setCurrentUserRole(admin.role || null);
+        }
+      } catch (err) {
+        console.error("Failed to fetch current admin role", err);
       }
-    } catch (err) {
-      console.error("Failed to fetch current admin role", err);
-    }
-  };
-  fetchCurrentUser();
-}, []);
+    };
+    fetchCurrentUser();
+  }, []);
 
   // ===== UI HELPERS =====
   const getStatusColor = (accountStatus: AccountStatus) => {
@@ -521,6 +659,26 @@ export default function AdminManageFundis() {
     return pages;
   };
 
+  // Get unique values for filter dropdowns
+  const uniqueLocations = useMemo(() => {
+    return [...new Set(allFundis.map(fundi => fundi.location).filter(Boolean))];
+  }, [allFundis]);
+
+  const uniqueExperienceLevels = useMemo(() => {
+    return [...new Set(allFundis.map(fundi => fundi.experience_level).filter(Boolean))];
+  }, [allFundis]);
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (filters.status !== "all") count++;
+    if (filters.subscriptionPlan !== "all") count++;
+    if (filters.subscriptionStatus !== "all") count++;
+    if (filters.experienceLevel) count++;
+    if (filters.location) count++;
+    if (filters.dateRange.start || filters.dateRange.end) count++;
+    return count;
+  }, [filters]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 lg:flex font-inter">
       <AdminSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
@@ -560,7 +718,7 @@ export default function AdminManageFundis() {
       <div className="flex-1 lg:ml-0">
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           {/* Header */}
-          <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl mb-8 sm:mb-10 flex items-center justify-between px-6 sm:px-8 py-6 rounded-2xl shadow-lg border border-white/20">
+          <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-sm mb-8 sm:mb-10 flex items-center justify-between px-6 sm:px-8 py-6 rounded-2xl shadow-lg border border-white/20">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -574,40 +732,62 @@ export default function AdminManageFundis() {
                   Manage Fundis
                 </h1>
                 <p className="text-slate-600 mt-2 text-base sm:text-lg font-extrabold">
-                  {allFundis.length} registered skilled workers
+                  {filteredFundis.length} of {allFundis.length} fundis shown
+                  {activeFilterCount > 0 && ` (${activeFilterCount} filter${activeFilterCount !== 1 ? 's' : ''} active)`}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Search & Filter */}
+          {/* Enhanced Search & Filter Section */}
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden mb-8">
             <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-indigo-50 to-blue-50">
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">
-                Search & Filter
-              </h2>
-              <p className="text-slate-600 font-extrabold">
-                Find and manage fundis efficiently
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">
+                    Search & Filter
+                  </h2>
+                  <p className="text-slate-600 font-extrabold">
+                    Find and manage fundis efficiently
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {activeFilterCount > 0 && (
+                    <button
+                      onClick={resetFilters}
+                      className="px-4 py-2 text-sm font-medium text-rose-600 bg-rose-50 rounded-xl hover:bg-rose-100 transition-colors"
+                    >
+                      Clear Filters ({activeFilterCount})
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors"
+                  >
+                    {showAdvancedFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    Advanced
+                  </button>
+                </div>
+              </div>
             </div>
+
             <div className="p-4 sm:p-6 lg:p-8">
-              <div className="flex flex-col sm:flex-row gap-4">
+              {/* Basic Search Row */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search fundis by name, email, or skills..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search fundis by name, email, phone, location, skills..."
+                    value={filters.searchTerm}
+                    onChange={(e) => updateFilter("searchTerm", e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
                   />
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <select
-                    value={filterStatus}
-                    onChange={(e) =>
-                      setFilterStatus(e.target.value as FilterStatus)
-                    }
+                    value={filters.status}
+                    onChange={(e) => updateFilter("status", e.target.value as FilterStatus)}
                     className="w-full sm:w-auto px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
                   >
                     <option value="all">All Status</option>
@@ -625,12 +805,107 @@ export default function AdminManageFundis() {
                     ) : (
                       <>
                         <Filter className="w-5 h-5" />
-                        <span>Apply</span>
+                        <span>Refresh</span>
                       </>
                     )}
                   </button>
                 </div>
               </div>
+
+              {/* Advanced Filters */}
+              {showAdvancedFilters && (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  {/* Subscription Plan */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Subscription Plan
+                    </label>
+                    <select
+                      value={filters.subscriptionPlan}
+                      onChange={(e) => updateFilter("subscriptionPlan", e.target.value as "all" | SubscriptionPlan)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">All Plans</option>
+                      <option value="FREE">Free</option>
+                      <option value="PREMIUM">Premium</option>
+                    </select>
+                  </div>
+
+                  {/* Subscription Status */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Subscription Status
+                    </label>
+                    <select
+                      value={filters.subscriptionStatus}
+                      onChange={(e) => updateFilter("subscriptionStatus", e.target.value as "all" | SubscriptionStatus)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="TRIAL">Trial</option>
+                      <option value="ACTIVE">Active</option>
+                      <option value="EXPIRED">Expired</option>
+                      <option value="CANCELLED">Cancelled</option>
+                    </select>
+                  </div>
+
+                  {/* Experience Level */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Experience Level
+                    </label>
+                    <select
+                      value={filters.experienceLevel}
+                      onChange={(e) => updateFilter("experienceLevel", e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Levels</option>
+                      {uniqueExperienceLevels.map(level => (
+                        <option key={level} value={level}>{level}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Location */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Location
+                    </label>
+                    <select
+                      value={filters.location}
+                      onChange={(e) => updateFilter("location", e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">All Locations</option>
+                      {uniqueLocations.map(location => (
+                        <option key={location} value={location}>{location}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Date Range */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Registration Date Range
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="date"
+                        value={filters.dateRange.start}
+                        onChange={(e) => updateDateRange("start", e.target.value)}
+                        className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="flex items-center text-slate-500">to</span>
+                      <input
+                        type="date"
+                        value={filters.dateRange.end}
+                        onChange={(e) => updateDateRange("end", e.target.value)}
+                        className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -639,11 +914,17 @@ export default function AdminManageFundis() {
             <div className="flex items-center justify-between">
               <h2 className="text-xl sm:text-2xl font-black text-slate-900">
                 Fundis Directory
+                {filteredFundis.length !== allFundis.length && (
+                  <span className="text-sm font-normal text-slate-600 ml-2">
+                    (Filtered: {filteredFundis.length} of {allFundis.length})
+                  </span>
+                )}
               </h2>
               <div className="flex items-center gap-3">
                 <button
                   onClick={exportToCSV}
-                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-lg"
+                  disabled={filteredFundis.length === 0}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-xl font-bold hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-lg disabled:opacity-50"
                 >
                   <Download className="w-4 h-4" />
                   <span className="hidden sm:inline">Export</span>
@@ -659,9 +940,21 @@ export default function AdminManageFundis() {
               <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-red-700 font-medium">
                 {error}
               </div>
-            ) : allFundis.length === 0 ? (
+            ) : filteredFundis.length === 0 ? (
               <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8 text-center">
-                <p className="text-slate-600 font-medium">No fundis found.</p>
+                <p className="text-slate-600 font-medium">
+                  {allFundis.length === 0 
+                    ? "No fundis found." 
+                    : "No fundis match your current filters."}
+                </p>
+                {allFundis.length > 0 && (
+                  <button
+                    onClick={resetFilters}
+                    className="mt-4 px-4 py-2 text-blue-600 bg-blue-50 rounded-xl font-medium hover:bg-blue-100 transition-colors"
+                  >
+                    Clear all filters
+                  </button>
+                )}
               </div>
             ) : (
               <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
@@ -835,8 +1128,8 @@ export default function AdminManageFundis() {
                   <div className="px-4 sm:px-6 py-6 bg-gradient-to-r from-slate-50 to-slate-100 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-sm font-medium text-slate-600">
                       Showing {(currentPage - 1) * itemsPerPage + 1}–
-                      {Math.min(currentPage * itemsPerPage, allFundis.length)}{" "}
-                      of {allFundis.length} fundis
+                      {Math.min(currentPage * itemsPerPage, filteredFundis.length)}{" "}
+                      of {filteredFundis.length} fundis
                     </div>
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       <button
