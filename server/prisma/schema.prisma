@@ -21,6 +21,10 @@ model Client_User {
   isActive      Boolean       @default(true)
   accountStatus AccountStatus @default(ACTIVE) // ✅ more descriptive
 
+  // phone number otp verification fields
+
+  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -29,6 +33,9 @@ model Client_User {
   logs           SystemLog[] // ✅ reverse relation
   supportTickets SupportTicket[]
 }
+
+// model client wallet for managing client funds
+
 
 model ClientPaymentLog {
   id         String        @id @default(cuid())
