@@ -53,21 +53,28 @@ export default function JobListingsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        setLoading(true);
-        const res = await fetch("http://localhost:5000/api/client/jobs");
-        const data = await res.json();
-        setJobs(data.jobs || []);
-      } catch (error) {
-        console.error("Failed to load jobs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchJobs();
-  }, []);
+ useEffect(() => {
+  const fetchJobs = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:5000/api/client/jobs");
+      const data = await res.json();
+
+      // Filter only paid and active jobs
+      const filteredJobs = (data.jobs || []).filter(
+        (job: Job & { isPaid?: boolean }) => job.isPaid && job.status === "ACTIVE"
+      );
+
+      setJobs(filteredJobs);
+    } catch (error) {
+      console.error("Failed to load jobs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchJobs();
+}, []);
+
 
   const toggleSaveJob = (jobId: string) => {
     console.log(`Toggle save for job ${jobId}`);
@@ -78,10 +85,11 @@ export default function JobListingsPage() {
   };
 
   // Pagination logic
-  const indexOfLastJob = currentPage * jobsPerPage;
-  const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = jobs.slice(indexOfFirstJob, indexOfLastJob);
-  const totalPages = Math.ceil(jobs.length / jobsPerPage);
+ const indexOfLastJob = currentPage * jobsPerPage;
+const indexOfFirstJob = indexOfLastJob - jobsPerPage;
+const currentJobs = jobs.slice(indexOfFirstJob, indexOfLastJob);
+const totalPages = Math.ceil(jobs.length / jobsPerPage);
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 lg:flex font-inter">

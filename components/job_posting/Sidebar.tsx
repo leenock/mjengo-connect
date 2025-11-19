@@ -54,13 +54,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       description: "Manage your listings",
     },
     {
-      name: "Payments",
+      name: "Job Payment",
       href: "/clientspace/payment",
       icon: BarChart3,
       description: "Performance insights",
     },
     {
-      name: "Add Funds", // New navigation item
+      name: "My wallet", // New navigation item
       href: "/clientspace/add-funds",
       icon: DollarSign, // Using DollarSign icon for Add Funds
       description: "Top up your account",

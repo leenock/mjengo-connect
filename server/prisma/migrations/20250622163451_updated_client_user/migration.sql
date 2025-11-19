@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE "Client_User" ALTER COLUMN "firstName" DROP NOT NULL,
-ALTER COLUMN "lastName" DROP NOT NULL;

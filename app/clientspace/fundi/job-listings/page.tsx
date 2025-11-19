@@ -34,6 +34,8 @@ interface Job {
   status: string;
   verified?: boolean;
   saved?: boolean;
+  isPaid: boolean; // add this
+
 }
 
 export default function JobListingsPage() {
@@ -63,35 +65,39 @@ export default function JobListingsPage() {
   }, []);
 
   // Fetch jobs data
-  useEffect(() => {
-    async function fetchJobs() {
-      try {
-        setLoading(true);
-        const res = await fetch("http://localhost:5000/api/client/jobs");
-        if (!res.ok) {
-          throw new Error(`Failed to fetch jobs (status ${res.status})`);
-        }
-
-        const data = await res.json();
-        const jobs: Job[] = Array.isArray(data.jobs) ? data.jobs : [];
-
-        setJobListings(jobs);
-        setRecentJobs(jobs.slice(0, 2));
-        const saved = jobs.filter((job) => job.saved);
-        setRecentApplications(saved);
-      } catch (err) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("An unknown error occurred");
-        }
-      } finally {
-        setLoading(false);
+ useEffect(() => {
+  async function fetchJobs() {
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:5000/api/client/jobs");
+      if (!res.ok) {
+        throw new Error(`Failed to fetch jobs (status ${res.status})`);
       }
-    }
 
-    fetchJobs();
-  }, []);
+      const data = await res.json();
+      const jobs: Job[] = Array.isArray(data.jobs) ? data.jobs : [];
+
+      // Filter only paid jobs
+    const paidJobs = jobs.filter((job: Job) => job.isPaid);
+
+      setJobListings(paidJobs);
+      setRecentJobs(paidJobs.slice(0, 2));
+      const saved = paidJobs.filter((job) => job.saved);
+      setRecentApplications(saved);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred");
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  fetchJobs();
+}, []);
+
 
   // Event handlers
   const toggleSaveJob = (jobId: string) => {

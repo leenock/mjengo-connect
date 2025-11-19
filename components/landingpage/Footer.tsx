@@ -29,8 +29,8 @@ export default function Footer() {
       title: "Services",
       id: "services",
       links: [
-        { label: "Job listing", href: "/listing" },
-        { label: "Post a Job", href: "/post-job" },
+        { label: "Job listing", href: "/auth/job-listing" },
+        { label: "Post a Job", href: "/auth/job-posting" },
       ],
     },
     {

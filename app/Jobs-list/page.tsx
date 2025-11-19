@@ -76,7 +76,14 @@ export default function JobsListPage() {
         setLoading(true);
         const res = await fetch("http://localhost:5000/api/client/jobs");
         const data = await res.json();
-        setJobs(data.jobs || []);
+
+        // Filter only paid and active jobs
+        const filteredJobs = (data.jobs || []).filter(
+          (job: Job & { isPaid?: boolean }) =>
+            job.isPaid && job.status === "ACTIVE"
+        );
+
+        setJobs(filteredJobs);
       } catch (error) {
         console.error("Failed to load jobs:", error);
         setJobs([]);
@@ -84,6 +91,7 @@ export default function JobsListPage() {
         setLoading(false);
       }
     };
+
     fetchJobs();
   }, []);
 
@@ -93,8 +101,7 @@ export default function JobsListPage() {
     if (job.SkillsAndrequirements) {
       skills =
         typeof job.SkillsAndrequirements === "string"
-          ? job.SkillsAndrequirements
-              .split(",")
+          ? job.SkillsAndrequirements.split(",")
               .map((s) => s.trim())
               .filter(Boolean)
           : [];
@@ -274,7 +281,9 @@ export default function JobsListPage() {
             {loading ? (
               <div className="text-center py-10">
                 <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-                <p className="mt-4 text-gray-600 font-medium">Loading jobs...</p>
+                <p className="mt-4 text-gray-600 font-medium">
+                  Loading jobs...
+                </p>
               </div>
             ) : currentJobs.length === 0 ? (
               <div className="text-center py-10">

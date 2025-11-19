@@ -1,9 +1,11 @@
-"use client"
-import { useState, useEffect, useCallback } from "react"
-import { useRouter } from "next/navigation"
-import Sidebar from "@/components/job_posting/Sidebar"
-import ClientAuthService, { type ClientUserData } from "@/app/services/client_user"
-import Toast from "@/components/ui/Toast"
+"use client";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Sidebar from "@/components/job_posting/Sidebar";
+import ClientAuthService, {
+  type ClientUserData,
+} from "@/app/services/client_user";
+import Toast from "@/components/ui/Toast";
 import {
   MapPin,
   Clock,
@@ -18,127 +20,134 @@ import {
   Phone,
   Loader2,
   ChevronLeft,
-  ChevronRight
-} from "lucide-react"
+  ChevronRight,
+} from "lucide-react";
 
 interface Job {
-  id: string
-  title: string
-  category: string
-  jobType: string
-  location: string
-  duration: string
-  salary: string
-  Jobdescription: string
-  SkillsAndrequirements: string
-  responsibilities: string
-  benefits?: string
-  companyName: string
-  contactPerson: string
-  phoneNumber: string
-  email: string
-  preferredContact: string
-  isUrgent: boolean
-  isPaid: boolean
-  status: "PENDING" | "ACTIVE" | "CLOSED" | "EXPIRED"
-  timePosted: string
-  clickCount: number
+  id: string;
+  title: string;
+  category: string;
+  jobType: string;
+  location: string;
+  duration: string;
+  salary: string;
+  Jobdescription: string;
+  SkillsAndrequirements: string;
+  responsibilities: string;
+  benefits?: string;
+  companyName: string;
+  contactPerson: string;
+  phoneNumber: string;
+  email: string;
+  preferredContact: string;
+  isUrgent: boolean;
+  isPaid: boolean;
+  status: "PENDING" | "ACTIVE" | "CLOSED" | "EXPIRED";
+  timePosted: string;
+  clickCount: number;
   postedBy: {
-    id: string
-    email: string
-    firstName: string
-    lastName: string
-    company: string
-  }
+    id: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    company: string;
+  };
 }
 
 export default function PaymentsPage() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [currentUser, setCurrentUser] = useState<ClientUserData | null>(null)
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<ClientUserData | null>(null);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [toast, setToast] = useState<{
-    message: string
-    type: "success" | "error" | "loading"
-  } | null>(null)
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [selectedJobForPayment, setSelectedJobForPayment] = useState<Job | null>(null)
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false)
-  
+    message: string;
+    type: "success" | "error" | "loading";
+  } | null>(null);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedJobForPayment, setSelectedJobForPayment] =
+    useState<Job | null>(null);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+
   // Pagination states
-  const [currentPage, setCurrentPage] = useState(1)
-  const jobsPerPage = 3 // Show 3 jobs per page
-  
-  const router = useRouter()
+  const [currentPage, setCurrentPage] = useState(1);
+  const jobsPerPage = 3; // Show 3 jobs per page
+
+  const router = useRouter();
 
   const fetchMyJobs = useCallback(async () => {
     try {
-      setIsLoading(true)
-      const token = ClientAuthService.getToken()
+      setIsLoading(true);
+      const token = ClientAuthService.getToken();
       if (!token) {
-        throw new Error("Authentication required")
+        throw new Error("Authentication required");
       }
       const response = await fetch("http://localhost:5000/api/client/my-jobs", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
       if (!response.ok) {
-        throw new Error("Failed to fetch jobs")
+        throw new Error("Failed to fetch jobs");
       }
-      const data = await response.json()
-      setJobs(data.jobs || [])
+      const data = await response.json();
+      setJobs(data.jobs || []);
     } catch (error) {
-      console.error("Error fetching jobs:", error)
+      console.error("Error fetching jobs:", error);
       setToast({
         message: "Failed to load your jobs. Please try again.",
         type: "error",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    const userData = ClientAuthService.getUserData()
+    const userData = ClientAuthService.getUserData();
     if (userData) {
-      setCurrentUser(userData)
-      fetchMyJobs()
+      setCurrentUser(userData);
+      fetchMyJobs();
     } else {
-      router.push("/auth/job-posting")
+      router.push("/auth/job-posting");
     }
-  }, [router, fetchMyJobs])
+  }, [router, fetchMyJobs]);
 
   const handleOpenPaymentModal = (job: Job) => {
-    setSelectedJobForPayment(job)
-    setPhoneNumber(currentUser?.phone || job.phoneNumber || "")
-    setShowPaymentModal(true)
-  }
+    setSelectedJobForPayment(job);
+    setPhoneNumber(currentUser?.phone || job.phoneNumber || "");
+    setShowPaymentModal(true);
+  };
 
   const handleProcessPayment = () => {
     if (!phoneNumber.trim()) {
-      setToast({ message: "Please enter a phone number for payment.", type: "error" })
-      return
+      setToast({
+        message: "Please enter a phone number for payment.",
+        type: "error",
+      });
+      return;
     }
-    
-    setIsProcessingPayment(true)
+
+    setIsProcessingPayment(true);
     // This is where your payment integration logic will go
     // For now, it's just a placeholder
     setToast({
       message: `Initiating payment for ${selectedJobForPayment?.title} to ${phoneNumber}... (Integration coming soon!)`,
       type: "loading",
-    })
-    
+    });
+
     setTimeout(() => {
-      setToast({ message: "Payment process simulated. Success!", type: "success" })
-      setIsProcessingPayment(false)
-      setShowPaymentModal(false)
-      setSelectedJobForPayment(null)
-      setPhoneNumber("")
-    }, 2000)
-  }
+      setToast({
+        message: "Payment process simulated. Success!",
+        type: "success",
+      });
+      setIsProcessingPayment(false);
+      setShowPaymentModal(false);
+      setSelectedJobForPayment(null);
+      setPhoneNumber("");
+    }, 2000);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -147,59 +156,62 @@ export default function PaymentsPage() {
           <span className="px-3 py-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 text-xs font-bold rounded-full flex items-center gap-1 border border-yellow-200">
             <AlertCircle className="w-3 h-3" /> Pending Review
           </span>
-        )
+        );
       case "ACTIVE":
         return (
           <span className="px-3 py-1 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 text-xs font-bold rounded-full flex items-center gap-1 border border-emerald-200">
             <CheckCircle className="w-3 h-3" /> Active
           </span>
-        )
+        );
       case "CLOSED":
         return (
           <span className="px-3 py-1 bg-gradient-to-r from-gray-100 to-slate-100 text-gray-700 text-xs font-bold rounded-full flex items-center gap-1 border border-gray-200">
             <XCircle className="w-3 h-3" /> Closed
           </span>
-        )
+        );
       case "EXPIRED":
         return (
           <span className="px-3 py-1 bg-gradient-to-r from-red-100 to-pink-100 text-red-700 text-xs font-bold rounded-full flex items-center gap-1 border border-red-200">
             <XCircle className="w-3 h-3" /> Expired
           </span>
-        )
+        );
       default:
-        return null
+        return null;
     }
-  }
+  };
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffTime = Math.abs(now.getTime() - date.getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    if (diffDays === 1) return "1 day ago"
-    if (diffDays < 7) return `${diffDays} days ago`
-    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`
-    return `${Math.ceil(diffDays / 30)} months ago`
-  }
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 1) return "1 day ago";
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 30) return `${Math.ceil(diffDays / 7)} weeks ago`;
+    return `${Math.ceil(diffDays / 30)} months ago`;
+  };
+
+  const activeJobs = jobs.filter((job) => job.status === "ACTIVE"); // ← add this line here
 
   // Pagination calculations
-  const indexOfLastJob = currentPage * jobsPerPage
-  const indexOfFirstJob = indexOfLastJob - jobsPerPage
-  const currentJobs = jobs.slice(indexOfFirstJob, indexOfLastJob)
-  const totalPages = Math.ceil(jobs.length / jobsPerPage)
+  // Pagination calculations
+  const indexOfLastJob = currentPage * jobsPerPage;
+  const indexOfFirstJob = indexOfLastJob - jobsPerPage;
+  const currentJobs = activeJobs.slice(indexOfFirstJob, indexOfLastJob);
+  const totalPages = Math.ceil(activeJobs.length / jobsPerPage);
 
   // Pagination handlers
   const goToNextPage = () => {
     if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1)
+      setCurrentPage(currentPage + 1);
     }
-  }
+  };
 
   const goToPreviousPage = () => {
     if (currentPage > 1) {
-      setCurrentPage(currentPage - 1)
+      setCurrentPage(currentPage - 1);
     }
-  }
+  };
 
   if (isLoading) {
     return (
@@ -209,42 +221,61 @@ export default function PaymentsPage() {
           <p className="text-slate-600">Loading payment options...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 lg:flex font-inter">
       <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* Payment Modal */}
       {showPaymentModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-md rounded-2xl p-6 bg-white/90 backdrop-blur-xl shadow-2xl border border-white/30">
             <div className="flex flex-col space-y-1.5 text-center sm:text-left">
-              <h2 className="text-2xl font-bold text-slate-900">Make Payment</h2>
+              <h2 className="text-2xl font-bold text-slate-900">
+                Make Payment
+              </h2>
               <p className="text-slate-600 text-sm">
                 Confirm details for payment for the ad:{" "}
-                <span className="font-semibold text-slate-800">{selectedJobForPayment?.title}</span>
+                <span className="font-semibold text-slate-800">
+                  {selectedJobForPayment?.title}
+                </span>
               </p>
             </div>
             <div className="grid gap-4 py-4">
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                 <span className="text-slate-700 font-medium">Job Title:</span>
-                <span className="font-bold text-slate-900 truncate max-w-[180px]">{selectedJobForPayment?.title}</span>
+                <span className="font-bold text-slate-900 truncate max-w-[180px]">
+                  {selectedJobForPayment?.title}
+                </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                 <span className="text-slate-700 font-medium">Category:</span>
-                <span className="font-bold text-slate-900">{selectedJobForPayment?.category}</span>
+                <span className="font-bold text-slate-900">
+                  {selectedJobForPayment?.category}
+                </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl border border-emerald-100">
                 <span className="text-slate-700 font-medium">Amount Due:</span>
-                <span className="font-bold text-emerald-600 text-lg">Ksh 300</span>
+                <span className="font-bold text-emerald-600 text-lg">
+                  Ksh 300
+                </span>
               </div>
-              
+
               {/* Phone Number Input */}
               <div className="pt-2">
-                <label htmlFor="phoneNumberInput" className="block text-sm font-semibold text-slate-700 mb-2">
+                <label
+                  htmlFor="phoneNumberInput"
+                  className="block text-sm font-semibold text-slate-700 mb-2"
+                >
                   Phone Number for STK Push
                 </label>
                 <div className="relative">
@@ -261,12 +292,13 @@ export default function PaymentsPage() {
                   />
                 </div>
               </div>
-              
+
               <div className="text-xs text-slate-500 bg-amber-50 p-3 rounded-lg border border-amber-100">
-                *Note: This is a placeholder for payment integration. Actual payment will not be processed.
+                *Note: This is a placeholder for payment integration. Actual
+                payment will not be processed.
               </div>
             </div>
-            
+
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
               <button
                 onClick={() => setShowPaymentModal(false)}
@@ -281,7 +313,8 @@ export default function PaymentsPage() {
               >
                 {isProcessingPayment ? (
                   <>
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Processing...
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />{" "}
+                    Processing...
                   </>
                 ) : (
                   <>
@@ -322,14 +355,16 @@ export default function PaymentsPage() {
 
           {/* Job Listings for Payment */}
           <div className="space-y-5">
-            {jobs.length === 0 ? (
+            {activeJobs.length === 0 ? (
               <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8 sm:p-12 text-center">
                 <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                   <Briefcase className="w-8 h-8 text-slate-400" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">No Jobs Available for Payment</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">
+                  No Active Jobs
+                </h3>
                 <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                  You currently have no active or pending jobs that require payment.
+                  You currently have no active jobs that require payment.
                 </p>
                 <button
                   onClick={() => router.push("/clientspace/newJob")}
@@ -352,21 +387,32 @@ export default function PaymentsPage() {
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-3 flex-wrap">
-                                <h3 className="text-lg sm:text-xl font-bold text-slate-900">{job.title}</h3>
+                                <h3 className="text-lg sm:text-xl font-bold text-slate-900">
+                                  {job.title}
+                                </h3>
                                 {getStatusBadge(job.status)}
+                                {/* Show “Make Payment to Publish” if active but not paid */}
+                                {job.status === "ACTIVE" && !job.isPaid && (
+                                  <span className="px-3 py-1 bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 text-xs font-bold rounded-full flex items-center gap-1 border border-amber-200">
+                                    <CreditCard className="w-3 h-3" /> Make
+                                    Payment to Publish
+                                  </span>
+                                )}
                                 {job.isUrgent && (
                                   <span className="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full">
                                     Urgent
                                   </span>
                                 )}
                               </div>
-                              <p className="text-slate-600 font-bold text-base mb-3">{job.companyName}</p>
+                              <p className="text-slate-600 font-bold text-base mb-3">
+                                {job.companyName}
+                              </p>
                               <p className="text-slate-600 font-medium text-sm mb-4 leading-relaxed line-clamp-2">
                                 {job.Jobdescription}
                               </p>
                             </div>
                           </div>
-                          
+
                           {/* Job Details Grid */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
                             <div className="flex items-center text-sm font-bold text-slate-600 p-3 bg-slate-50 rounded-lg">
@@ -375,7 +421,9 @@ export default function PaymentsPage() {
                             </div>
                             <div className="flex items-center text-sm font-bold p-3 bg-emerald-50 rounded-lg border border-emerald-100">
                               <DollarSign className="w-4 h-4 mr-2 text-emerald-500 flex-shrink-0" />
-                              <span className="text-emerald-600 font-black truncate">{job.salary}</span>
+                              <span className="text-emerald-600 font-black truncate">
+                                {job.salary}
+                              </span>
                             </div>
                             <div className="flex items-center text-sm font-bold text-slate-600 p-3 bg-slate-50 rounded-lg">
                               <Clock className="w-4 h-4 mr-2 text-slate-400 flex-shrink-0" />
@@ -383,10 +431,12 @@ export default function PaymentsPage() {
                             </div>
                             <div className="flex items-center text-sm font-bold text-slate-600 p-3 bg-slate-50 rounded-lg">
                               <Calendar className="w-4 h-4 mr-2 text-slate-400 flex-shrink-0" />
-                              <span className="truncate">{formatDate(job.timePosted)}</span>
+                              <span className="truncate">
+                                {formatDate(job.timePosted)}
+                              </span>
                             </div>
                           </div>
-                          
+
                           {/* Requirements */}
                           <div className="mb-5">
                             <div className="flex flex-wrap gap-2">
@@ -402,7 +452,7 @@ export default function PaymentsPage() {
                                 ))}
                             </div>
                           </div>
-                          
+
                           {/* Action Button */}
                           <div className="flex justify-end">
                             <button
@@ -434,13 +484,13 @@ export default function PaymentsPage() {
                       <ChevronLeft className="w-4 h-4" />
                       Previous
                     </button>
-                    
+
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-slate-600">
                         Page {currentPage} of {totalPages}
                       </span>
                     </div>
-                    
+
                     <button
                       onClick={goToNextPage}
                       disabled={currentPage === totalPages}
@@ -461,5 +511,5 @@ export default function PaymentsPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

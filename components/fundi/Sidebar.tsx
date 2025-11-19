@@ -12,6 +12,7 @@ import {
   Calendar,
   Shield,
   Mail,
+  Banknote,
 } from "lucide-react";
 import FundiAuthService from "@/app/services/fundi_user";
 
@@ -176,6 +177,13 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       icon: Shield,
       description: "Manage your plan",
     },
+    // my wallet 
+     {
+      name: "MyWallet",
+      href: "/clientspace/fundi/wallet",
+      icon: Banknote,
+      description: "Manage your wallet",
+     },
     {
       name: "User Profile",
       href: "/clientspace/fundi/userProfile",

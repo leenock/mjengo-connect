@@ -20,35 +20,77 @@ model Client_User {
   password      String
   isActive      Boolean       @default(true)
   accountStatus AccountStatus @default(ACTIVE) // ✅ more descriptive
-
-  // phone number otp verification fields
-
-  
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   jobs           Job[]
   paymentLogs    ClientPaymentLog[] // NEW: Relationship to payments
   logs           SystemLog[] // ✅ reverse relation
   supportTickets SupportTicket[]
+
+  wallet ClientWallet? // 👈 Added reverse relation
 }
 
 // model client wallet for managing client funds
 
+model ClientWallet {
+  id       String      @id @default(cuid())
+  clientId String      @unique
+  client   Client_User @relation(fields: [clientId], references: [id])
+
+  balance  Int    @default(0) // stored in cents e.g. 100 = 1 KES
+  currency String @default("KES")
+
+  transactions ClientWalletTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ClientWalletTransaction {
+  id       String       @id @default(cuid())
+  walletId String
+  wallet   ClientWallet @relation(fields: [walletId], references: [id])
+
+  type      WalletTransactionType
+  amount    Int // Always positive — type defines direction
+  phone     String? // For M-Pesa or Paystack phone reference
+  reference String?               @unique // Receipt / tracking ID
+
+  status     PaymentStatus @default(PENDING)
+  rawPayload Json?
+
+  // If transaction comes from a payment log (deposit)
+  paymentLogId String?
+  paymentLog   ClientPaymentLog? @relation(fields: [paymentLogId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([walletId])
+  @@index([paymentLogId])
+}
+
+enum WalletTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  REFUND
+  ADJUSTMENT // Admin/manual update if needed
+}
 
 model ClientPaymentLog {
   id         String        @id @default(cuid())
   clientId   String
   client     Client_User   @relation(fields: [clientId], references: [id])
-  jobId      String        @unique
-  job        Job           @relation(fields: [jobId], references: [id])
+  jobId      String?
+  job        Job?          @relation(fields: [jobId], references: [id], name: "JobPayments")
   phone      String
   amount     Int
   receipt    String        @unique
-  status     PaymentStatus // "Success", "Failed", etc.
+  status     PaymentStatus
   rawPayload Json?
   createdAt  DateTime      @default(now())
+
+  walletTransactions ClientWalletTransaction[] // 👈 Added reverse relation
 
   @@index([clientId])
   @@index([jobId])
@@ -85,14 +127,14 @@ model Job {
   postedById String
   postedBy   Client_User @relation(fields: [postedById], references: [id])
 
-  payment    ClientPaymentLog? // Link to payment
-  jobReports JobReport[] // ✅ Reverse relation to reports
-  savedJobs  SavedJob[] // ✅ Reverse relation to saved jobs
+  paymentLogs ClientPaymentLog[] @relation("JobPayments") // one-to-many payments
+  jobReports  JobReport[] // ✅ Reverse relation to reports
+  savedJobs   SavedJob[] // ✅ Reverse relation to saved jobs
 }
 
 model Fundi_User {
   id               String          @id @default(cuid())
-  email            String?          @unique
+  email            String?         @unique
   firstName        String?
   lastName         String?
   phone            String          @unique
@@ -119,17 +161,55 @@ model Fundi_User {
   jobReports     JobReport[] // ✅ Reverse relation to reports
   supportTickets SupportTicket[]
   savedJobs      SavedJob[] // ✅ Reverse relation to saved jobs
+
+  wallet FundiWallet? // one-to-one reverse relation
+}
+
+model FundiWallet {
+  id      String     @id @default(cuid())
+  fundiId String     @unique
+  fundi   Fundi_User @relation(fields: [fundiId], references: [id])
+
+  balance  Int    @default(0) // Stored in cents
+  currency String @default("KES")
+
+  transactions FundiWalletTransaction[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FundiWalletTransaction {
+  id       String      @id @default(cuid())
+  walletId String
+  wallet   FundiWallet @relation(fields: [walletId], references: [id])
+
+  type      WalletTransactionType
+  amount    Int // Always positive
+  phone     String?
+  reference String? @unique
+
+  status     PaymentStatus @default(PENDING)
+  rawPayload Json?
+
+  paymentLogId String?
+  paymentLog   PaymentLog? @relation(fields: [paymentLogId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@index([walletId])
+  @@index([paymentLogId])
 }
 
 // Saved jobs model for fundi users
 model SavedJob {
-  id        String     @id @default(cuid())
-  fundiId   String
-  fundi     Fundi_User @relation(fields: [fundiId], references: [id], onDelete: Cascade)
-  jobId     String
-  job       Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  savedAt   DateTime   @default(now())
-  
+  id      String     @id @default(cuid())
+  fundiId String
+  fundi   Fundi_User @relation(fields: [fundiId], references: [id], onDelete: Cascade)
+  jobId   String
+  job     Job        @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  savedAt DateTime   @default(now())
+
   @@unique([fundiId, jobId]) // Prevent duplicate saves
   @@index([fundiId])
   @@index([jobId])
@@ -151,7 +231,7 @@ model Subscription {
   receipt   String?    @unique
   startDate DateTime
   endDate   DateTime
-  status    String     @default("PENDING") // ACTIVE, EXPIRED, CANCELLED, etc.
+  status SubscriptionStatus @default(PENDING)// ACTIVE, EXPIRED, CANCELLED, etc.
 
   mpesaCheckoutRequestId String? // Optional for M-Pesa tracking
   mpesaMerchantRequestId String?
@@ -177,6 +257,9 @@ model PaymentLog {
   resultCode        Int?
   resultDesc        String?
   transactionDate   DateTime?
+
+  fundiWalletTransactions FundiWalletTransaction[] // add this line
+
 
   createdAt DateTime @default(now())
 
@@ -370,6 +453,8 @@ enum SubscriptionStatus {
   ACTIVE
   EXPIRED
   CANCELLED
+  PENDING   // add this back
+
 }
 
 enum PaymentStatus {

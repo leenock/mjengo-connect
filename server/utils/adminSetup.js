@@ -66,15 +66,13 @@ export const setupAdminSystem = async () => {
   }
 }
 
-// Run setup if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
-  setupAdminSystem()
-    .then(() => {
-      console.log("Setup completed successfully!")
-      process.exit(0)
-    })
-    .catch((error) => {
-      console.error("Setup failed:", error)
-      process.exit(1)
-    })
-}
+// Run setup directly
+setupAdminSystem()
+  .then(() => {
+    console.log("Setup completed successfully!")
+    process.exit(0)
+  })
+  .catch((error) => {
+    console.error("Setup failed:", error)
+    process.exit(1)
+  })

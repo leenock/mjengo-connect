@@ -161,42 +161,58 @@ export default function MyJobsPage() {
     router.push(`/clientspace/job/${jobId}/edit`) // Updated path
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "PENDING":
-        return (
-          <span className="px-3 py-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 text-xs font-bold rounded-full flex items-center gap-1 border border-yellow-200">
-            <AlertCircle className="w-3 h-3" /> Pending Review
-          </span>
-        )
-      case "ACTIVE":
-        return (
+const getStatusBadge = (job: Job) => {
+  const status = job.status
+  const isPaid = job.isPaid
+
+  switch (status) {
+    case "PENDING":
+      return (
+        <span className="px-3 py-1 bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 text-xs font-bold rounded-full flex items-center gap-1 border border-yellow-200">
+          <AlertCircle className="w-3 h-3" /> Pending Review
+        </span>
+      )
+
+    case "ACTIVE":
+      return (
+        <div className="flex items-center gap-2">
           <span className="px-3 py-1 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 text-xs font-bold rounded-full flex items-center gap-1 border border-emerald-200">
             <CheckCircle className="w-3 h-3" /> Active
           </span>
-        )
-      case "CLOSED":
-        return (
-          <span className="px-3 py-1 bg-gradient-to-r from-gray-100 to-slate-100 text-gray-700 text-xs font-bold rounded-full flex items-center gap-1 border border-gray-200">
-            <XCircle className="w-3 h-3" /> Closed
-          </span>
-        )
-      case "EXPIRED":
-        return (
-          <span className="px-3 py-1 bg-gradient-to-r from-red-100 to-pink-100 text-red-700 text-xs font-bold rounded-full flex items-center gap-1 border border-red-200">
-            <XCircle className="w-3 h-3" /> Expired
-          </span>
-        )
-      case "REJECTED":
-        return (
-          <span className="px-3 py-1 bg-gradient-to-r from-red-100 to-pink-100 text-red-700 text-xs font-bold rounded-full flex items-center gap-1 border border-red-200">
-            <XCircle className="w-3 h-3" /> Rejected
-          </span>
-        )
-      default:
-        return null
-    }
+
+          {!isPaid && (
+            <span className="px-2.5 py-1 bg-yellow-200 text-yellow-900 text-[10px] font-bold rounded-md border border-yellow-300 animate-pulse">
+              Payment required to publish
+            </span>
+          )}
+        </div>
+      )
+
+    case "CLOSED":
+      return (
+        <span className="px-3 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-full flex items-center gap-1 border border-slate-300">
+          <XCircle className="w-3 h-3" /> Closed
+        </span>
+      )
+
+    case "EXPIRED":
+      return (
+        <span className="px-3 py-1 bg-red-200 text-red-700 text-xs font-bold rounded-full flex items-center gap-1 border border-red-300">
+          <XCircle className="w-3 h-3" /> Expired
+        </span>
+      )
+
+    case "REJECTED":
+      return (
+        <span className="px-3 py-1 bg-red-200 text-red-700 text-xs font-bold rounded-full flex items-center gap-1 border border-red-300">
+          <XCircle className="w-3 h-3" /> Rejected
+        </span>
+      )
+
+    default:
+      return null
   }
+}
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -399,7 +415,7 @@ export default function MyJobsPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-3 flex-wrap">
                                 <h3 className="text-base sm:text-lg md:text-xl font-bold text-slate-900">{job.title}</h3>
-                                {getStatusBadge(job.status)}
+                               {getStatusBadge(job)}
                                 {job.isUrgent && (
                                   <span className="px-2.5 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full">
                                     Urgent

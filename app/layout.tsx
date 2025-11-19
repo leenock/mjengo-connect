@@ -20,18 +20,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className="antialiased">
+        {/* Apply font variables inside a wrapper div */}
+        <div className={`${geistSans.variable} ${geistMono.variable}`}>
+          {children}
+        </div>
       </body>
     </html>
   );
 }
+
