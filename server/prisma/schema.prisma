@@ -85,15 +85,28 @@ model ClientPaymentLog {
   job        Job?          @relation(fields: [jobId], references: [id], name: "JobPayments")
   phone      String
   amount     Int
-  receipt    String        @unique
+  receipt    String?       @unique // Made optional for pending payments
   status     PaymentStatus
   rawPayload Json?
+  
+  // KopoKopo-specific fields
+  paymentProvider String?  @default("KOPOKOPO") // KOPOKOPO, PAYSTACK, etc.
+  kopokopoPaymentRequestId String? @unique // KopoKopo payment request ID
+  kopokopoPaymentRequestUrl String? // URL returned from KopoKopo
+  kopokopoTillNumber String? // Till number used for the payment
+  kopokopoCallbackUrl String? // Webhook callback URL
+  kopokopoReference String? // Reference from metadata
+  kopokopoMetadata Json? // Store metadata sent to KopoKopo
+  
   createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 
   walletTransactions ClientWalletTransaction[] // 👈 Added reverse relation
 
   @@index([clientId])
   @@index([jobId])
+  @@index([kopokopoPaymentRequestId])
+  @@index([status])
 }
 
 model Job {
@@ -119,6 +132,7 @@ model Job {
   timePosted DateTime @default(now())
   isUrgent   Boolean  @default(false)
   isPaid     Boolean  @default(false) //  Was job ad paid for?
+  paidAt     DateTime? // When the job was paid for (used for expiration tracking)
 
   clickCount Int       @default(0) //  Tracks how many times the job has been viewed or clicked
   status     JobStatus @default(PENDING)

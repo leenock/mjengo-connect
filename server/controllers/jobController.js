@@ -6,6 +6,8 @@ import {
   updateJob,
   deleteJob,
   updateJobStatus,
+  payForJob,
+  expirePaidJobs,
 } from "../services/jobService.js";
 
 /**
@@ -204,6 +206,57 @@ export const updateJobStatusController = async (req, res) => {
     console.error("Update Job Status Controller Error:", error);
     res.status(400).json({
       message: error.message || "Failed to update job status",
+    });
+  }
+};
+
+/**
+ * Pay for a job posting
+ */
+export const payForJobController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount } = req.body; // Optional, defaults to 300
+    const clientId = req.user?.id;
+
+    if (!clientId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const paymentAmount = amount || 300; // Default to 300 KES
+
+    const result = await payForJob(id, clientId, paymentAmount);
+
+    res.status(200).json({
+      message: "Job payment processed successfully",
+      ...result,
+    });
+  } catch (error) {
+    console.error("Pay For Job Controller Error:", error);
+    const statusCode = error.message.includes("Insufficient") ? 402 : 400;
+    res.status(statusCode).json({
+      message: error.message || "Failed to process job payment",
+    });
+  }
+};
+
+/**
+ * Expire paid jobs after 7 days
+ * This can be called manually or via cron job
+ */
+export const expirePaidJobsController = async (req, res) => {
+  try {
+    const result = await expirePaidJobs();
+
+    res.status(200).json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    console.error("Expire Paid Jobs Controller Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to expire paid jobs",
     });
   }
 };

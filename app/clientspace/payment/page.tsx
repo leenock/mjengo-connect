@@ -21,6 +21,7 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Wallet,
 } from "lucide-react";
 
 interface Job {
@@ -66,8 +67,9 @@ export default function PaymentsPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedJobForPayment, setSelectedJobForPayment] =
     useState<Job | null>(null);
-  const [phoneNumber, setPhoneNumber] = useState("");
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -104,49 +106,149 @@ export default function PaymentsPage() {
     }
   }, []);
 
+  const fetchWalletBalance = useCallback(async () => {
+    try {
+      setIsLoadingBalance(true);
+      const token = ClientAuthService.getToken();
+      if (!token) {
+        return;
+      }
+      const response = await fetch("http://localhost:5000/api/client/wallet/balance", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch wallet balance");
+      }
+      const data = await response.json();
+      if (data.success && data.data) {
+        setWalletBalance(data.data.balance || 0);
+      } else {
+        setWalletBalance(0);
+      }
+    } catch (error) {
+      console.error("Error fetching wallet balance:", error);
+    } finally {
+      setIsLoadingBalance(false);
+    }
+  }, []);
+
   useEffect(() => {
     const userData = ClientAuthService.getUserData();
     if (userData) {
       setCurrentUser(userData);
       fetchMyJobs();
+      fetchWalletBalance();
     } else {
       router.push("/auth/job-posting");
     }
-  }, [router, fetchMyJobs]);
+  }, [router, fetchMyJobs, fetchWalletBalance]);
 
   const handleOpenPaymentModal = (job: Job) => {
-    setSelectedJobForPayment(job);
-    setPhoneNumber(currentUser?.phone || job.phoneNumber || "");
-    setShowPaymentModal(true);
-  };
-
-  const handleProcessPayment = () => {
-    if (!phoneNumber.trim()) {
+    // Check if job is already paid
+    if (job.isPaid) {
       setToast({
-        message: "Please enter a phone number for payment.",
+        message: "This job has already been paid for.",
         type: "error",
       });
       return;
     }
 
+    // Check wallet balance
+    const paymentAmount = 300;
+    if (walletBalance < paymentAmount) {
+      setToast({
+        message: `Insufficient balance. You need Ksh ${paymentAmount.toFixed(2)} but have Ksh ${walletBalance.toFixed(2)}. Please add funds to your wallet.`,
+        type: "error",
+      });
+      // Redirect to add funds page after a short delay
+      setTimeout(() => {
+        router.push("/clientspace/add-funds");
+      }, 2000);
+      return;
+    }
+
+    setSelectedJobForPayment(job);
+    setShowPaymentModal(true);
+  };
+
+  const handleProcessPayment = async () => {
+    if (!selectedJobForPayment) {
+      return;
+    }
+
+    const paymentAmount = 300;
+
+    // Double-check balance before processing
+    if (walletBalance < paymentAmount) {
+      setToast({
+        message: `Insufficient balance. You need Ksh ${paymentAmount.toFixed(2)} but have Ksh ${walletBalance.toFixed(2)}. Please add funds to your wallet.`,
+        type: "error",
+      });
+      setShowPaymentModal(false);
+      setTimeout(() => {
+        router.push("/clientspace/add-funds");
+      }, 2000);
+      return;
+    }
+
     setIsProcessingPayment(true);
-    // This is where your payment integration logic will go
-    // For now, it's just a placeholder
     setToast({
-      message: `Initiating payment for ${selectedJobForPayment?.title} to ${phoneNumber}... (Integration coming soon!)`,
+      message: `Processing payment for ${selectedJobForPayment.title}...`,
       type: "loading",
     });
 
-    setTimeout(() => {
+    try {
+      const token = ClientAuthService.getToken();
+      if (!token) {
+        throw new Error("Authentication required");
+      }
+
+      const response = await fetch(
+        `http://localhost:5000/api/client/jobs/${selectedJobForPayment.id}/pay`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            amount: paymentAmount,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Payment failed");
+      }
+
       setToast({
-        message: "Payment process simulated. Success!",
+        message: `Payment successful! ${selectedJobForPayment.title} is now published.`,
         type: "success",
       });
+
+      // Refresh jobs and wallet balance
+      await fetchMyJobs();
+      await fetchWalletBalance();
+
+      // Close modal after a short delay
+      setTimeout(() => {
+        setShowPaymentModal(false);
+        setSelectedJobForPayment(null);
+      }, 1500);
+    } catch (error: any) {
+      console.error("Payment error:", error);
+      setToast({
+        message: error.message || "Failed to process payment. Please try again.",
+        type: "error",
+      });
+    } finally {
       setIsProcessingPayment(false);
-      setShowPaymentModal(false);
-      setSelectedJobForPayment(null);
-      setPhoneNumber("");
-    }, 2000);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -270,32 +372,42 @@ export default function PaymentsPage() {
                 </span>
               </div>
 
-              {/* Phone Number Input */}
-              <div className="pt-2">
-                <label
-                  htmlFor="phoneNumberInput"
-                  className="block text-sm font-semibold text-slate-700 mb-2"
-                >
-                  Phone Number for STK Push
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500">
-                    <Phone className="h-5 w-5" />
-                  </div>
-                  <input
-                    id="phoneNumberInput"
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="e.g., 0712345678 or +254712345678"
-                    className="flex h-12 w-full rounded-xl border border-slate-300 bg-white pl-12 pr-4 py-3 text-base ring-offset-background transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm hover:border-slate-400 focus:shadow-md"
-                  />
-                </div>
+              {/* Wallet Balance Display */}
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
+                <span className="text-slate-700 font-medium">Your Wallet Balance:</span>
+                <span className={`font-bold text-lg ${walletBalance >= 300 ? 'text-emerald-600' : 'text-red-600'}`}>
+                  Ksh {walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
               </div>
 
-              <div className="text-xs text-slate-500 bg-amber-50 p-3 rounded-lg border border-amber-100">
-                *Note: This is a placeholder for payment integration. Actual
-                payment will not be processed.
+              {/* Insufficient Balance Warning */}
+              {walletBalance < 300 && (
+                <div className="flex items-start gap-3 rounded-xl bg-red-50 p-4 text-red-800 font-medium border border-red-200">
+                  <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="font-semibold">Insufficient Balance</p>
+                    <p className="text-sm font-normal mt-1">
+                      You need Ksh 300.00 to publish this job, but your current balance is Ksh {walletBalance.toFixed(2)}.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setShowPaymentModal(false);
+                        router.push("/clientspace/add-funds");
+                      }}
+                      className="mt-2 inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 h-9 px-4 shadow-sm hover:shadow-md transition-all"
+                    >
+                      Add Funds to Wallet
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Info */}
+              <div className="text-xs text-slate-500 bg-blue-50 p-3 rounded-lg border border-blue-100">
+                <p className="font-semibold text-slate-700 mb-1">Payment Information:</p>
+                <p>• Payment will be deducted from your wallet balance</p>
+                <p>• Once paid, your job will be published and appear in job listings</p>
+                <p>• If your balance is insufficient, please add funds first</p>
               </div>
             </div>
 
@@ -308,7 +420,7 @@ export default function PaymentsPage() {
               </button>
               <button
                 onClick={handleProcessPayment}
-                disabled={isProcessingPayment}
+                disabled={isProcessingPayment || walletBalance < 300}
                 className="inline-flex flex-1 items-center justify-center whitespace-nowrap rounded-xl text-base font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-emerald-600 to-teal-700 text-white hover:from-emerald-700 hover:to-teal-800 h-12 px-6 py-3 shadow-md hover:shadow-lg disabled:from-emerald-400 disabled:to-teal-500"
               >
                 {isProcessingPayment ? (
@@ -330,7 +442,7 @@ export default function PaymentsPage() {
       <div className="flex-1 lg:ml-0">
         <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
           {/* Header */}
-          <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl mb-6 sm:mb-8 flex items-center justify-between px-4 sm:px-6 py-4 sm:py-6 rounded-2xl shadow-lg border border-white/20">
+          <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl mb-6 sm:mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-4 sm:px-6 py-4 sm:py-6 rounded-2xl shadow-lg border border-white/20">
             <div className="flex items-center space-x-3 sm:space-x-4">
               <button
                 onClick={() => setIsOpen(!isOpen)}
@@ -350,6 +462,22 @@ export default function PaymentsPage() {
                   Manage payments for your job postings
                 </p>
               </div>
+            </div>
+            {/* Wallet Balance */}
+            <div className="flex items-center gap-3 rounded-xl bg-gradient-to-r from-blue-500/15 to-indigo-500/15 px-3 py-2 sm:px-4 sm:py-2 text-blue-700 font-bold text-sm sm:text-base shadow-sm border border-blue-200/50">
+              <Wallet className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="whitespace-nowrap">
+                Balance: Ksh {isLoadingBalance ? "..." : walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+              <button
+                onClick={fetchWalletBalance}
+                disabled={isLoadingBalance}
+                className="p-1 hover:bg-blue-400/20 rounded transition-colors disabled:opacity-50"
+                title="Refresh balance"
+                aria-label="Refresh balance"
+              >
+                <Loader2 className={`h-4 w-4 ${isLoadingBalance ? 'animate-spin' : ''}`} />
+              </button>
             </div>
           </div>
 

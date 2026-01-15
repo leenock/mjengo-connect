@@ -8,6 +8,8 @@ import {
   updateJobController,
   deleteJobController,
   updateJobStatusController,
+  payForJobController,
+  expirePaidJobsController,
 } from "../controllers/jobController.js"
 import { validate } from "../middleware/validate.js"
 import { authenticateToken } from "../middleware/auth.js"
@@ -30,5 +32,7 @@ router.get("/client/:clientId/jobs", authenticateToken, getJobsByClientControlle
 router.put("/jobs/:id", authenticateToken, validate(updateJobSchema), updateJobController) // Update job
 router.delete("/jobs/:id", authenticateToken, deleteJobController) // Delete job
 router.patch("/jobs/:id/status", authenticateToken, validate(updateJobStatusSchema), updateJobStatusController) // Update job status
+router.post("/jobs/:id/pay", authenticateToken, payForJobController) // Pay for job
+router.post("/jobs/expire-paid", expirePaidJobsController) // Expire paid jobs after 7 days (can be called by cron or manually)
 
 export default router

@@ -2,6 +2,8 @@
 import express from "express"
 import cors from "cors"
 import dotenv from "dotenv"
+import cron from "node-cron"
+import { expirePaidJobs } from "./services/jobService.js"
 
 // Import routes
 import client_UserRoute from "./routes/client_UserRoute.js"
@@ -18,6 +20,7 @@ import ticketsFundiRoute from "./routes/ticketsFundiRoute.js" // Added fundi tic
 import ticketSupportRoute from "./routes/ticketSupportRoute.js" // Added ticket support route import
 
 import adminJobRoutes from './routes/adminJobRoutes.js'; // Import admin job routes
+import clientWalletRoute from './routes/clientWalletRoute.js'; // Import client wallet routes
 
 // Load environment variables
 dotenv.config()
@@ -39,6 +42,9 @@ app.use("/api/client", client_UserRoute)
 
 // Use the auth routes under /api/auth
 app.use("/api/client/auth", client_authRoute)
+
+// Client Wallet Routes (KopoKopo integration)
+app.use("/api/client/wallet", clientWalletRoute)
 
 // Job Routes
 app.use("/api/client", jobRoute)
@@ -81,3 +87,19 @@ const PORT = process.env.PORT || 5000
 app.listen(PORT, () => {
   console.log(`✅ Server is running at http://localhost:${PORT}`)
 })
+
+// Schedule job expiration task to run daily at 2:00 AM
+// This will expire jobs that have been paid for more than 7 days
+cron.schedule("0 2 * * *", async () => {
+  try {
+    console.log("🕐 Running scheduled job expiration check...");
+    const result = await expirePaidJobs();
+    console.log(`✅ Job expiration check completed: ${result.message}`);
+  } catch (error) {
+    console.error("❌ Error running job expiration check:", error);
+  }
+}, {
+  timezone: "Africa/Nairobi" // Adjust to your timezone
+});
+
+console.log("📅 Scheduled job expiration task: Daily at 2:00 AM (Africa/Nairobi timezone)");

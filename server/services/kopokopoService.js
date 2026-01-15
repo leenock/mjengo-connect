@@ -1,0 +1,589 @@
+import { PrismaClient } from "@prisma/client";
+import { depositToWallet, getWalletBalance } from "./clientAddFunds.js";
+
+const prisma = new PrismaClient();
+
+/**
+ * KopoKopo API Configuration
+ * These should be set in your .env file:
+ * - KOPOKOPO_CLIENT_ID
+ * - KOPOKOPO_CLIENT_SECRET
+ * - KOPOKOPO_TILL_NUMBER (e.g., "K000000")
+ * - KOPOKOPO_BASE_URL (sandbox: "https://sandbox.kopokopo.com", production: "https://api.kopokopo.com")
+ * - KOPOKOPO_CALLBACK_URL (your webhook endpoint URL)
+ */
+const KOPOKOPO_CONFIG = {
+  clientId: process.env.KOPOKOPO_CLIENT_ID,
+  clientSecret: process.env.KOPOKOPO_CLIENT_SECRET,
+  tillNumber: process.env.KOPOKOPO_TILL_NUMBER,
+  baseUrl: process.env.KOPOKOPO_BASE_URL || "https://sandbox.kopokopo.com",
+  callbackUrl: process.env.KOPOKOPO_CALLBACK_URL || "http://localhost:5000/api/client/wallet/kopokopo/webhook",
+  grantType: "client_credentials"
+};
+
+/**
+ * Get OAuth access token from KopoKopo
+ * @returns {Promise<string>} Access token
+ */
+export const getKopokopoAccessToken = async () => {
+  try {
+    // KopoKopo OAuth endpoint expects form-urlencoded data
+    const params = new URLSearchParams();
+    params.append("client_id", KOPOKOPO_CONFIG.clientId);
+    params.append("client_secret", KOPOKOPO_CONFIG.clientSecret);
+    params.append("grant_type", KOPOKOPO_CONFIG.grantType);
+
+    const response = await fetch(`${KOPOKOPO_CONFIG.baseUrl}/oauth/token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: params.toString(),
+    });
+
+    const responseText = await response.text();
+    
+    // Log token response only in development
+    if (process.env.NODE_ENV !== "production") {
+      console.log("🔑 KopoKopo Access Token obtained");
+    }
+
+    if (!response.ok) {
+      let errorData = {};
+      try {
+        errorData = JSON.parse(responseText);
+      } catch (e) {
+        errorData = { message: responseText || "Unknown error" };
+      }
+      throw new Error(
+        `Failed to get access token: ${response.status} - ${JSON.stringify(errorData)}`
+      );
+    }
+
+    const data = JSON.parse(responseText);
+    if (!data.access_token) {
+      throw new Error("Access token not found in response");
+    }
+    return data.access_token;
+  } catch (error) {
+    console.error("KopoKopo Access Token Error:", error);
+    throw new Error(`Failed to authenticate with KopoKopo: ${error.message}`);
+  }
+};
+
+/**
+ * Initiate STK Push payment request to KopoKopo
+ * @param {Object} paymentData - Payment data
+ * @param {string} paymentData.firstName - Customer first name
+ * @param {string} paymentData.lastName - Customer last name
+ * @param {string} paymentData.phoneNumber - Customer phone number
+ * @param {string} paymentData.email - Customer email (optional)
+ * @param {number} paymentData.amount - Payment amount
+ * @param {string} paymentData.currency - Currency (default: KES)
+ * @param {Object} paymentData.metadata - Additional metadata
+ * @param {string} clientId - Client user ID
+ * @returns {Promise<Object>} Payment request response
+ */
+export const initiateKopokopoStkPush = async (paymentData, clientId) => {
+  try {
+    // Validate configuration
+    if (!KOPOKOPO_CONFIG.clientId || !KOPOKOPO_CONFIG.clientSecret) {
+      throw new Error("KopoKopo credentials not configured. Please set KOPOKOPO_CLIENT_ID and KOPOKOPO_CLIENT_SECRET in your .env file.");
+    }
+
+    if (!KOPOKOPO_CONFIG.tillNumber) {
+      throw new Error("KopoKopo till number not configured. Please set KOPOKOPO_TILL_NUMBER in your .env file.");
+    }
+
+    // Validate payment data
+    if (!paymentData.amount || paymentData.amount <= 0) {
+      throw new Error("Amount must be greater than 0");
+    }
+
+    if (!paymentData.phoneNumber) {
+      throw new Error("Phone number is required");
+    }
+
+    // Get access token
+    const accessToken = await getKopokopoAccessToken();
+    
+    if (!accessToken) {
+      throw new Error("Failed to obtain access token from KopoKopo");
+    }
+
+    // Prepare STK Push request payload according to KopoKopo API format
+    // KopoKopo expects: subscriber object, amount object, and _links for callback
+    const stkPushPayload = {
+      payment_channel: paymentData.paymentChannel || "M-PESA STK Push",
+      till_number: KOPOKOPO_CONFIG.tillNumber,
+      subscriber: {
+        first_name: paymentData.firstName,
+        last_name: paymentData.lastName,
+        phone_number: paymentData.phoneNumber,
+        ...(paymentData.email && { email: paymentData.email }),
+      },
+      amount: {
+        currency: paymentData.currency || "KES",
+        value: paymentData.amount.toString(), // Amount as string
+      },
+      metadata: {
+        customer_id: clientId,
+        reference: paymentData.metadata?.reference || `WALLET_TOPUP_${Date.now()}`,
+        notes: paymentData.metadata?.notes || `Wallet top-up of KES ${paymentData.amount}`,
+      },
+      _links: {
+        callback_url: KOPOKOPO_CONFIG.callbackUrl,
+      },
+    };
+
+    // Log request details (can be removed in production or made conditional)
+    if (process.env.NODE_ENV !== "production") {
+      console.log("📤 Initiating KopoKopo STK Push...");
+      console.log("   Amount: KES", paymentData.amount);
+      console.log("   Phone:", paymentData.phoneNumber);
+    }
+
+    // Make API request to KopoKopo
+    const response = await fetch(`${KOPOKOPO_CONFIG.baseUrl}/api/v1/incoming_payments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(stkPushPayload),
+    });
+
+    // Get response text first to see what we're dealing with
+    const responseText = await response.text();
+    
+    // Log response details only in development
+    if (process.env.NODE_ENV !== "production") {
+      console.log("📥 KopoKopo API Response Status:", response.status);
+    }
+
+    if (!response.ok) {
+      let errorData = {};
+      try {
+        errorData = JSON.parse(responseText);
+      } catch (e) {
+        errorData = { message: responseText || "Unknown error" };
+      }
+      
+      console.error("KopoKopo API Error Details:", {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData,
+        requestPayload: stkPushPayload,
+      });
+      
+      throw new Error(
+        `KopoKopo API Error: ${response.status} - ${JSON.stringify(errorData)}`
+      );
+    }
+
+    // Get the payment request URL from Location header
+    const paymentRequestUrl = response.headers.get("Location") || response.headers.get("location");
+    
+    // Parse response body
+    let responseData = {};
+    try {
+      if (responseText) {
+        responseData = JSON.parse(responseText);
+      }
+    } catch (e) {
+      console.warn("Could not parse response body as JSON:", e);
+    }
+
+    // Extract payment request ID from URL
+    const paymentRequestId = paymentRequestUrl
+      ? paymentRequestUrl.split("/").pop()
+      : responseData.id || null;
+
+    if (!paymentRequestId) {
+      throw new Error("Payment request ID not found in response");
+    }
+
+    console.log("✅ KopoKopo STK Push initiated successfully!");
+    console.log("   Payment Request ID:", paymentRequestId);
+    console.log("   Payment Request URL:", paymentRequestUrl);
+    
+    // Note about sandbox behavior
+    if (KOPOKOPO_CONFIG.baseUrl.includes("sandbox")) {
+      console.log("   ⚠️  SANDBOX MODE: No actual STK push will be sent to phone.");
+      console.log("   Payment will be simulated via webhook callback.");
+      console.log("   Check webhook endpoint for payment status updates.");
+    } else {
+      console.log("   📱 PRODUCTION MODE: STK push should appear on phone shortly.");
+    }
+
+    // Save payment log to database
+    const paymentLog = await prisma.clientPaymentLog.create({
+      data: {
+        clientId: clientId,
+        phone: paymentData.phoneNumber,
+        amount: Math.round(paymentData.amount * 100), // Convert to cents
+        status: "PENDING",
+        paymentProvider: "KOPOKOPO",
+        kopokopoPaymentRequestId: paymentRequestId,
+        kopokopoPaymentRequestUrl: paymentRequestUrl,
+        kopokopoTillNumber: KOPOKOPO_CONFIG.tillNumber,
+        kopokopoCallbackUrl: KOPOKOPO_CONFIG.callbackUrl,
+        kopokopoReference: paymentData.metadata?.reference || `WALLET_TOPUP_${Date.now()}`,
+        kopokopoMetadata: paymentData.metadata || {},
+        rawPayload: responseData,
+      },
+    });
+
+    console.log("✅ Payment log saved to database. ID:", paymentLog.id);
+
+    return {
+      success: true,
+      paymentRequestId,
+      paymentRequestUrl,
+      paymentLogId: paymentLog.id,
+      message: "STK Push initiated successfully. Please check your phone.",
+    };
+  } catch (error) {
+    console.error("KopoKopo STK Push Error:", error);
+    throw new Error(`Failed to initiate STK Push: ${error.message}`);
+  }
+};
+
+/**
+ * Process webhook callback from KopoKopo
+ * @param {Object} webhookData - Webhook payload from KopoKopo
+ * @returns {Promise<Object>} Processing result
+ */
+export const processKopokopoWebhook = async (webhookData) => {
+  try {
+    const { data } = webhookData;
+    const { attributes } = data;
+    const { event, status } = attributes;
+
+    // Find payment log by KopoKopo payment request ID
+    const paymentRequestId = data.id;
+    const paymentLog = await prisma.clientPaymentLog.findFirst({
+      where: {
+        kopokopoPaymentRequestId: paymentRequestId,
+      },
+      include: {
+        client: true,
+      },
+    });
+
+    if (!paymentLog) {
+      console.error(`Payment log not found for KopoKopo request ID: ${paymentRequestId}`);
+      return {
+        success: false,
+        message: "Payment log not found",
+      };
+    }
+
+    // Update payment log with webhook data
+    const updateData = {
+      rawPayload: webhookData,
+      updatedAt: new Date(),
+    };
+
+    if (status === "Success" && event.resource) {
+      const resource = event.resource;
+      updateData.status = "SUCCESS";
+      updateData.receipt = resource.reference || resource.id;
+      updateData.amount = Math.round(parseFloat(resource.amount) * 100); // Convert to cents
+
+      // Update wallet balance
+      await updateClientWallet(paymentLog.clientId, updateData.amount, paymentLog.id);
+    } else if (status === "Failed") {
+      updateData.status = "FAILED";
+    }
+
+    // Update payment log
+    await prisma.clientPaymentLog.update({
+      where: { id: paymentLog.id },
+      data: updateData,
+    });
+
+    return {
+      success: true,
+      paymentLogId: paymentLog.id,
+      status: updateData.status,
+      message: `Payment ${updateData.status.toLowerCase()}`,
+    };
+  } catch (error) {
+    console.error("KopoKopo Webhook Processing Error:", error);
+    throw new Error(`Failed to process webhook: ${error.message}`);
+  }
+};
+
+/**
+ * Update client wallet balance after successful payment
+ * @param {string} clientId - Client user ID
+ * @param {number} amount - Amount in cents
+ * @param {string} paymentLogId - Payment log ID
+ */
+const updateClientWallet = async (clientId, amount, paymentLogId) => {
+  try {
+    // Convert amount from cents to KES
+    const amountInKES = amount / 100;
+    
+    // Generate reference
+    const reference = `KOPOKOPO_${Date.now()}`;
+
+    // Use the clientAddFunds service to deposit
+    const result = await depositToWallet(
+      clientId,
+      amountInKES,
+      paymentLogId,
+      reference
+    );
+
+    return result.wallet;
+  } catch (error) {
+    console.error("Wallet Update Error:", error);
+    throw new Error(`Failed to update wallet: ${error.message}`);
+  }
+};
+
+/**
+ * Get client wallet balance
+ * @param {string} clientId - Client user ID
+ * @returns {Promise<Object>} Wallet data
+ */
+export const getClientWalletBalance = async (clientId) => {
+  try {
+    // Use the clientAddFunds service
+    return await getWalletBalance(clientId);
+  } catch (error) {
+    console.error("Get Wallet Balance Error:", error);
+    throw new Error(`Failed to get wallet balance: ${error.message}`);
+  }
+};
+
+/**
+ * Get payment status by payment request ID and update wallet if payment succeeded
+ * @param {string} paymentRequestId - KopoKopo payment request ID
+ * @returns {Promise<Object>} Payment status
+ */
+export const getKopokopoPaymentStatus = async (paymentRequestId) => {
+  try {
+    const accessToken = await getKopokopoAccessToken();
+
+    const response = await fetch(
+      `${KOPOKOPO_CONFIG.baseUrl}/api/v1/incoming_payments/${paymentRequestId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        `Failed to get payment status: ${response.status} - ${JSON.stringify(errorData)}`
+      );
+    }
+
+    const data = await response.json();
+    
+    console.log("📊 Payment Status Check:", {
+      paymentRequestId,
+      status: data.data?.attributes?.status,
+      hasEvent: !!data.data?.attributes?.event,
+      hasResource: !!data.data?.attributes?.event?.resource,
+    });
+    
+    // Check if payment succeeded and update wallet if needed
+    if (data.data?.attributes?.status === "Success") {
+      console.log("✅ Payment status is Success, updating wallet...");
+      const updateResult = await checkAndUpdateWalletFromPaymentStatus(paymentRequestId, data);
+      console.log("💰 Wallet update result:", updateResult);
+    } else {
+      console.log(`⏳ Payment status: ${data.data?.attributes?.status || "Unknown"}`);
+    }
+    
+    return data;
+  } catch (error) {
+    console.error("Get Payment Status Error:", error);
+    throw new Error(`Failed to get payment status: ${error.message}`);
+  }
+};
+
+/**
+ * Check payment status and update wallet if payment succeeded
+ * This is useful for sandbox where webhooks might not arrive
+ * @param {string} paymentRequestId - KopoKopo payment request ID
+ * @param {Object} statusData - Payment status data from KopoKopo (optional)
+ * @returns {Promise<Object>} Update result
+ */
+const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusData = null) => {
+  try {
+    // Find payment log
+    const paymentLog = await prisma.clientPaymentLog.findFirst({
+      where: {
+        kopokopoPaymentRequestId: paymentRequestId,
+      },
+      include: {
+        client: true,
+      },
+    });
+
+    if (!paymentLog) {
+      console.log(`Payment log not found for request ID: ${paymentRequestId}`);
+      return { updated: false, reason: "Payment log not found" };
+    }
+
+    // If payment log is already SUCCESS, skip
+    if (paymentLog.status === "SUCCESS") {
+      console.log(`Payment log ${paymentLog.id} already processed`);
+      return { updated: false, reason: "Already processed" };
+    }
+
+    // Get status data if not provided
+    if (!statusData) {
+      const accessToken = await getKopokopoAccessToken();
+      const response = await fetch(
+        `${KOPOKOPO_CONFIG.baseUrl}/api/v1/incoming_payments/${paymentRequestId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch payment status: ${response.status}`);
+      }
+
+      statusData = await response.json();
+    }
+
+    const { attributes } = statusData.data || {};
+    const { status, event } = attributes || {};
+
+    console.log("🔍 Checking payment status for wallet update:", {
+      paymentLogId: paymentLog.id,
+      currentStatus: paymentLog.status,
+      kopokopoStatus: status,
+      hasEvent: !!event,
+      hasResource: !!event?.resource,
+    });
+
+    // Update payment log and wallet if payment succeeded
+    if (status === "Success" && event?.resource) {
+      const resource = event.resource;
+      const amountInCents = Math.round(parseFloat(resource.amount) * 100);
+      
+      console.log("💵 Processing successful payment:", {
+        amount: amountInCents / 100,
+        clientId: paymentLog.clientId,
+        paymentLogId: paymentLog.id,
+      });
+
+      // Update payment log
+      await prisma.clientPaymentLog.update({
+        where: { id: paymentLog.id },
+        data: {
+          status: "SUCCESS",
+          receipt: resource.reference || resource.id,
+          amount: amountInCents,
+          rawPayload: statusData,
+          updatedAt: new Date(),
+        },
+      });
+
+      // Update wallet balance
+      await updateClientWallet(paymentLog.clientId, amountInCents, paymentLog.id);
+
+      console.log(`✅ Wallet updated for client ${paymentLog.clientId}: +${amountInCents / 100} KES`);
+      
+      return {
+        updated: true,
+        amount: amountInCents / 100,
+        clientId: paymentLog.clientId,
+      };
+    } else if (status === "Failed") {
+      // Update payment log to failed
+      await prisma.clientPaymentLog.update({
+        where: { id: paymentLog.id },
+        data: {
+          status: "FAILED",
+          rawPayload: statusData,
+          updatedAt: new Date(),
+        },
+      });
+
+      return { updated: false, reason: "Payment failed" };
+    }
+
+    return { updated: false, reason: "Payment still pending" };
+  } catch (error) {
+    console.error("Check and Update Wallet Error:", error);
+    throw new Error(`Failed to check and update wallet: ${error.message}`);
+  }
+};
+
+/**
+ * Process pending payments and update wallets
+ * Useful for checking pending payments that might have succeeded
+ * @param {string} clientId - Optional client ID to check only their payments
+ * @returns {Promise<Object>} Processing results
+ */
+export const processPendingPayments = async (clientId = null) => {
+  try {
+    // Find pending payment logs
+    const whereClause = {
+      status: "PENDING",
+      paymentProvider: "KOPOKOPO",
+      kopokopoPaymentRequestId: { not: null },
+    };
+
+    if (clientId) {
+      whereClause.clientId = clientId;
+    }
+
+    const pendingPayments = await prisma.clientPaymentLog.findMany({
+      where: whereClause,
+      orderBy: { createdAt: "desc" },
+      take: 50, // Process up to 50 at a time
+    });
+
+    console.log(`Found ${pendingPayments.length} pending payments to check`);
+
+    const results = {
+      checked: 0,
+      updated: 0,
+      failed: 0,
+      stillPending: 0,
+    };
+
+    for (const payment of pendingPayments) {
+      try {
+        results.checked++;
+        const result = await checkAndUpdateWalletFromPaymentStatus(
+          payment.kopokopoPaymentRequestId
+        );
+
+        if (result.updated) {
+          results.updated++;
+        } else if (result.reason === "Payment failed") {
+          results.failed++;
+        } else {
+          results.stillPending++;
+        }
+      } catch (error) {
+        console.error(`Error processing payment ${payment.id}:`, error);
+        results.failed++;
+      }
+    }
+
+    console.log("Pending payments processing results:", results);
+    return results;
+  } catch (error) {
+    console.error("Process Pending Payments Error:", error);
+    throw new Error(`Failed to process pending payments: ${error.message}`);
+  }
+};

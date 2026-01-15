@@ -336,3 +336,158 @@ export const updateJobStatus = async (jobId, clientId, status) => {
     throw new Error(`Failed to update job status: ${error.message}`)
   }
 }
+
+/**
+ * Pay for a job posting (deduct from wallet and mark job as paid)
+ * @param {String} jobId - Job ID
+ * @param {String} clientId - Client user ID (for authorization)
+ * @param {Number} amount - Payment amount (default: 300 KES)
+ * @returns {Object} Updated job and payment details
+ */
+export const payForJob = async (jobId, clientId, amount = 300) => {
+  try {
+    // Check if job exists and belongs to the client
+    const existingJob = await prisma.job.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!existingJob) {
+      throw new Error("Job not found");
+    }
+
+    if (existingJob.postedById !== clientId) {
+      throw new Error("Unauthorized: You can only pay for your own jobs");
+    }
+
+    // Check if job is already paid
+    if (existingJob.isPaid) {
+      throw new Error("Job has already been paid for");
+    }
+
+    // Import wallet service
+    const { withdrawFromWallet, getWalletBalance } = await import("./clientAddFunds.js");
+
+    // Check wallet balance
+    const walletData = await getWalletBalance(clientId);
+    if (walletData.balance < amount) {
+      throw new Error(`Insufficient balance. You have Ksh ${walletData.balance.toFixed(2)}, but need Ksh ${amount.toFixed(2)}`);
+    }
+
+    // Withdraw from wallet
+    const reference = `JOB_PAYMENT_${jobId}_${Date.now()}`;
+    const withdrawalResult = await withdrawFromWallet(clientId, amount, reference);
+
+    // Create payment log
+    const paymentLog = await prisma.clientPaymentLog.create({
+      data: {
+        clientId: clientId,
+        jobId: jobId,
+        phone: existingJob.phoneNumber,
+        amount: Math.round(amount * 100), // Convert to cents
+        receipt: reference,
+        status: "SUCCESS",
+        paymentProvider: "WALLET",
+        kopokopoReference: reference,
+        rawPayload: {
+          jobId: jobId,
+          jobTitle: existingJob.title,
+          amount: amount,
+          paymentMethod: "WALLET",
+        },
+      },
+    });
+
+    // Update job to mark as paid and set payment timestamp
+    const updatedJob = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        isPaid: true,
+        paidAt: new Date(), // Set payment timestamp for expiration tracking
+      },
+      include: {
+        postedBy: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            company: true,
+          },
+        },
+      },
+    });
+
+    return {
+      job: updatedJob,
+      payment: {
+        amount: amount,
+        reference: reference,
+        paymentLogId: paymentLog.id,
+        walletBalance: withdrawalResult.wallet.balance,
+      },
+    };
+  } catch (error) {
+    console.error("Pay For Job Service Error:", error);
+    throw new Error(`Failed to process job payment: ${error.message}`);
+  }
+}
+
+/**
+ * Expire jobs that have been paid for more than 7 days
+ * Sets isPaid to false for jobs where paidAt is older than 7 days
+ * @returns {Object} Expiration results
+ */
+export const expirePaidJobs = async () => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // Find all paid jobs where paidAt is older than 7 days
+    const expiredJobs = await prisma.job.findMany({
+      where: {
+        isPaid: true,
+        paidAt: {
+          not: null,
+          lte: sevenDaysAgo, // Less than or equal to 7 days ago
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        paidAt: true,
+      },
+    });
+
+    if (expiredJobs.length === 0) {
+      return {
+        expired: 0,
+        message: "No jobs to expire",
+      };
+    }
+
+    // Update all expired jobs to set isPaid to false
+    const updateResult = await prisma.job.updateMany({
+      where: {
+        id: {
+          in: expiredJobs.map((job) => job.id),
+        },
+      },
+      data: {
+        isPaid: false,
+        // Optionally clear paidAt or keep it for historical record
+        // paidAt: null, // Uncomment if you want to clear the timestamp
+      },
+    });
+
+    console.log(`✅ Expired ${updateResult.count} job(s) after 7 days`);
+
+    return {
+      expired: updateResult.count,
+      jobs: expiredJobs,
+      message: `Successfully expired ${updateResult.count} job(s)`,
+    };
+  } catch (error) {
+    console.error("Expire Paid Jobs Service Error:", error);
+    throw new Error(`Failed to expire paid jobs: ${error.message}`);
+  }
+}
