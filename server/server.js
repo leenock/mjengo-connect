@@ -92,14 +92,14 @@ app.listen(PORT, () => {
 // This will expire jobs that have been paid for more than 7 days
 cron.schedule("0 2 * * *", async () => {
   try {
-    console.log("🕐 Running scheduled job expiration check...");
+    console.log("Running scheduled job expiration check...");
     const result = await expirePaidJobs();
-    console.log(`✅ Job expiration check completed: ${result.message}`);
+    console.log(`Job expiration check completed: ${result.message}`);
   } catch (error) {
-    console.error("❌ Error running job expiration check:", error);
+    console.error("Error running job expiration check:", error);
   }
 }, {
   timezone: "Africa/Nairobi" // Adjust to your timezone
 });
 
-console.log("📅 Scheduled job expiration task: Daily at 2:00 AM (Africa/Nairobi timezone)");
+console.log("Scheduled job expiration task: Daily at 2:00 AM (Africa/Nairobi timezone)");
