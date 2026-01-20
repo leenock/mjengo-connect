@@ -260,7 +260,7 @@ model PaymentLog {
   id         String        @id @default(cuid())
   phone      String
   amount     Int
-  receipt    String        @unique
+  receipt    String?       @unique // Made optional for pending payments
   status     PaymentStatus @default(PENDING)
   fundi      Fundi_User?   @relation(fields: [fundiId], references: [id])
   fundiId    String?
@@ -272,14 +272,25 @@ model PaymentLog {
   resultDesc        String?
   transactionDate   DateTime?
 
+  // KopoKopo-specific fields
+  paymentProvider String?  @default("KOPOKOPO") // KOPOKOPO, PAYSTACK, etc.
+  kopokopoPaymentRequestId String? @unique // KopoKopo payment request ID
+  kopokopoPaymentRequestUrl String? // URL returned from KopoKopo
+  kopokopoTillNumber String? // Till number used for the payment
+  kopokopoCallbackUrl String? // Webhook callback URL
+  kopokopoReference String? // Reference from metadata
+  kopokopoMetadata Json? // Store metadata sent to KopoKopo
+
   fundiWalletTransactions FundiWalletTransaction[] // add this line
 
-
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([fundiId])
   @@index([receipt])
   @@index([createdAt])
+  @@index([kopokopoPaymentRequestId])
+  @@index([status])
 }
 
 // Administration model for managing clients, fundis and jobs

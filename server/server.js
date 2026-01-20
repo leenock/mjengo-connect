@@ -4,6 +4,7 @@ import cors from "cors"
 import dotenv from "dotenv"
 import cron from "node-cron"
 import { expirePaidJobs } from "./services/jobService.js"
+import { downgradeExpiredSubscriptions } from "./services/subscriptionService.js"
 
 // Import routes
 import client_UserRoute from "./routes/client_UserRoute.js"
@@ -21,6 +22,8 @@ import ticketSupportRoute from "./routes/ticketSupportRoute.js" // Added ticket 
 
 import adminJobRoutes from './routes/adminJobRoutes.js'; // Import admin job routes
 import clientWalletRoute from './routes/clientWalletRoute.js'; // Import client wallet routes
+import fundiWalletRoute from './routes/fundiWalletRoute.js'; // Import fundi wallet routes
+import subscriptionRoute from './routes/subscriptionRoute.js'; // Import subscription routes
 
 // Load environment variables
 dotenv.config()
@@ -45,6 +48,12 @@ app.use("/api/client/auth", client_authRoute)
 
 // Client Wallet Routes (KopoKopo integration)
 app.use("/api/client/wallet", clientWalletRoute)
+
+// Fundi Wallet Routes (KopoKopo integration)
+app.use("/api/fundi/wallet", fundiWalletRoute)
+
+// Fundi Subscription Routes
+app.use("/api/fundi/subscription", subscriptionRoute)
 
 // Job Routes
 app.use("/api/client", jobRoute)
@@ -103,3 +112,19 @@ cron.schedule("0 2 * * *", async () => {
 });
 
 console.log("Scheduled job expiration task: Daily at 2:00 AM (Africa/Nairobi timezone)");
+
+// Schedule subscription expiration task to run daily at 3:00 AM
+// This will downgrade expired premium subscriptions to free plan
+cron.schedule("0 3 * * *", async () => {
+  try {
+    console.log("🕐 Running scheduled subscription expiration check...");
+    const result = await downgradeExpiredSubscriptions();
+    console.log(`✅ Subscription expiration check completed: ${result.message}`);
+  } catch (error) {
+    console.error("❌ Error running subscription expiration check:", error);
+  }
+}, {
+  timezone: "Africa/Nairobi"
+});
+
+console.log("📅 Scheduled subscription expiration task: Daily at 3:00 AM (Africa/Nairobi timezone)");

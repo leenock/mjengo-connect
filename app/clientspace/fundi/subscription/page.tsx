@@ -17,6 +17,7 @@ import {
   Smartphone,
   Globe,
   Loader2,
+  Wallet,
 } from "lucide-react"
 
 interface PaymentModalProps {
@@ -26,79 +27,102 @@ interface PaymentModalProps {
 }
 
 function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) {
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"mpesa" | "paystack" | null>(null)
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [email, setEmail] = useState("")
-  const [paymentStep, setPaymentStep] = useState<"method" | "details" | "processing">("method")
+  const [walletBalance, setWalletBalance] = useState(0)
+  const [isLoadingBalance, setIsLoadingBalance] = useState(true)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState<string>("")
+
+  const fetchWalletBalance = async () => {
+    setIsLoadingBalance(true)
+    try {
+      const token = FundiAuthService.getToken()
+      if (!token) return
+
+      const response = await fetch("http://localhost:5000/api/fundi/wallet/balance", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success && data.data) {
+          setWalletBalance(data.data.balance || 0)
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch wallet balance:", error)
+    } finally {
+      setIsLoadingBalance(false)
+    }
+  }
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchWalletBalance()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen])
 
   const handlePayment = async () => {
-    if (!selectedPaymentMethod) return
-
-    setPaymentStep("processing")
+    setIsProcessing(true)
+    setError("")
 
     try {
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 3000))
-
-      // Get current user data
-      const currentUser = FundiAuthService.getUserData()
-      if (!currentUser) {
-        throw new Error("User not found")
+      const token = FundiAuthService.getToken()
+      if (!token) {
+        throw new Error("Authentication required")
       }
 
-      // Update user subscription in the database
-      const token = FundiAuthService.getToken()
-      const response = await fetch(`http://localhost:5000/api/fundi/updateFundi/${currentUser.id}`, {
-        method: "PUT",
+      // Check wallet balance
+      if (walletBalance < 200) {
+        setError(`Insufficient balance. You need KSh 200 but have KSh ${walletBalance.toFixed(2)}. Please add funds to your wallet.`)
+        setIsProcessing(false)
+        return
+      }
+
+      // Subscribe to premium (deducts 200 KES from wallet)
+      const response = await fetch("http://localhost:5000/api/fundi/subscription/premium", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          subscriptionPlan: "PREMIUM",
-          subscriptionStatus: "ACTIVE",
-          accountStatus: "ACTIVE",
-        }),
       })
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || "Failed to update subscription in database")
+        if (response.status === 402) {
+          // Insufficient balance
+          setError(errorData.message || "Insufficient wallet balance. Please add funds.")
+          setIsProcessing(false)
+          return
+        }
+        throw new Error(errorData.message || "Failed to subscribe to premium")
       }
 
-      // Successfully updated in database
-      console.log("Subscription updated successfully in database")
+      const data = await response.json()
+      console.log("Subscription successful:", data)
 
       // Update local storage with the updated user data
-      const updatedUser: FundiUserData = {
-        ...currentUser,
-        subscriptionPlan: "PREMIUM",
-        subscriptionStatus: "ACTIVE",
-        accountStatus: "ACTIVE",
-        trialEndsAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+      const currentUser = FundiAuthService.getUserData()
+      if (currentUser && data.data?.fundi) {
+        const updatedUser: FundiUserData = {
+          ...currentUser,
+          subscriptionPlan: data.data.fundi.subscriptionPlan,
+          subscriptionStatus: data.data.fundi.subscriptionStatus,
+          planStartDate: data.data.fundi.planStartDate,
+          planEndDate: data.data.fundi.planEndDate,
+        }
+        FundiAuthService.saveUserData(updatedUser)
       }
-      FundiAuthService.saveUserData(updatedUser)
 
       onPaymentSuccess()
       onClose()
     } catch (error) {
       console.error("Payment failed:", error)
-      alert("Payment processing failed. Please try again.")
+      setError(error instanceof Error ? error.message : "Payment processing failed. Please try again.")
     } finally {
-      setPaymentStep("method")
+      setIsProcessing(false)
     }
-  }
-
-  const resetModal = () => {
-    setSelectedPaymentMethod(null)
-    setPhoneNumber("")
-    setEmail("")
-    setPaymentStep("method")
-  }
-
-  const handleClose = () => {
-    resetModal()
-    onClose()
   }
 
   if (!isOpen) return null
@@ -106,11 +130,10 @@ function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 w-full max-w-md">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-slate-200">
           <h3 className="text-xl font-bold text-slate-900">Upgrade to Premium</h3>
           <button
-            onClick={handleClose}
+            onClick={onClose}
             className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all duration-200"
           >
             <X className="w-5 h-5" />
@@ -118,152 +141,90 @@ function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) 
         </div>
 
         <div className="p-6">
-          {paymentStep === "method" && (
-            <>
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <CreditCard className="w-8 h-8 text-white" />
-                </div>
-                <h4 className="text-lg font-bold text-slate-900 mb-2">Premium Plan</h4>
-                <p className="text-2xl font-black text-orange-600 mb-1">KSh 200/month</p>
-                <p className="text-slate-600 text-sm">Unlimited access to all features</p>
-              </div>
-
-              <div className="space-y-3 mb-6">
-                <button
-                  onClick={() => {
-                    setSelectedPaymentMethod("mpesa")
-                    setPaymentStep("details")
-                  }}
-                  className="w-full p-4 border-2 border-slate-200 rounded-2xl hover:border-green-300 hover:bg-green-50 transition-all duration-200 flex items-center gap-4"
-                >
-                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
-                    <Smartphone className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="text-left">
-                    <h5 className="font-bold text-slate-900">M-Pesa</h5>
-                    <p className="text-sm text-slate-600">Pay with your mobile money</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-slate-400 ml-auto" />
-                </button>
-
-                <button
-                  onClick={() => {
-                    setSelectedPaymentMethod("paystack")
-                    setPaymentStep("details")
-                  }}
-                  className="w-full p-4 border-2 border-slate-200 rounded-2xl hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 flex items-center gap-4"
-                >
-                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                    <Globe className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="text-left">
-                    <h5 className="font-bold text-slate-900">Paystack</h5>
-                    <p className="text-sm text-slate-600">Pay with card or bank transfer</p>
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-slate-400 ml-auto" />
-                </button>
-              </div>
-            </>
-          )}
-
-          {paymentStep === "details" && selectedPaymentMethod === "mpesa" && (
-            <>
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Smartphone className="w-8 h-8 text-white" />
-                </div>
-                <h4 className="text-lg font-bold text-slate-900 mb-2">M-Pesa Payment</h4>
-                <p className="text-slate-600 text-sm">Enter your M-Pesa number to proceed</p>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Phone Number</label>
-                  <input
-                    type="tel"
-                    placeholder="254712345678"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-green-500 focus:ring-4 focus:ring-green-500/20 transition-all duration-200"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setPaymentStep("method")}
-                  className="flex-1 px-4 py-3 border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all duration-200"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handlePayment}
-                  disabled={!phoneNumber}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-green-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Pay KSh 200
-                </button>
-              </div>
-            </>
-          )}
-
-          {paymentStep === "details" && selectedPaymentMethod === "paystack" && (
-            <>
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Globe className="w-8 h-8 text-white" />
-                </div>
-                <h4 className="text-lg font-bold text-slate-900 mb-2">Paystack Payment</h4>
-                <p className="text-slate-600 text-sm">Enter your email to proceed with card payment</p>
-              </div>
-
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-200"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setPaymentStep("method")}
-                  className="flex-1 px-4 py-3 border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all duration-200"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handlePayment}
-                  disabled={!email}
-                  className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Pay KSh 200
-                </button>
-              </div>
-            </>
-          )}
-
-          {paymentStep === "processing" && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Loader2 className="w-8 h-8 text-white animate-spin" />
-              </div>
-              <h4 className="text-lg font-bold text-slate-900 mb-2">Processing Payment</h4>
-              <p className="text-slate-600 text-sm mb-4">
-                {selectedPaymentMethod === "mpesa"
-                  ? "Please check your phone for the M-Pesa prompt"
-                  : "Processing your card payment..."}
-              </p>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-gradient-to-r from-orange-500 to-pink-500 h-2 rounded-full animate-pulse w-3/4"></div>
-              </div>
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <CreditCard className="w-8 h-8 text-white" />
             </div>
+            <h4 className="text-lg font-bold text-slate-900 mb-2">Premium Plan</h4>
+            <p className="text-2xl font-black text-orange-600 mb-1">KSh 200/month</p>
+            <p className="text-slate-600 text-sm">Unlimited access to all features</p>
+          </div>
+
+          {isLoadingBalance ? (
+            <div className="text-center py-4">
+              <Loader2 className="w-6 h-6 animate-spin mx-auto text-slate-600" />
+              <p className="text-sm text-slate-600 mt-2">Loading wallet balance...</p>
+            </div>
+          ) : (
+            <>
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-4 mb-6 border-2 border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-slate-600 uppercase tracking-wider">Wallet Balance</p>
+                    <p className="text-2xl font-black text-slate-900 mt-1">
+                      KSh {walletBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </p>
+                  </div>
+                  <Wallet className="w-8 h-8 text-blue-600" />
+                </div>
+                {walletBalance < 200 && (
+                  <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+                    <p className="text-sm text-yellow-800 font-medium">
+                      ⚠️ Insufficient balance. You need KSh 200 to subscribe.
+                    </p>
+                    <button
+                      onClick={() => {
+                        onClose()
+                        window.location.href = "/clientspace/fundi/wallet"
+                      }}
+                      className="mt-2 text-sm text-yellow-700 font-bold hover:underline"
+                    >
+                      Add Funds to Wallet →
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                  <p className="text-sm text-red-800 font-medium">{error}</p>
+                  {error.includes("Insufficient") && (
+                    <button
+                      onClick={() => {
+                        onClose()
+                        window.location.href = "/clientspace/fundi/wallet"
+                      }}
+                      className="mt-2 text-sm text-red-700 font-bold hover:underline"
+                    >
+                      Add Funds to Wallet →
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={onClose}
+                  className="flex-1 px-4 py-3 border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePayment}
+                  disabled={isProcessing || walletBalance < 200}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 text-white rounded-xl font-bold hover:from-orange-600 hover:via-pink-600 hover:to-red-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    "Subscribe KSh 200"
+                  )}
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -276,12 +237,50 @@ export default function SubscriptionPage() {
   const [currentUser, setCurrentUser] = useState<FundiUserData | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [subscriptionUpdated, setSubscriptionUpdated] = useState(false)
+  const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null)
+  const [isLoadingDetails, setIsLoadingDetails] = useState(true)
 
   useEffect(() => {
-    const userData = FundiAuthService.getUserData()
-    if (userData) {
-      setCurrentUser(userData)
+    const loadData = async () => {
+      setIsLoadingDetails(true)
+      const userData = FundiAuthService.getUserData()
+      if (userData) {
+        setCurrentUser(userData)
+      }
+
+      // Fetch subscription details from API
+      try {
+        const token = FundiAuthService.getToken()
+        if (token) {
+          const response = await fetch("http://localhost:5000/api/fundi/subscription/details", {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (response.ok) {
+            const data = await response.json()
+            if (data.success && data.data) {
+              setSubscriptionDetails(data.data)
+              // Update local user data with latest subscription info
+              if (userData) {
+                const updatedUser: FundiUserData = {
+                  ...userData,
+                  subscriptionPlan: data.data.currentPlan,
+                  subscriptionStatus: data.data.subscriptionStatus,
+                  planStartDate: data.data.planStartDate,
+                  planEndDate: data.data.planEndDate,
+                }
+                FundiAuthService.saveUserData(updatedUser)
+                setCurrentUser(updatedUser)
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch subscription details:", error)
+      } finally {
+        setIsLoadingDetails(false)
+      }
     }
+    loadData()
   }, [subscriptionUpdated])
 
   const handlePaymentSuccess = () => {
@@ -327,26 +326,19 @@ export default function SubscriptionPage() {
   }
 
   const getAmountPaid = () => {
-    if (!currentUser) return "KSh 0"
-
-    if (currentUser.subscriptionPlan === "PREMIUM") {
-      return "KSh 200"
-    } else {
-      return "KSh 0"
+    if (subscriptionDetails?.totalPaid !== undefined) {
+      return `KSh ${subscriptionDetails.totalPaid.toLocaleString()}`
     }
+    return "KSh 0"
   }
 
   const getNextBillingDate = () => {
+    if (subscriptionDetails?.nextBillingDate) {
+      return formatDate(subscriptionDetails.nextBillingDate)
+    }
     if (!currentUser || currentUser.subscriptionPlan !== "PREMIUM") {
       return "Not applicable"
     }
-
-    if (currentUser.trialEndsAt) {
-      const trialEnd = new Date(currentUser.trialEndsAt)
-      const nextBilling = new Date(trialEnd.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days after trial ends
-      return formatDate(nextBilling.toISOString())
-    }
-
     return "Not set"
   }
 
