@@ -103,6 +103,22 @@ export const depositToWallet = async (
 
     // Convert amount to cents
     const amountInCents = Math.round(amount * 100);
+    
+    // Maximum wallet balance: 5,000 KES = 500,000 cents
+    const MAX_BALANCE_CENTS = 500000; // 5,000 KES in cents
+    
+    // Check if current balance is already at maximum
+    if (wallet.balance >= MAX_BALANCE_CENTS) {
+      throw new Error(`Maximum wallet balance of KES 5,000 has been reached. Cannot deposit more funds.`);
+    }
+    
+    // Check if adding this amount would exceed the maximum
+    const newBalance = wallet.balance + amountInCents;
+    if (newBalance > MAX_BALANCE_CENTS) {
+      const currentBalanceKES = wallet.balance / 100;
+      const maxAllowedDeposit = 5000 - currentBalanceKES;
+      throw new Error(`Deposit would exceed maximum wallet balance of KES 5,000. Current balance: KES ${currentBalanceKES.toFixed(2)}. Maximum deposit allowed: KES ${maxAllowedDeposit.toFixed(2)}.`);
+    }
 
     // Update wallet balance
     const updatedWallet = await prisma.clientWallet.update({

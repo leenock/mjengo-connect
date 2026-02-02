@@ -11,6 +11,7 @@ import {
   User,
   Mail,
   Phone,
+  AlertCircle,
 } from "lucide-react";
 import Sidebar from "@/components/job_posting/Sidebar";
 import ClientAuthService, {
@@ -197,6 +198,25 @@ export default function AddFundsPage() {
     if (!kopokopoData.phoneNumber || !/^\+?\d{10,15}$/.test(kopokopoData.phoneNumber)) {
       setStkPushStatus("error");
       setStkPushError("Please enter a valid phone number (e.g., +254712345678)");
+      setIsStkPushProcessing(false);
+      return;
+    }
+
+    // Check maximum wallet balance limit (KES 5,000)
+    const MAX_BALANCE = 5000;
+    if (currentBalance >= MAX_BALANCE) {
+      setStkPushStatus("error");
+      setStkPushError(`Maximum wallet balance of KES 5,000 has been reached. Cannot deposit more funds.`);
+      setIsStkPushProcessing(false);
+      return;
+    }
+
+    // Check if adding this amount would exceed the maximum
+    const newBalance = currentBalance + parsedAmount;
+    if (newBalance > MAX_BALANCE) {
+      const maxAllowedDeposit = MAX_BALANCE - currentBalance;
+      setStkPushStatus("error");
+      setStkPushError(`Deposit would exceed maximum wallet balance of KES 5,000. Current balance: KES ${currentBalance.toFixed(2)}. Maximum deposit allowed: KES ${maxAllowedDeposit.toFixed(2)}.`);
       setIsStkPushProcessing(false);
       return;
     }
@@ -619,12 +639,17 @@ export default function AddFundsPage() {
                 </p>
               </div>
             </div>
-            <div className="flex items-center justify-between sm:justify-normal gap-3 rounded-xl bg-gradient-to-r from-blue-500/15 to-indigo-500/15 px-3 py-2 sm:px-4 sm:py-2 text-blue-700 font-bold text-sm sm:text-base shadow-sm border border-blue-200/50 self-start sm:self-auto">
-              <Wallet className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between sm:justify-normal gap-2 sm:gap-3 rounded-xl bg-gradient-to-r from-blue-500/15 to-indigo-500/15 px-3 py-2 sm:px-4 sm:py-2 text-blue-700 font-bold text-sm sm:text-base shadow-sm border border-blue-200/50 self-start sm:self-auto">
               <div className="flex items-center gap-2">
-                <span className="whitespace-nowrap">
-                  Balance: Ksh {currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
+                <Wallet className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                  <span className="whitespace-nowrap">
+                    Balance: Ksh {currentBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                  <span className="text-xs font-normal text-slate-600">
+                    (Max: Ksh 5,000)
+                  </span>
+                </div>
                 <button
                   onClick={fetchWalletBalance}
                   disabled={isRefreshingBalance}
@@ -635,6 +660,12 @@ export default function AddFundsPage() {
                   <Loader2 className={`h-4 w-4 ${isRefreshingBalance ? 'animate-spin' : ''}`} />
                 </button>
               </div>
+              {currentBalance >= 5000 && (
+                <div className="flex items-center gap-1 text-xs font-semibold text-orange-700 bg-orange-50 px-2 py-1 rounded border border-orange-200">
+                  <AlertCircle className="h-3 w-3" />
+                  Maximum balance reached
+                </div>
+              )}
             </div>
           </div>
 
@@ -671,9 +702,21 @@ export default function AddFundsPage() {
                         onChange={(e) => setAmount(e.target.value)}
                         required
                         min="1"
+                        max={5000 - currentBalance > 0 ? 5000 - currentBalance : 0}
                         className="flex h-12 w-full rounded-xl border border-slate-300 bg-white pl-12 pr-4 py-3 text-base ring-offset-background transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/30 focus-visible:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50 shadow-sm hover:border-slate-400 focus:shadow-md"
+                        disabled={currentBalance >= 5000}
                       />
                     </div>
+                    {currentBalance >= 5000 ? (
+                      <p className="text-xs text-orange-600 font-medium flex items-center gap-1">
+                        <AlertCircle className="h-3 w-3" />
+                        Maximum wallet balance of KES 5,000 reached. Cannot deposit more funds.
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-500">
+                        Maximum wallet balance: KES 5,000. You can deposit up to KES {(5000 - currentBalance).toFixed(2)} more.
+                      </p>
+                    )}
                   </div>
 
                   <div className="grid gap-2">

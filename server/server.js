@@ -3,7 +3,7 @@ import express from "express"
 import cors from "cors"
 import dotenv from "dotenv"
 import cron from "node-cron"
-import { expirePaidJobs } from "./services/jobService.js"
+import { expirePaidJobs, expireUnpaidActiveJobs } from "./services/jobService.js"
 import { downgradeExpiredSubscriptions } from "./services/subscriptionService.js"
 
 // Import routes
@@ -128,3 +128,19 @@ cron.schedule("0 3 * * *", async () => {
 });
 
 console.log("📅 Scheduled subscription expiration task: Daily at 3:00 AM (Africa/Nairobi timezone)");
+
+// Schedule unpaid active job expiration task to run daily at 4:00 AM
+// This will expire jobs that are ACTIVE and unpaid for more than 7 days
+cron.schedule("0 4 * * *", async () => {
+  try {
+    console.log("🕐 Running scheduled unpaid active job expiration check...");
+    const result = await expireUnpaidActiveJobs();
+    console.log(`✅ Unpaid active job expiration check completed: ${result.message}`);
+  } catch (error) {
+    console.error("❌ Error running unpaid active job expiration check:", error);
+  }
+}, {
+  timezone: "Africa/Nairobi"
+});
+
+console.log("📅 Scheduled unpaid active job expiration task: Daily at 4:00 AM (Africa/Nairobi timezone)");

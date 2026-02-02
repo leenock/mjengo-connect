@@ -22,6 +22,9 @@ import {
   XCircle,
   ChevronLeft,
   ChevronRight,
+  X,
+  RotateCcw,
+  PlayCircle,
   
 } from "lucide-react"
 
@@ -66,6 +69,8 @@ export default function MyJobsPage() {
     type: "success" | "error" | "loading"
   } | null>(null)
   const [deleteJobId, setDeleteJobId] = useState<string | null>(null)
+  const [processingJobId, setProcessingJobId] = useState<string | null>(null)
+  const [jobPaidPeriods, setJobPaidPeriods] = useState<Record<string, { isWithinPeriod: boolean; remainingDays: number }>>({})
   
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1)
@@ -102,6 +107,12 @@ export default function MyJobsPage() {
       }
       const data = await response.json()
       setJobs(data.jobs || [])
+      
+      // Fetch paid period info for closed paid jobs
+      const closedPaidJobs = (data.jobs || []).filter((job: Job) => job.status === "CLOSED" && job.isPaid)
+      for (const job of closedPaidJobs) {
+        checkJobPaidPeriod(job.id)
+      }
     } catch (error) {
       console.error("Error fetching jobs:", error)
       setToast({
@@ -110,6 +121,146 @@ export default function MyJobsPage() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const checkJobPaidPeriod = async (jobId: string) => {
+    try {
+      const token = ClientAuthService.getToken()
+      if (!token) return
+
+      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}/paid-period`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setJobPaidPeriods((prev) => ({
+          ...prev,
+          [jobId]: {
+            isWithinPeriod: data.isWithinPeriod,
+            remainingDays: data.remainingDays,
+          },
+        }))
+      }
+    } catch (error) {
+      console.error("Error checking paid period:", error)
+    }
+  }
+
+  const handleCloseJob = async (jobId: string) => {
+    try {
+      setProcessingJobId(jobId)
+      setToast({
+        message: "Closing job...",
+        type: "loading",
+      })
+      const token = ClientAuthService.getToken()
+      if (!token) {
+        throw new Error("Authentication required")
+      }
+      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}/close`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to close job")
+      }
+      await fetchMyJobs()
+      setToast({
+        message: "Job closed successfully!",
+        type: "success",
+      })
+    } catch (error) {
+      console.error("Error closing job:", error)
+      setToast({
+        message: error instanceof Error ? error.message : "Failed to close job. Please try again.",
+        type: "error",
+      })
+    } finally {
+      setProcessingJobId(null)
+    }
+  }
+
+  const handleReactivateJob = async (jobId: string) => {
+    try {
+      setProcessingJobId(jobId)
+      setToast({
+        message: "Reactivating job...",
+        type: "loading",
+      })
+      const token = ClientAuthService.getToken()
+      if (!token) {
+        throw new Error("Authentication required")
+      }
+      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}/reactivate`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to reactivate job")
+      }
+      const data = await response.json()
+      await fetchMyJobs()
+      setToast({
+        message: data.message || `Job reactivated! ${data.remainingDays} day(s) remaining.`,
+        type: "success",
+      })
+    } catch (error) {
+      console.error("Error reactivating job:", error)
+      setToast({
+        message: error instanceof Error ? error.message : "Failed to reactivate job. Please try again.",
+        type: "error",
+      })
+    } finally {
+      setProcessingJobId(null)
+    }
+  }
+
+  const handleRerunJob = async (jobId: string) => {
+    try {
+      setProcessingJobId(jobId)
+      setToast({
+        message: "Re-running job...",
+        type: "loading",
+      })
+      const token = ClientAuthService.getToken()
+      if (!token) {
+        throw new Error("Authentication required")
+      }
+      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}/rerun`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to re-run job")
+      }
+      const data = await response.json()
+      await fetchMyJobs()
+      setToast({
+        message: data.message || (data.remainingDays ? `Job reactivated! ${data.remainingDays} day(s) remaining.` : "Job set to pending. After admin approval, you'll need to make a new payment."),
+        type: "success",
+      })
+    } catch (error) {
+      console.error("Error re-running job:", error)
+      setToast({
+        message: error instanceof Error ? error.message : "Failed to re-run job. Please try again.",
+        type: "error",
+      })
+    } finally {
+      setProcessingJobId(null)
     }
   }
 
@@ -478,28 +629,77 @@ const getStatusBadge = (job: Job) => {
                               </div>
                             </div>
                             {/* Action Buttons */}
-                            <div className="flex flex-wrap gap-2">
-                              <button
-                                onClick={() => editJobDetails(job.id)}
-                                className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs sm:text-sm font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 h-8 sm:h-9 px-3 py-1.5 shadow-sm hover:shadow-md"
-                              >
-                                <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => viewJobDetails(job.id)}
-                                className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs sm:text-sm font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 h-8 sm:h-9 px-3 py-1.5 shadow-sm hover:shadow-md"
-                              >
-                                <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
-                                View
-                              </button>
-                              <button
-                                onClick={() => setDeleteJobId(job.id)}
-                                className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs sm:text-sm font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 h-8 sm:h-9 px-3 py-1.5 shadow-sm hover:shadow-md"
-                              >
-                                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
-                                Delete
-                              </button>
+                            <div className="flex flex-col gap-2">
+                              <div className="flex flex-wrap gap-2">
+                                {!job.isPaid && (
+                                  <button
+                                    onClick={() => editJobDetails(job.id)}
+                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs sm:text-sm font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 h-8 sm:h-9 px-3 py-1.5 shadow-sm hover:shadow-md"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
+                                    Edit
+                                  </button>
+                                )}
+                                {/* Close button - for ACTIVE jobs */}
+                                {job.status === "ACTIVE" && (
+                                  <button
+                                    onClick={() => handleCloseJob(job.id)}
+                                    disabled={processingJobId === job.id}
+                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs sm:text-sm font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 h-8 sm:h-9 px-3 py-1.5 shadow-sm hover:shadow-md"
+                                  >
+                                    <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
+                                    Close
+                                  </button>
+                                )}
+                                {/* Re-run button - for all CLOSED jobs */}
+                                {/* If within paid period: sets to ACTIVE (no approval needed) */}
+                                {/* If outside paid period: sets to PENDING (requires approval and payment) */}
+                                {job.status === "CLOSED" && (
+                                  <button
+                                    onClick={() => handleRerunJob(job.id)}
+                                    disabled={processingJobId === job.id}
+                                    className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs sm:text-sm font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 h-8 sm:h-9 px-3 py-1.5 shadow-sm hover:shadow-md"
+                                  >
+                                    <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
+                                    Re-run
+                                    {job.isPaid && jobPaidPeriods[job.id]?.isWithinPeriod && (
+                                      <span className="ml-1 text-[10px]">({jobPaidPeriods[job.id]?.remainingDays} days left)</span>
+                                    )}
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => viewJobDetails(job.id)}
+                                  className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs sm:text-sm font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 h-8 sm:h-9 px-3 py-1.5 shadow-sm hover:shadow-md"
+                                >
+                                  <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
+                                  View
+                                </button>
+                                <button
+                                  onClick={() => setDeleteJobId(job.id)}
+                                  className="inline-flex items-center justify-center whitespace-nowrap rounded-lg text-xs sm:text-sm font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-red-500 to-pink-500 text-white hover:from-red-600 hover:to-pink-600 h-8 sm:h-9 px-3 py-1.5 shadow-sm hover:shadow-md"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
+                                  Delete
+                                </button>
+                              </div>
+                              {job.isPaid && job.status !== "CLOSED" && (
+                                <p className="text-xs text-slate-500 italic flex items-center gap-1">
+                                  <AlertCircle className="w-3 h-3" />
+                                  Paid jobs cannot be edited
+                                </p>
+                              )}
+                              {job.status === "CLOSED" && job.isPaid && jobPaidPeriods[job.id]?.isWithinPeriod && (
+                                <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
+                                  <CheckCircle className="w-3 h-3" />
+                                  {jobPaidPeriods[job.id]?.remainingDays} day(s) remaining. Re-run will activate immediately (no approval needed).
+                                </p>
+                              )}
+                              {job.status === "CLOSED" && (!job.isPaid || !jobPaidPeriods[job.id]?.isWithinPeriod) && (
+                                <p className="text-xs text-slate-500 italic flex items-center gap-1">
+                                  <AlertCircle className="w-3 h-3" />
+                                  Paid period expired. Re-run will require admin approval and new payment.
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>

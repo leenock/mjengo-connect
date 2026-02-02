@@ -10,6 +10,11 @@ import {
   updateJobStatusController,
   payForJobController,
   expirePaidJobsController,
+  expireUnpaidActiveJobsController,
+  closeJobController,
+  reactivateJobController,
+  rerunJobController,
+  checkJobPaidPeriodController,
 } from "../controllers/jobController.js"
 import { validate } from "../middleware/validate.js"
 import { authenticateToken } from "../middleware/auth.js"
@@ -34,5 +39,10 @@ router.delete("/jobs/:id", authenticateToken, deleteJobController) // Delete job
 router.patch("/jobs/:id/status", authenticateToken, validate(updateJobStatusSchema), updateJobStatusController) // Update job status
 router.post("/jobs/:id/pay", authenticateToken, payForJobController) // Pay for job
 router.post("/jobs/expire-paid", expirePaidJobsController) // Expire paid jobs after 7 days (can be called by cron or manually)
+router.post("/jobs/expire-unpaid-active", expireUnpaidActiveJobsController) // Expire unpaid active jobs after 7 days (can be called by cron or manually)
+router.post("/jobs/:id/close", authenticateToken, closeJobController) // Close job manually
+router.post("/jobs/:id/reactivate", authenticateToken, reactivateJobController) // Reactivate closed job (if within paid period)
+router.post("/jobs/:id/rerun", authenticateToken, rerunJobController) // Re-run closed job (set to PENDING)
+router.get("/jobs/:id/paid-period", authenticateToken, checkJobPaidPeriodController) // Check if job is within paid period
 
 export default router

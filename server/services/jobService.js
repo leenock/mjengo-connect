@@ -69,7 +69,15 @@ export const getAllJobs = async (filters = {}, pagination = {}) => {
     if (filters.category) where.category = filters.category
     if (filters.location) where.location = { contains: filters.location, mode: "insensitive" }
     if (filters.jobType) where.jobType = filters.jobType
-    if (filters.status) where.status = filters.status
+    if (filters.status) {
+      where.status = filters.status
+    } else {
+      // By default, exclude CLOSED and EXPIRED jobs from active listings
+      // Only include if explicitly requested via status filter
+      where.status = { 
+        notIn: ["CLOSED", "EXPIRED"]
+      }
+    }
     if (filters.isUrgent !== undefined) where.isUrgent = filters.isUrgent
 
     const [jobs, totalCount] = await Promise.all([
@@ -219,6 +227,13 @@ export const updateJob = async (jobId, clientId, updateData) => {
       throw new Error("Unauthorized: You can only update your own jobs")
     }
     
+    // Prevent editing paid jobs - they can only be viewed or deleted
+    if (existingJob.isPaid) {
+      throw new Error("Cannot edit paid jobs. Paid jobs can only be viewed or deleted.")
+    }
+    
+    // If job is ACTIVE and being edited, change status to PENDING for re-approval
+    const statusUpdate = existingJob.status === "ACTIVE" ? { status: "PENDING" } : {}
 
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
@@ -239,7 +254,7 @@ export const updateJob = async (jobId, clientId, updateData) => {
         email: updateData.email,
         preferredContact: updateData.preferredContact,
         isUrgent: updateData.isUrgent,
-     //   status: updateData.status,
+        ...statusUpdate, // Include status update if job was ACTIVE
       },
       include: {
         postedBy: {
@@ -433,8 +448,31 @@ export const payForJob = async (jobId, clientId, amount = 300) => {
 }
 
 /**
+ * Check if a job is still within the 7-day paid period
+ * @param {Date} paidAt - Payment date
+ * @returns {Object} { isWithinPeriod: boolean, remainingDays: number }
+ */
+export const isJobWithinPaidPeriod = (paidAt) => {
+  if (!paidAt) {
+    return { isWithinPeriod: false, remainingDays: 0 };
+  }
+
+  const now = new Date();
+  const paymentDate = new Date(paidAt);
+  const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+  const timeSincePayment = now.getTime() - paymentDate.getTime();
+  const remainingTime = sevenDaysInMs - timeSincePayment;
+  const remainingDays = Math.ceil(remainingTime / (24 * 60 * 60 * 1000));
+
+  return {
+    isWithinPeriod: remainingTime > 0,
+    remainingDays: remainingDays > 0 ? remainingDays : 0,
+  };
+};
+
+/**
  * Expire jobs that have been paid for more than 7 days
- * Sets isPaid to false for jobs where paidAt is older than 7 days
+ * Sets status to CLOSED for jobs where paidAt is older than 7 days
  * @returns {Object} Expiration results
  */
 export const expirePaidJobs = async () => {
@@ -442,10 +480,13 @@ export const expirePaidJobs = async () => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // Find all paid jobs where paidAt is older than 7 days
+    // Find all paid jobs where paidAt is older than 7 days and status is not already CLOSED
     const expiredJobs = await prisma.job.findMany({
       where: {
         isPaid: true,
+        status: {
+          not: "CLOSED", // Don't update jobs that are already closed
+        },
         paidAt: {
           not: null,
           lte: sevenDaysAgo, // Less than or equal to 7 days ago
@@ -455,6 +496,7 @@ export const expirePaidJobs = async () => {
         id: true,
         title: true,
         paidAt: true,
+        status: true,
       },
     });
 
@@ -465,7 +507,8 @@ export const expirePaidJobs = async () => {
       };
     }
 
-    // Update all expired jobs to set isPaid to false
+    // Update all expired jobs to set status to CLOSED
+    // Keep isPaid = true for historical record
     const updateResult = await prisma.job.updateMany({
       where: {
         id: {
@@ -473,21 +516,289 @@ export const expirePaidJobs = async () => {
         },
       },
       data: {
-        isPaid: false,
-        // Optionally clear paidAt or keep it for historical record
-        // paidAt: null, // Uncomment if you want to clear the timestamp
+        status: "CLOSED",
+        // Keep isPaid = true and paidAt for historical record
       },
     });
 
-    console.log(`✅ Expired ${updateResult.count} job(s) after 7 days`);
+    console.log(`✅ Closed ${updateResult.count} job(s) after 7-day paid period`);
 
     return {
       expired: updateResult.count,
       jobs: expiredJobs,
-      message: `Successfully expired ${updateResult.count} job(s)`,
+      message: `Successfully closed ${updateResult.count} job(s) after 7-day paid period`,
     };
   } catch (error) {
     console.error("Expire Paid Jobs Service Error:", error);
     throw new Error(`Failed to expire paid jobs: ${error.message}`);
+  }
+}
+
+/**
+ * Expire unpaid active jobs that have been active for more than 7 days
+ * Changes status to EXPIRED for jobs that are ACTIVE, unpaid, and older than 7 days
+ * @returns {Object} Expiration results
+ */
+export const expireUnpaidActiveJobs = async () => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // Find all active, unpaid jobs where timePosted is older than 7 days
+    const expiredJobs = await prisma.job.findMany({
+      where: {
+        status: "ACTIVE",
+        isPaid: false,
+        timePosted: {
+          lte: sevenDaysAgo, // Less than or equal to 7 days ago
+        },
+      },
+      select: {
+        id: true,
+        title: true,
+        timePosted: true,
+        status: true,
+      },
+    });
+
+    if (expiredJobs.length === 0) {
+      return {
+        expired: 0,
+        message: "No unpaid active jobs to expire",
+      };
+    }
+
+    // Update all expired jobs to set status to EXPIRED
+    const updateResult = await prisma.job.updateMany({
+      where: {
+        id: {
+          in: expiredJobs.map((job) => job.id),
+        },
+      },
+      data: {
+        status: "EXPIRED",
+      },
+    });
+
+    console.log(`✅ Expired ${updateResult.count} unpaid active job(s) after 7 days`);
+
+    return {
+      expired: updateResult.count,
+      jobs: expiredJobs,
+      message: `Successfully expired ${updateResult.count} unpaid active job(s)`,
+    };
+  } catch (error) {
+    console.error("Expire Unpaid Active Jobs Service Error:", error);
+    throw new Error(`Failed to expire unpaid active jobs: ${error.message}`);
+  }
+}
+
+/**
+ * Close a job manually (client action)
+ * @param {String} jobId - Job ID
+ * @param {String} clientId - Client user ID (for authorization)
+ * @returns {Object} Updated job
+ */
+export const closeJob = async (jobId, clientId) => {
+  try {
+    // Check if job exists and belongs to the client
+    const existingJob = await prisma.job.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!existingJob) {
+      throw new Error("Job not found");
+    }
+
+    if (existingJob.postedById !== clientId) {
+      throw new Error("Unauthorized: You can only close your own jobs");
+    }
+
+    // Check if job is already closed
+    if (existingJob.status === "CLOSED") {
+      throw new Error("Job is already closed");
+    }
+
+    // Update job status to CLOSED
+    const updatedJob = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        status: "CLOSED",
+      },
+      include: {
+        postedBy: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            company: true,
+          },
+        },
+      },
+    });
+
+    return updatedJob;
+  } catch (error) {
+    console.error("Close Job Service Error:", error);
+    throw new Error(`Failed to close job: ${error.message}`);
+  }
+}
+
+/**
+ * Reactivate a closed job (if still within paid period)
+ * @param {String} jobId - Job ID
+ * @param {String} clientId - Client user ID (for authorization)
+ * @returns {Object} Updated job and remaining days
+ */
+export const reactivateJob = async (jobId, clientId) => {
+  try {
+    // Check if job exists and belongs to the client
+    const existingJob = await prisma.job.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!existingJob) {
+      throw new Error("Job not found");
+    }
+
+    if (existingJob.postedById !== clientId) {
+      throw new Error("Unauthorized: You can only reactivate your own jobs");
+    }
+
+    // Check if job is closed
+    if (existingJob.status !== "CLOSED") {
+      throw new Error("Job is not closed. Only closed jobs can be reactivated.");
+    }
+
+    // Check if job is paid
+    if (!existingJob.isPaid || !existingJob.paidAt) {
+      throw new Error("Job has not been paid for. Please make a payment first.");
+    }
+
+    // Check if job is still within the 7-day paid period
+    const periodCheck = isJobWithinPaidPeriod(existingJob.paidAt);
+    if (!periodCheck.isWithinPeriod) {
+      throw new Error("The 7-day paid period has expired. Please re-run the job to make a new payment.");
+    }
+
+    // Reactivate the job
+    const updatedJob = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        status: "ACTIVE",
+      },
+      include: {
+        postedBy: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            company: true,
+          },
+        },
+      },
+    });
+
+    return {
+      job: updatedJob,
+      remainingDays: periodCheck.remainingDays,
+      message: `Job reactivated successfully. ${periodCheck.remainingDays} day(s) remaining in paid period.`,
+    };
+  } catch (error) {
+    console.error("Reactivate Job Service Error:", error);
+    throw new Error(`Failed to reactivate job: ${error.message}`);
+  }
+}
+
+/**
+ * Re-run a closed job
+ * If still within paid period: set to ACTIVE (no approval needed)
+ * If outside paid period: set to PENDING (requires approval and new payment)
+ * @param {String} jobId - Job ID
+ * @param {String} clientId - Client user ID (for authorization)
+ * @returns {Object} Updated job
+ */
+export const rerunJob = async (jobId, clientId) => {
+  try {
+    // Check if job exists and belongs to the client
+    const existingJob = await prisma.job.findUnique({
+      where: { id: jobId },
+    });
+
+    if (!existingJob) {
+      throw new Error("Job not found");
+    }
+
+    if (existingJob.postedById !== clientId) {
+      throw new Error("Unauthorized: You can only re-run your own jobs");
+    }
+
+    // Check if job is closed
+    if (existingJob.status !== "CLOSED") {
+      throw new Error("Only closed jobs can be re-run.");
+    }
+
+    // Check if job is paid and still within the 7-day paid period
+    if (existingJob.isPaid && existingJob.paidAt) {
+      const periodCheck = isJobWithinPaidPeriod(existingJob.paidAt);
+      
+      if (periodCheck.isWithinPeriod) {
+        // Still within paid period - just reactivate to ACTIVE
+        const updatedJob = await prisma.job.update({
+          where: { id: jobId },
+          data: {
+            status: "ACTIVE",
+          },
+          include: {
+            postedBy: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                company: true,
+              },
+            },
+          },
+        });
+
+        return {
+          job: updatedJob,
+          remainingDays: periodCheck.remainingDays,
+          message: `Job reactivated successfully. ${periodCheck.remainingDays} day(s) remaining in paid period.`,
+        };
+      }
+    }
+
+    // Outside paid period or not paid - reset to PENDING for approval and new payment
+    const updatedJob = await prisma.job.update({
+      where: { id: jobId },
+      data: {
+        status: "PENDING",
+        isPaid: false,
+        paidAt: null, // Clear payment timestamp for new payment cycle
+      },
+      include: {
+        postedBy: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            company: true,
+          },
+        },
+      },
+    });
+
+    return {
+      job: updatedJob,
+      message: "Job set to PENDING. After admin approval, you will need to make a new payment to activate it.",
+    };
+  } catch (error) {
+    console.error("Re-run Job Service Error:", error);
+    throw new Error(`Failed to re-run job: ${error.message}`);
   }
 }

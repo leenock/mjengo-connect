@@ -36,6 +36,29 @@ export const initiateStkPush = async (req, res) => {
       });
     }
 
+    // Check wallet balance limit before initiating payment
+    const { getClientWalletBalance } = await import("../services/kopokopoService.js");
+    const walletData = await getClientWalletBalance(clientId);
+    const MAX_BALANCE = 5000; // Maximum wallet balance in KES
+    
+    // Check if current balance is already at maximum
+    if (walletData.balance >= MAX_BALANCE) {
+      return res.status(400).json({
+        success: false,
+        message: `Maximum wallet balance of KES 5,000 has been reached. Cannot deposit more funds.`,
+      });
+    }
+    
+    // Check if adding this amount would exceed the maximum
+    const newBalance = walletData.balance + paymentData.amount;
+    if (newBalance > MAX_BALANCE) {
+      const maxAllowedDeposit = MAX_BALANCE - walletData.balance;
+      return res.status(400).json({
+        success: false,
+        message: `Deposit would exceed maximum wallet balance of KES 5,000. Current balance: KES ${walletData.balance.toFixed(2)}. Maximum deposit allowed: KES ${maxAllowedDeposit.toFixed(2)}.`,
+      });
+    }
+
     // Initiate STK Push
     const result = await initiateKopokopoStkPush(paymentData, clientId);
 

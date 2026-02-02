@@ -81,6 +81,7 @@ export default function EditJobPage() {
   })
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isPaid, setIsPaid] = useState(false)
   const [toast, setToast] = useState<{
     message: string
     type: "success" | "error" | "loading"
@@ -108,6 +109,21 @@ export default function EditJobPage() {
         throw new Error("Failed to fetch job details")
       }
       const jobData: Job = await response.json()
+      
+      // Check if job is paid - prevent editing paid jobs
+      if (jobData.isPaid) {
+        setIsPaid(true)
+        setToast({
+          message: "Cannot edit paid jobs. Paid jobs can only be viewed or deleted.",
+          type: "error",
+        })
+        // Redirect to job details page after 3 seconds
+        setTimeout(() => {
+          router.push(`/clientspace/job/${jobId}`)
+        }, 3000)
+        return
+      }
+      
       setJobDetails({
         title: jobData.title,
         category: jobData.category,
@@ -136,7 +152,7 @@ export default function EditJobPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [jobId, router, setToast])
+  }, [jobId, router])
 
   useEffect(() => {
     if (jobId) {
@@ -328,7 +344,13 @@ export default function EditJobPage() {
         }
         return response.json()
       }, 3000) // 3 seconds minimum loading time
-      setToast({ message: "Job updated successfully!", type: "success" })
+      
+      // Show appropriate success message based on job status
+      const successMessage = jobDetails.status === "ACTIVE" 
+        ? "Job updated successfully! Status changed to Pending for re-approval."
+        : "Job updated successfully!"
+      
+      setToast({ message: successMessage, type: "success" })
       setTimeout(() => {
         router.push(`/clientspace/myJobs`) // Redirect to my jobs page after update
       }, 2000)
@@ -361,6 +383,45 @@ export default function EditJobPage() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-slate-600">Loading job details for editing...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error message if job is paid
+  if (isPaid) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 lg:flex font-inter">
+        <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
+        {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+        <div className="flex-1 lg:ml-0">
+          <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+            <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8 sm:p-12 text-center">
+              <div className="mx-auto w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-6">
+                <AlertCircle className="w-10 h-10 text-red-600" />
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">
+                Editing Not Allowed
+              </h2>
+              <p className="text-slate-600 mb-6 max-w-md mx-auto text-lg">
+                This job has been paid for and cannot be edited. Paid jobs can only be viewed or deleted.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <button
+                  onClick={() => router.push(`/clientspace/job/${jobId}`)}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-base font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:from-emerald-600 hover:to-teal-600 h-12 px-6 py-3 shadow-md hover:shadow-lg"
+                >
+                  View Job Details
+                </button>
+                <button
+                  onClick={() => router.push(`/clientspace/myJobs`)}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-base font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 hover:border-slate-400 h-12 px-6 py-3 shadow-sm hover:shadow-md"
+                >
+                  Back to My Jobs
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -401,6 +462,23 @@ export default function EditJobPage() {
               </div>
             </div>
           </div>
+          
+          {/* Active Job Warning Banner */}
+          {jobDetails.status === "ACTIVE" && (
+            <div className="mb-6 bg-gradient-to-r from-yellow-50 to-amber-50 border-l-4 border-yellow-500 rounded-xl p-4 shadow-md">
+              <div className="flex items-start">
+                <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="text-sm font-bold text-yellow-900 mb-1">
+                    Re-approval Required
+                  </h3>
+                  <p className="text-sm text-yellow-800">
+                    This job is currently <span className="font-bold">Active</span>. When you submit your changes, the job status will change to <span className="font-bold">Pending</span> for re-approval by the administrator.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="max-w-7xl mx-auto">
             {/* Enhanced Progress Steps */}

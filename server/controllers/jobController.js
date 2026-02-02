@@ -8,6 +8,11 @@ import {
   updateJobStatus,
   payForJob,
   expirePaidJobs,
+  expireUnpaidActiveJobs,
+  closeJob,
+  reactivateJob,
+  rerunJob,
+  isJobWithinPaidPeriod,
 } from "../services/jobService.js";
 
 /**
@@ -257,6 +262,147 @@ export const expirePaidJobsController = async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || "Failed to expire paid jobs",
+    });
+  }
+};
+
+/**
+ * Expire unpaid active jobs after 7 days
+ * This can be called manually or via cron job
+ */
+export const expireUnpaidActiveJobsController = async (req, res) => {
+  try {
+    const result = await expireUnpaidActiveJobs();
+
+    res.status(200).json({
+      success: true,
+      ...result,
+    });
+  } catch (error) {
+    console.error("Expire Unpaid Active Jobs Controller Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Failed to expire unpaid active jobs",
+    });
+  }
+};
+
+/**
+ * Close a job manually (client action)
+ */
+export const closeJobController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clientId = req.user?.id;
+
+    if (!clientId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const updatedJob = await closeJob(id, clientId);
+
+    res.status(200).json({
+      message: "Job closed successfully",
+      job: updatedJob,
+    });
+  } catch (error) {
+    console.error("Close Job Controller Error:", error);
+    res.status(400).json({
+      message: error.message || "Failed to close job",
+    });
+  }
+};
+
+/**
+ * Reactivate a closed job (if still within paid period)
+ */
+export const reactivateJobController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clientId = req.user?.id;
+
+    if (!clientId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const result = await reactivateJob(id, clientId);
+
+    res.status(200).json({
+      message: result.message,
+      job: result.job,
+      remainingDays: result.remainingDays,
+    });
+  } catch (error) {
+    console.error("Reactivate Job Controller Error:", error);
+    res.status(400).json({
+      message: error.message || "Failed to reactivate job",
+    });
+  }
+};
+
+/**
+ * Re-run a closed job (set to PENDING for approval)
+ */
+export const rerunJobController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clientId = req.user?.id;
+
+    if (!clientId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const result = await rerunJob(id, clientId);
+
+    res.status(200).json({
+      message: result.message,
+      job: result.job,
+    });
+  } catch (error) {
+    console.error("Re-run Job Controller Error:", error);
+    res.status(400).json({
+      message: error.message || "Failed to re-run job",
+    });
+  }
+};
+
+/**
+ * Check if a job is within paid period
+ */
+export const checkJobPaidPeriodController = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const clientId = req.user?.id;
+
+    if (!clientId) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
+    const job = await getJobById(id);
+
+    if (job.postedById !== clientId) {
+      return res.status(403).json({ message: "Unauthorized: You can only check your own jobs" });
+    }
+
+    if (!job.paidAt) {
+      return res.status(200).json({
+        isWithinPeriod: false,
+        remainingDays: 0,
+        message: "Job has not been paid for",
+      });
+    }
+
+    const periodCheck = isJobWithinPaidPeriod(job.paidAt);
+
+    res.status(200).json({
+      isWithinPeriod: periodCheck.isWithinPeriod,
+      remainingDays: periodCheck.remainingDays,
+      paidAt: job.paidAt,
+    });
+  } catch (error) {
+    console.error("Check Job Paid Period Controller Error:", error);
+    res.status(400).json({
+      message: error.message || "Failed to check job paid period",
     });
   }
 };
