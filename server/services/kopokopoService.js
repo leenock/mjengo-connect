@@ -27,7 +27,7 @@ const KOPOKOPO_CONFIG = {
 
 // Verbose logs only in development (set KOPOKOPO_VERBOSE=true to enable in production)
 const KOPOKOPO_VERBOSE = process.env.KOPOKOPO_VERBOSE === "true" || process.env.NODE_ENV !== "production";
-const logInfo = (...args) => { if (KOPOKOPO_VERBOSE) logInfo(...args); };
+const logInfo = (...args) => { if (KOPOKOPO_VERBOSE) console.log(...args); };
 
 /**
  * Get OAuth access token from KopoKopo

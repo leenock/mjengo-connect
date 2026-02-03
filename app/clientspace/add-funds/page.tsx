@@ -46,7 +46,7 @@ export default function AddFundsPage() {
   const [paymentRequestId, setPaymentRequestId] = useState<string>(""); // Store payment request ID for polling
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false); // Balance refresh state
   const [isOpen, setIsOpen] = useState(false); // State for sidebar visibility
-  const [paymentSuccessToast, setPaymentSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
+  const [paymentToast, setPaymentToast] = useState<{ show: boolean; message: string; type: "success" | "cancelled" }>({ show: false, message: "", type: "success" });
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Function to fetch wallet balance from API
@@ -102,13 +102,25 @@ export default function AddFundsPage() {
             pollingIntervalRef.current = null;
           }
           await fetchWalletBalance();
-          setPaymentSuccessToast({ show: true, message: "Payment successful! Your wallet has been updated." });
+          setPaymentToast({ show: true, message: "Payment successful! Your wallet has been updated.", type: "success" });
           setShowMpesaModal(false);
           setStkPushStatus(null);
           setPaymentRequestId("");
           setAmount("");
           setPaymentMethod("");
-          setTimeout(() => setPaymentSuccessToast({ show: false, message: "" }), 4000);
+          setTimeout(() => setPaymentToast({ show: false, message: "", type: "success" }), 4000);
+        } else if (status === "Failed") {
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+          }
+          setPaymentToast({ show: true, message: "You cancelled the payment.", type: "cancelled" });
+          setShowMpesaModal(false);
+          setStkPushStatus(null);
+          setPaymentRequestId("");
+          setAmount("");
+          setPaymentMethod("");
+          setTimeout(() => setPaymentToast({ show: false, message: "", type: "success" }), 4000);
         }
       } catch {
         // ignore per-poll errors
@@ -521,11 +533,19 @@ export default function AddFundsPage() {
         </div>
       )}
 
-      {/* Success toast when payment completes */}
-      {paymentSuccessToast.show && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 rounded-xl bg-green-600 text-white px-6 py-4 shadow-lg border border-green-700">
-          <CheckCircle2 className="h-6 w-6 flex-shrink-0" />
-          <p className="font-semibold">{paymentSuccessToast.message}</p>
+      {/* Payment result toast (success or cancelled) */}
+      {paymentToast.show && (
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 rounded-xl px-6 py-4 shadow-lg ${
+          paymentToast.type === "success"
+            ? "bg-green-600 text-white border border-green-700"
+            : "bg-amber-500 text-white border border-amber-600"
+        }`}>
+          {paymentToast.type === "success" ? (
+            <CheckCircle2 className="h-6 w-6 flex-shrink-0" />
+          ) : (
+            <XCircle className="h-6 w-6 flex-shrink-0" />
+          )}
+          <p className="font-semibold">{paymentToast.message}</p>
         </div>
       )}
 
