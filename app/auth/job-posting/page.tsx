@@ -186,18 +186,26 @@ export default function JobPostingPage() {
     }
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      console.log("Sending reset email to:", forgotPasswordData.email)
+      const response = await fetch("http://localhost:5000/api/client/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotPasswordData.email.trim() }),
+      })
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send reset email")
+      }
+
       setToast({
-        message: "If an account exists, a password reset link has been sent to your email.",
+        message: data.message || "If an account exists, a password reset link has been sent to your email.",
         type: "success",
       })
-      setForgotPasswordData({ email: "", phone: "" }) // Clear form
-      setAuthMode("login") // Redirect to login after sending
+      setForgotPasswordData({ email: "", phone: "" })
+      setAuthMode("login")
     } catch (err) {
       console.error("Error sending reset email:", err)
-      setError("Failed to send reset email. Please try again.")
+      setError(err instanceof Error ? err.message : "Failed to send reset email. Please try again.")
     } finally {
       setIsLoading(false)
     }

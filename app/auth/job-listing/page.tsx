@@ -12,7 +12,7 @@ import { validateFundiForm, hasFormErrors, type FundiFormData } from "@/app/util
 
 export default function JobListingPage() {
   const [mounted, setMounted] = useState(false)
-  const [authMode, setAuthMode] = useState<"login" | "signup">("login")
+  const [authMode, setAuthMode] = useState<"login" | "signup" | "forgotPassword">("login")
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -28,6 +28,9 @@ export default function JobListingPage() {
     emailOrPhone: "",
     password: "",
   })
+
+  const [forgotPasswordData, setForgotPasswordData] = useState({ email: "", phone: "" })
+  const [resetMethod, setResetMethod] = useState<"email" | "phone">("email")
 
   const [signupData, setSignupData] = useState<FundiFormData>({
     email: "",
@@ -65,6 +68,65 @@ export default function JobListingPage() {
       }
     } else if (authMode === "login") {
       setLoginData((prev) => ({ ...prev, [name]: value }))
+    } else if (authMode === "forgotPassword") {
+      setForgotPasswordData((prev) => ({ ...prev, [name]: value }))
+    }
+  }
+
+  const handleSendResetEmail = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setToast(null)
+    setError(null)
+    if (!forgotPasswordData.email.trim()) {
+      setError("Please enter your email address.")
+      setIsLoading(false)
+      return
+    }
+    try {
+      const response = await fetch("http://localhost:5000/api/fundi/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotPasswordData.email.trim() }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || "Failed to send reset email")
+      setToast({ message: data.message || "If an account exists, a reset link has been sent to your email.", type: "success" })
+      setForgotPasswordData({ email: "", phone: "" })
+      setAuthMode("login")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send reset email. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleSendOtp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsLoading(true)
+    setToast(null)
+    setError(null)
+    if (!forgotPasswordData.phone.trim()) {
+      setError("Please enter your phone number.")
+      setIsLoading(false)
+      return
+    }
+    try {
+      const response = await fetch("http://localhost:5000/api/fundi/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumber: forgotPasswordData.phone.trim() }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.message || "Failed to send OTP")
+      setToast({ message: data.message || "OTP sent. Redirecting to verification...", type: "success" })
+      setTimeout(() => {
+        router.push(`/auth/fundi/reset-password-otp?phone=${encodeURIComponent(forgotPasswordData.phone)}`)
+      }, 1500)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send OTP. Please try again.")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -356,7 +418,11 @@ export default function JobListingPage() {
                       />
                       <span className="ml-2 text-sm text-gray-600">Remember me</span>
                     </label>
-                    <button type="button" className="text-sm text-orange-600 hover:text-orange-700 font-medium">
+                    <button
+                      type="button"
+                      onClick={() => { setAuthMode("forgotPassword"); setError(null); setToast(null); }}
+                      className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                    >
                       Forgot password?
                     </button>
                   </div>
@@ -613,6 +679,95 @@ export default function JobListingPage() {
                     )}
                   </button>
                 </form>
+              )}
+
+              {/* Forgot Password Form */}
+              {authMode === "forgotPassword" && (
+                <div className="space-y-6">
+                  <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">Forgot Password?</h2>
+                  <p className="text-gray-600 text-center mb-8">
+                    Enter your email or phone to receive a password reset link or OTP.
+                  </p>
+                  <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
+                    <button
+                      onClick={() => setResetMethod("email")}
+                      className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 text-sm sm:text-base ${
+                        resetMethod === "email" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Reset via Email
+                    </button>
+                    <button
+                      onClick={() => setResetMethod("phone")}
+                      className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 text-sm sm:text-base ${
+                        resetMethod === "phone" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                      }`}
+                    >
+                      Reset via Phone (OTP)
+                    </button>
+                  </div>
+                  {resetMethod === "email" && (
+                    <form onSubmit={handleSendResetEmail} className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                        <div className="relative">
+                          <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="email"
+                            name="email"
+                            required
+                            value={forgotPasswordData.email}
+                            onChange={handleChange}
+                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                            placeholder="your@email.com"
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isLoading ? "Sending..." : "Send Reset Link"}
+                      </button>
+                    </form>
+                  )}
+                  {resetMethod === "phone" && (
+                    <form onSubmit={handleSendOtp} className="space-y-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                          <input
+                            type="tel"
+                            name="phone"
+                            required
+                            value={forgotPasswordData.phone}
+                            onChange={handleChange}
+                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                            placeholder="0700 123 456"
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isLoading ? "Sending OTP..." : "Send OTP"}
+                      </button>
+                    </form>
+                  )}
+                  <div className="text-center mt-6">
+                    <button
+                      type="button"
+                      onClick={() => { setAuthMode("login"); setError(null); setForgotPasswordData({ email: "", phone: "" }); }}
+                      className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                    >
+                      Back to Sign In
+                    </button>
+                  </div>
+                </div>
               )}
             </div>
           </div>

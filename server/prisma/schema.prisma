@@ -23,9 +23,13 @@ model Client_User {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
-  // OTP fields for password reset
+  // OTP fields for password reset (phone)
   otp           String?       // 6-digit OTP code
   otpExpiresAt  DateTime?     // OTP expiration time (usually 10 minutes)
+
+  // Email password reset (link in email)
+  passwordResetToken         String?   // hashed token
+  passwordResetTokenExpiresAt DateTime? // one-time use, 15–60 min
 
   jobs           Job[]
   paymentLogs    ClientPaymentLog[] // NEW: Relationship to payments
@@ -163,6 +167,13 @@ model Fundi_User {
   password         String
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
+
+  // OTP fields for password reset (phone)
+  otp              String?
+  otpExpiresAt     DateTime?
+  // Email password reset (link in email)
+  passwordResetToken         String?
+  passwordResetTokenExpiresAt DateTime?
 
   accountStatus AccountStatus @default(ACTIVE) // ✅ Default is ACTIVE
 

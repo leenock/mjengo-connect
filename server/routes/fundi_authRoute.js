@@ -9,6 +9,15 @@ import {
   loginFundiController,
   logoutFundiController,
 } from "../controllers/fundiUserController.js";
+import {
+  sendFundiOtpController,
+  verifyFundiOtpController,
+  resendFundiOtpController,
+  fundiForgotPasswordController,
+  fundiResetPasswordEmailController,
+  checkFundiSmsServiceController,
+  checkFundiEmailServiceController,
+} from "../controllers/fundiForgotPasswordController.js";
 import { validate } from "../middleware/validate.js";
 import {
   authenticateFundiToken,
@@ -38,6 +47,15 @@ router.post(
   validate(loginFundiUserSchema),
   loginFundiController
 );
+
+// Fundi forgot password (OTP + Email)
+router.post("/send-otp", sendFundiOtpController);
+router.post("/verify-otp", verifyFundiOtpController);
+router.post("/resend-otp", resendFundiOtpController);
+router.post("/forgot-password", fundiForgotPasswordController);
+router.post("/reset-password-email", fundiResetPasswordEmailController);
+router.get("/check-sms-service", checkFundiSmsServiceController);
+router.get("/check-email-service", checkFundiEmailServiceController);
 
 // Protected routes (authentication required)
 router.get("/getAllFundis", adminAuthMiddleware, getAllFundiUsers);

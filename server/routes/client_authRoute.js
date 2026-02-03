@@ -7,6 +7,11 @@ import {
   resendOTPController,
   checkSMSServiceController,
 } from '../controllers/otpController.js';
+import {
+  forgotPasswordController,
+  resetPasswordEmailController,
+  checkEmailServiceController,
+} from '../controllers/passwordResetEmailController.js';
 
 const router = express.Router();
 
@@ -15,16 +20,14 @@ router.post('/login', loginController);
 router.post('/logout', logoutController);
 
 // OTP Password Reset Routes
-// POST /api/client/auth/send-otp - Send OTP to phone number
 router.post('/send-otp', sendOTPController);
-
-// POST /api/client/auth/verify-otp - Verify OTP and reset password
 router.post('/verify-otp', verifyOTPController);
-
-// POST /api/client/auth/resend-otp - Resend OTP to phone number
 router.post('/resend-otp', resendOTPController);
-
-// GET /api/client/auth/check-sms-service - Check if SMS service is available
 router.get('/check-sms-service', checkSMSServiceController);
+
+// Email Password Reset Routes (reset link in email)
+router.post('/forgot-password', forgotPasswordController);
+router.post('/reset-password-email', resetPasswordEmailController);
+router.get('/check-email-service', checkEmailServiceController);
 
 export default router;
