@@ -37,7 +37,10 @@ KOPOKOPO_CALLBACK_URL=http://localhost:5000/api/client/wallet/kopokopo/webhook
 2. Navigate to your dashboard
 3. Create an application to get your `CLIENT_ID` and `CLIENT_SECRET`
 4. Request an Online Payments account to get your `TILL_NUMBER` (prefixed with "K")
-5. Contact KopoKopo support (api-support@kopokopo.com) to activate your Online Payments account
+5. **Request approval:** Contact KopoKopo to get your OAuth application approved for STK Push:
+   - **Email:** support@kopokopo.com
+   - **Phone:** 0709 376 000  
+   Without approval you will get **403 – "Your Oauth Application has not been approved"** when initiating STK Push.
 6. **Note:** In sandbox, STK push requests are simulated - no actual phone prompt appears
 
 ### For Production:
@@ -56,10 +59,15 @@ The webhook endpoint is: `/api/client/wallet/kopokopo/webhook`
 - KopoKopo will send webhook callbacks to this URL when payment status changes
 - Make sure your server is accessible from the internet (consider using ngrok for local testing)
 
-### Testing Webhooks Locally:
-1. Use ngrok to expose your local server: `ngrok http 5000`
-2. Update `KOPOKOPO_CALLBACK_URL` with the ngrok URL: `https://your-ngrok-url.ngrok.io/api/client/wallet/kopokopo/webhook`
-3. Update the callback URL in your KopoKopo dashboard
+### ⚠️ 403 Forbidden when initiating STK Push
+KopoKopo **requires the callback URL to be HTTPS** and reachable from the internet. `http://localhost:5000/...` is **not** accepted and will result in **403 Forbidden**.
+
+### Testing Webhooks Locally (required for sandbox STK push to work):
+1. Install [ngrok](https://ngrok.com/) and run: `ngrok http 5000`
+2. Copy the HTTPS URL (e.g. `https://abc123.ngrok-free.app`)
+3. In `server/.env` set: `KOPOKOPO_CALLBACK_URL=https://abc123.ngrok-free.app/api/client/wallet/kopokopo/webhook`
+4. Restart your server and try the add-funds flow again
+5. (Optional) If KopoKopo dashboard has a callback whitelist, add the same URL there
 
 ## API Endpoints
 
@@ -106,6 +114,12 @@ cd server
 npx prisma migrate dev --name add_kopokopo_fields
 npx prisma generate
 ```
+
+## Logging
+
+- **Development:** Verbose KopoKopo logs (token obtained, STK initiated, payment status) are shown in the console.
+- **Production:** Verbose logs are **disabled** by default to avoid noise and minor overhead when you have many clients/fundis. Only **errors** are logged.
+- To enable verbose logs in production (e.g. for debugging), set in `.env`: `KOPOKOPO_VERBOSE=true`.
 
 ## Security Notes
 

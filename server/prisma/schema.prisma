@@ -23,6 +23,10 @@ model Client_User {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  // OTP fields for password reset
+  otp           String?       // 6-digit OTP code
+  otpExpiresAt  DateTime?     // OTP expiration time (usually 10 minutes)
+
   jobs           Job[]
   paymentLogs    ClientPaymentLog[] // NEW: Relationship to payments
   logs           SystemLog[] // ✅ reverse relation

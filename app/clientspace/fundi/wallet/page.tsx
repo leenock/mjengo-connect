@@ -1,6 +1,6 @@
 "use client";
 import type React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   CheckCircle2,
   XCircle,
@@ -43,11 +43,10 @@ export default function AddFundsPage() {
   >(null);
   const [stkPushError, setStkPushError] = useState<string>("");
   const [paymentRequestId, setPaymentRequestId] = useState<string>("");
-  const [paymentStatus, setPaymentStatus] = useState<string>("");
-  const [paymentStatusDetails, setPaymentStatusDetails] = useState<any>(null);
-  const [isCheckingStatus, setIsCheckingStatus] = useState(false);
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [paymentSuccessToast, setPaymentSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: "" });
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Function to fetch wallet balance from API
   const fetchWalletBalance = useCallback(async () => {
@@ -74,50 +73,50 @@ export default function AddFundsPage() {
     }
   }, []);
 
-  // Function to check payment status
-  const checkPaymentStatus = async () => {
-    if (!paymentRequestId) return;
+  // Poll payment status and show success toast when payment completes
+  const startPaymentStatusPolling = useCallback((requestId: string) => {
+    const POLL_INTERVAL_MS = 3000;
+    const POLL_TIMEOUT_MS = 120000;
+    const startTime = Date.now();
 
-    setIsCheckingStatus(true);
-    try {
+    const poll = async () => {
+      if (Date.now() - startTime > POLL_TIMEOUT_MS) {
+        if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+        return;
+      }
       const token = FundiAuthService.getToken();
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
-      const response = await fetch(
-        `http://localhost:5000/api/fundi/wallet/payment-status/${paymentRequestId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to check payment status");
-      }
-
-      const data = await response.json();
-      if (data.success && data.data) {
-        const status = data.data.data?.attributes?.status || "Unknown";
-        setPaymentStatus(status);
-        setPaymentStatusDetails(data.data);
-
+      if (!token) return;
+      try {
+        const response = await fetch(
+          `http://localhost:5000/api/fundi/wallet/payment-status/${requestId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (!response.ok) return;
+        const data = await response.json();
+        const status = data.data?.data?.attributes?.status ?? data.data?.attributes?.status;
         if (status === "Success") {
-          if (data.wallet) {
-            setCurrentBalance(data.wallet.balance || 0);
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
           }
-          await fetchWalletBalance();
+          fetchWalletBalance();
+          setPaymentSuccessToast({ show: true, message: "Payment successful! Your wallet has been updated." });
+          setShowMpesaModal(false);
+          setStkPushStatus(null);
+          setPaymentRequestId("");
+          setAmount("");
+          setPaymentMethod("");
+          setTimeout(() => setPaymentSuccessToast({ show: false, message: "" }), 4000);
         }
+      } catch {
+        // ignore per-poll errors
       }
-    } catch (error) {
-      console.error("Failed to check payment status:", error);
-      setPaymentStatus("Error checking status");
-    } finally {
-      setIsCheckingStatus(false);
-    }
-  };
+    };
+
+    poll();
+    pollingIntervalRef.current = setInterval(poll, POLL_INTERVAL_MS);
+  }, [fetchWalletBalance]);
 
   useEffect(() => {
     const loadPageData = async () => {
@@ -139,6 +138,9 @@ export default function AddFundsPage() {
       setIsLoadingPage(false);
     };
     loadPageData();
+    return () => {
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+    };
   }, [fetchWalletBalance]);
 
   const handleAddFunds = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -239,33 +241,13 @@ export default function AddFundsPage() {
       const data = await response.json();
       console.log("KopoKopo STK Push Response:", data);
 
-      if (data.data?.paymentRequestId) {
-        setPaymentRequestId(data.data.paymentRequestId);
+      const requestId = data.data?.paymentRequestId;
+      if (requestId) {
+        setPaymentRequestId(requestId);
+        startPaymentStatusPolling(requestId);
       }
 
       setStkPushStatus("success");
-      
-      setTimeout(async () => {
-        if (data.data?.paymentRequestId) {
-          await checkPaymentStatus();
-        }
-      }, 5000);
-      
-      const refreshInterval = setInterval(async () => {
-        await fetchWalletBalance();
-        if (data.data?.paymentRequestId) {
-          await checkPaymentStatus();
-        }
-      }, 10000);
-      
-      setTimeout(() => {
-        clearInterval(refreshInterval);
-      }, 60000);
-      
-      setTimeout(() => {
-        setAmount("");
-        setPaymentMethod("");
-      }, 2000);
     } catch (error) {
       console.error("STK Push failed:", error);
       setStkPushStatus("error");
@@ -461,90 +443,27 @@ export default function AddFundsPage() {
                 <div className="mt-4 space-y-3">
                   <div className="flex items-start gap-3 rounded-xl bg-green-50 p-4 text-green-800 font-medium border border-green-200">
                     <CheckCircle2 className="h-6 w-6 flex-shrink-0 mt-0.5" />
-                    <div className="flex-1">
-                      <p className="font-semibold">STK Push Initiated Successfully!</p>
-                      <p className="text-sm font-normal mt-1">
-                        <strong>Note:</strong> If you're using the sandbox environment, 
-                        no actual STK push will appear on your phone. The payment is 
-                        simulated and will be processed via webhook callback.
-                      </p>
-                      {paymentRequestId && (
-                        <p className="text-xs font-mono mt-2 text-green-700">
-                          Payment ID: {paymentRequestId}
-                        </p>
-                      )}
-                    </div>
+                    <p className="text-sm">
+                      Check your phone and enter your M-Pesa PIN to complete the payment. Your balance will update automatically when payment is complete.
+                    </p>
                   </div>
-
-                  {paymentRequestId && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={checkPaymentStatus}
-                          disabled={isCheckingStatus}
-                          className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-sm font-semibold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 shadow-sm hover:shadow-md"
-                        >
-                          {isCheckingStatus ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Checking...
-                            </>
-                          ) : (
-                            "Check Payment Status"
-                          )}
-                        </button>
-                        {paymentStatus && (
-                          <span className={`text-sm font-medium ${
-                            paymentStatus === "Success" ? "text-green-700" : 
-                            paymentStatus === "Failed" ? "text-red-700" : 
-                            "text-blue-700"
-                          }`}>
-                            Status: {paymentStatus}
-                          </span>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          try {
-                            const token = FundiAuthService.getToken();
-                            if (!token) return;
-                            
-                            const response = await fetch(
-                              "http://localhost:5000/api/fundi/wallet/process-pending-payments",
-                              {
-                                method: "POST",
-                                headers: { Authorization: `Bearer ${token}` },
-                              }
-                            );
-                            
-                            if (response.ok) {
-                              const data = await response.json();
-                              if (data.success) {
-                                await fetchWalletBalance();
-                                alert(`Processed ${data.data.updated || 0} pending payment(s)`);
-                              }
-                            }
-                          } catch (error) {
-                            console.error("Process pending payments error:", error);
-                          }
-                        }}
-                        className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-xs font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-slate-600 text-white hover:bg-slate-700 h-8 px-3 shadow-sm hover:shadow-md"
-                      >
-                        Process Pending Payments (Sandbox)
-                      </button>
-                    </div>
-                  )}
-
-                  {paymentStatusDetails && paymentStatus === "Success" && (
-                    <div className="rounded-xl bg-blue-50 p-3 text-sm text-blue-800 border border-blue-200">
-                      <p className="font-semibold">Payment Confirmed!</p>
-                      <p className="mt-1">
-                        Your wallet balance has been updated. The payment was processed successfully.
-                      </p>
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (pollingIntervalRef.current) {
+                        clearInterval(pollingIntervalRef.current);
+                        pollingIntervalRef.current = null;
+                      }
+                      setShowMpesaModal(false);
+                      setStkPushStatus(null);
+                      setPaymentRequestId("");
+                      setAmount("");
+                      setPaymentMethod("");
+                    }}
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    Done
+                  </button>
                 </div>
               )}
               {stkPushStatus === "error" && (
@@ -561,6 +480,14 @@ export default function AddFundsPage() {
               )}
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Success toast when payment completes */}
+      {paymentSuccessToast.show && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-3 rounded-xl bg-green-600 text-white px-6 py-4 shadow-lg border border-green-700">
+          <CheckCircle2 className="h-6 w-6 flex-shrink-0" />
+          <p className="font-semibold">{paymentSuccessToast.message}</p>
         </div>
       )}
 

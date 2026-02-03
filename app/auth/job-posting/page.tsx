@@ -216,18 +216,35 @@ export default function JobPostingPage() {
     }
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      console.log("Sending OTP to:", forgotPasswordData.phone)
+      const response = await fetch("http://localhost:5000/api/client/auth/send-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber: forgotPasswordData.phone,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to send OTP")
+      }
+
       setToast({
-        message: "OTP sent successfully! Redirecting to verification...",
+        message: data.message || "OTP sent successfully! Redirecting to verification...",
         type: "success",
       })
+
       // Redirect to OTP verification page with phone number
-      router.push(`/auth/reset-password-otp?phone=${encodeURIComponent(forgotPasswordData.phone)}`)
+      setTimeout(() => {
+        router.push(`/auth/reset-password-otp?phone=${encodeURIComponent(forgotPasswordData.phone)}`)
+      }, 1500)
     } catch (err) {
       console.error("Error sending OTP:", err)
-      setError("Failed to send OTP. Please try again.")
+      const message = err instanceof Error ? err.message : "Failed to send OTP. Please try again."
+      setError(message)
     } finally {
       setIsLoading(false)
     }

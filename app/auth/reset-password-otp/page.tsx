@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { Eye, EyeOff, Lock, Phone, ArrowRight } from "lucide-react"
+import { Eye, EyeOff, Lock, Phone, ArrowRight, RefreshCw, Timer } from "lucide-react"
 import Header from "@/components/landingpage/Header"
 import Footer from "@/components/landingpage/Footer"
 import Toast from "@/components/ui/Toast"
@@ -18,11 +18,16 @@ export default function ResetPasswordOtpPage() {
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isResending, setIsResending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<{
     message: string
     type: "success" | "error"
   } | null>(null)
+  
+  // Countdown timer for OTP expiry (10 minutes = 600 seconds)
+  const [countdown, setCountdown] = useState(600)
+  const [canResend, setCanResend] = useState(false)
 
   useEffect(() => {
     const phoneFromParams = searchParams.get("phone")
@@ -31,6 +36,70 @@ export default function ResetPasswordOtpPage() {
     }
   }, [searchParams])
 
+  // Countdown timer effect
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setInterval(() => {
+        setCountdown((prev) => prev - 1)
+      }, 1000)
+      return () => clearInterval(timer)
+    } else {
+      setCanResend(true)
+    }
+  }, [countdown])
+
+  // Format countdown to MM:SS
+  const formatCountdown = useCallback((seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins}:${secs.toString().padStart(2, "0")}`
+  }, [])
+
+  const handleResendOTP = async () => {
+    if (!phoneNumber.trim()) {
+      setError("Phone number is required to resend OTP.")
+      return
+    }
+
+    setIsResending(true)
+    setError(null)
+    setToast(null)
+
+    try {
+      const response = await fetch("http://localhost:5000/api/client/auth/resend-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber: phoneNumber,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to resend OTP")
+      }
+
+      // Reset countdown
+      setCountdown(600)
+      setCanResend(false)
+      setOtp("") // Clear old OTP input
+
+      setToast({
+        message: data.message || "OTP resent successfully! Please check your phone.",
+        type: "success",
+      })
+    } catch (err) {
+      console.error("Error resending OTP:", err)
+      const message = err instanceof Error ? err.message : "Failed to resend OTP. Please try again."
+      setError(message)
+    } finally {
+      setIsResending(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
@@ -38,6 +107,12 @@ export default function ResetPasswordOtpPage() {
 
     if (!phoneNumber.trim() || !otp.trim() || !newPassword.trim() || !confirmNewPassword.trim()) {
       setError("All fields are required.")
+      return
+    }
+
+    // Validate OTP format (6 digits)
+    if (!/^\d{6}$/.test(otp)) {
+      setError("OTP must be a 6-digit number.")
       return
     }
 
@@ -53,24 +128,26 @@ export default function ResetPasswordOtpPage() {
 
     setIsLoading(true)
     try {
-      // Simulate API call to verify OTP and reset password
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const response = await fetch("http://localhost:5000/api/client/auth/verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          phoneNumber: phoneNumber,
+          otp: otp,
+          newPassword: newPassword,
+        }),
+      })
 
-      console.log("Resetting password with:", { phoneNumber, otp, newPassword })
+      const data = await response.json()
 
-      // In a real application, you would send this data to your backend:
-      // const response = await fetch("http://localhost:5000/api/client/auth/reset-password-otp", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ phoneNumber, otp, newPassword }),
-      // });
-      // if (!response.ok) {
-      //   const errorData = await response.json();
-      //   throw new Error(errorData.message || "Password reset failed.");
-      // }
+      if (!response.ok) {
+        throw new Error(data.message || "Password reset failed.")
+      }
 
       setToast({
-        message: "Password reset successfully! You can now log in with your new password.",
+        message: data.message || "Password reset successfully! You can now log in with your new password.",
         type: "success",
       })
       setTimeout(() => {
@@ -125,11 +202,49 @@ export default function ResetPasswordOtpPage() {
                   type="text"
                   required
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value)}
+                  onChange={(e) => {
+                    // Only allow numeric input
+                    const value = e.target.value.replace(/\D/g, "")
+                    setOtp(value)
+                  }}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
                   placeholder="Enter 6-digit OTP"
                   maxLength={6}
                 />
+              </div>
+              
+              {/* OTP Timer and Resend */}
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center text-sm text-gray-600">
+                  <Timer className="w-4 h-4 mr-1" />
+                  {countdown > 0 ? (
+                    <span>OTP expires in: <span className="font-semibold text-orange-600">{formatCountdown(countdown)}</span></span>
+                  ) : (
+                    <span className="text-red-600 font-semibold">OTP has expired</span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={!canResend && countdown > 0 || isResending}
+                  className={`flex items-center text-sm font-medium transition-colors ${
+                    canResend || countdown <= 0
+                      ? "text-orange-600 hover:text-orange-700 cursor-pointer"
+                      : "text-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  {isResending ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-1 animate-spin" />
+                      Resending...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Resend OTP
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 

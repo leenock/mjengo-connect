@@ -25,6 +25,10 @@ const KOPOKOPO_CONFIG = {
   grantType: "client_credentials"
 };
 
+// Verbose logs only in development (set KOPOKOPO_VERBOSE=true to enable in production)
+const KOPOKOPO_VERBOSE = process.env.KOPOKOPO_VERBOSE === "true" || process.env.NODE_ENV !== "production";
+const logInfo = (...args) => { if (KOPOKOPO_VERBOSE) logInfo(...args); };
+
 /**
  * Get OAuth access token from KopoKopo
  * @returns {Promise<string>} Access token
@@ -49,7 +53,7 @@ export const getKopokopoAccessToken = async () => {
     
     // Log token response only in development
     if (process.env.NODE_ENV !== "production") {
-      console.log("🔑 KopoKopo Access Token obtained");
+      logInfo("🔑 KopoKopo Access Token obtained");
     }
 
     if (!response.ok) {
@@ -142,9 +146,9 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
 
     // Log request details (can be removed in production or made conditional)
     if (process.env.NODE_ENV !== "production") {
-      console.log("📤 Initiating KopoKopo STK Push...");
-      console.log("   Amount: KES", paymentData.amount);
-      console.log("   Phone:", paymentData.phoneNumber);
+      logInfo("📤 Initiating KopoKopo STK Push...");
+      logInfo("   Amount: KES", paymentData.amount);
+      logInfo("   Phone:", paymentData.phoneNumber);
     }
 
     // Make API request to KopoKopo
@@ -163,7 +167,7 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
     
     // Log response details only in development
     if (process.env.NODE_ENV !== "production") {
-      console.log("📥 KopoKopo API Response Status:", response.status);
+      logInfo("📥 KopoKopo API Response Status:", response.status);
     }
 
     if (!response.ok) {
@@ -180,6 +184,22 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
         error: errorData,
         requestPayload: stkPushPayload,
       });
+      
+      // 403: use KopoKopo's error_message when present (e.g. app not approved)
+      if (response.status === 403) {
+        const msg = errorData.error_message || errorData.error?.error_message;
+        if (msg) {
+          throw new Error(`KopoKopo: ${msg}`);
+        }
+        const callbackUrl = KOPOKOPO_CONFIG.callbackUrl || "";
+        const isLocalhost = /^http:\/\/localhost/i.test(callbackUrl);
+        const hint = isLocalhost
+          ? " KopoKopo requires a public HTTPS callback URL. Use ngrok and set KOPOKOPO_CALLBACK_URL to your https ngrok URL in .env."
+          : " Ensure KOPOKOPO_CALLBACK_URL is HTTPS and whitelisted in your KopoKopo dashboard.";
+        throw new Error(
+          `KopoKopo API returned 403 Forbidden. Callback URL may be invalid.${hint}`
+        );
+      }
       
       throw new Error(
         `KopoKopo API Error: ${response.status} - ${JSON.stringify(errorData)}`
@@ -208,17 +228,17 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
       throw new Error("Payment request ID not found in response");
     }
 
-    console.log("✅ KopoKopo STK Push initiated successfully!");
-    console.log("   Payment Request ID:", paymentRequestId);
-    console.log("   Payment Request URL:", paymentRequestUrl);
+    logInfo("✅ KopoKopo STK Push initiated successfully!");
+    logInfo("   Payment Request ID:", paymentRequestId);
+    logInfo("   Payment Request URL:", paymentRequestUrl);
     
     // Note about sandbox behavior
     if (KOPOKOPO_CONFIG.baseUrl.includes("sandbox")) {
-      console.log("   ⚠️  SANDBOX MODE: No actual STK push will be sent to phone.");
-      console.log("   Payment will be simulated via webhook callback.");
-      console.log("   Check webhook endpoint for payment status updates.");
+      logInfo("   ⚠️  SANDBOX MODE: No actual STK push will be sent to phone.");
+      logInfo("   Payment will be simulated via webhook callback.");
+      logInfo("   Check webhook endpoint for payment status updates.");
     } else {
-      console.log("   📱 PRODUCTION MODE: STK push should appear on phone shortly.");
+      logInfo("   📱 PRODUCTION MODE: STK push should appear on phone shortly.");
     }
 
     // Save payment log to database
@@ -239,7 +259,7 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
       },
     });
 
-    console.log("✅ Payment log saved to database. ID:", paymentLog.id);
+    logInfo("✅ Payment log saved to database. ID:", paymentLog.id);
 
     return {
       success: true,
@@ -392,7 +412,7 @@ export const getKopokopoPaymentStatus = async (paymentRequestId) => {
 
     const data = await response.json();
     
-    console.log("📊 Payment Status Check:", {
+    logInfo("📊 Payment Status Check:", {
       paymentRequestId,
       status: data.data?.attributes?.status,
       hasEvent: !!data.data?.attributes?.event,
@@ -401,11 +421,11 @@ export const getKopokopoPaymentStatus = async (paymentRequestId) => {
     
     // Check if payment succeeded and update wallet if needed
     if (data.data?.attributes?.status === "Success") {
-      console.log("✅ Payment status is Success, updating wallet...");
+      logInfo("✅ Payment status is Success, updating wallet...");
       const updateResult = await checkAndUpdateWalletFromPaymentStatus(paymentRequestId, data);
-      console.log("💰 Wallet update result:", updateResult);
+      logInfo("💰 Wallet update result:", updateResult);
     } else {
-      console.log(`⏳ Payment status: ${data.data?.attributes?.status || "Unknown"}`);
+      logInfo(`⏳ Payment status: ${data.data?.attributes?.status || "Unknown"}`);
     }
     
     return data;
@@ -435,13 +455,13 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
     });
 
     if (!paymentLog) {
-      console.log(`Payment log not found for request ID: ${paymentRequestId}`);
+      logInfo(`Payment log not found for request ID: ${paymentRequestId}`);
       return { updated: false, reason: "Payment log not found" };
     }
 
     // If payment log is already SUCCESS, skip
     if (paymentLog.status === "SUCCESS") {
-      console.log(`Payment log ${paymentLog.id} already processed`);
+      logInfo(`Payment log ${paymentLog.id} already processed`);
       return { updated: false, reason: "Already processed" };
     }
 
@@ -468,7 +488,7 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
     const { attributes } = statusData.data || {};
     const { status, event } = attributes || {};
 
-    console.log("🔍 Checking payment status for wallet update:", {
+    logInfo("🔍 Checking payment status for wallet update:", {
       paymentLogId: paymentLog.id,
       currentStatus: paymentLog.status,
       kopokopoStatus: status,
@@ -481,7 +501,7 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
       const resource = event.resource;
       const amountInCents = Math.round(parseFloat(resource.amount) * 100);
       
-      console.log("💵 Processing successful payment:", {
+      logInfo("💵 Processing successful payment:", {
         amount: amountInCents / 100,
         clientId: paymentLog.clientId,
         paymentLogId: paymentLog.id,
@@ -502,7 +522,7 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
       // Update wallet balance
       await updateClientWallet(paymentLog.clientId, amountInCents, paymentLog.id);
 
-      console.log(`✅ Wallet updated for client ${paymentLog.clientId}: +${amountInCents / 100} KES`);
+      logInfo(`✅ Wallet updated for client ${paymentLog.clientId}: +${amountInCents / 100} KES`);
       
       return {
         updated: true,
@@ -555,7 +575,7 @@ export const processPendingPayments = async (clientId = null) => {
       take: 50, // Process up to 50 at a time
     });
 
-    console.log(`Found ${pendingPayments.length} pending payments to check`);
+    logInfo(`Found ${pendingPayments.length} pending payments to check`);
 
     const results = {
       checked: 0,
@@ -584,7 +604,7 @@ export const processPendingPayments = async (clientId = null) => {
       }
     }
 
-    console.log("Pending payments processing results:", results);
+    logInfo("Pending payments processing results:", results);
     return results;
   } catch (error) {
     console.error("Process Pending Payments Error:", error);
@@ -649,9 +669,9 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
 
     // Log request details (can be removed in production or made conditional)
     if (process.env.NODE_ENV !== "production") {
-      console.log("📤 Initiating KopoKopo STK Push for Fundi...");
-      console.log("   Amount: KES", paymentData.amount);
-      console.log("   Phone:", paymentData.phoneNumber);
+      logInfo("📤 Initiating KopoKopo STK Push for Fundi...");
+      logInfo("   Amount: KES", paymentData.amount);
+      logInfo("   Phone:", paymentData.phoneNumber);
     }
 
     // Make STK Push request
@@ -673,7 +693,7 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
     
     // Log response details only in development
     if (process.env.NODE_ENV !== "production") {
-      console.log("📥 KopoKopo API Response Status (Fundi):", response.status);
+      logInfo("📥 KopoKopo API Response Status (Fundi):", response.status);
     }
 
     if (!response.ok) {
@@ -690,6 +710,21 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
         error: errorData,
         requestPayload: stkPushPayload,
       });
+      
+      if (response.status === 403) {
+        const msg = errorData.error_message || errorData.error?.error_message;
+        if (msg) {
+          throw new Error(`KopoKopo: ${msg}`);
+        }
+        const callbackUrl = fundiCallbackUrl || "";
+        const isLocalhost = /^http:\/\/localhost/i.test(callbackUrl);
+        const hint = isLocalhost
+          ? " KopoKopo requires a public HTTPS callback URL. Use ngrok and set KOPOKOPO_FUNDI_CALLBACK_URL to your https ngrok URL in .env."
+          : " Ensure KOPOKOPO_FUNDI_CALLBACK_URL is HTTPS and whitelisted in your KopoKopo dashboard.";
+        throw new Error(
+          `KopoKopo API returned 403 Forbidden. Callback URL may be invalid.${hint}`
+        );
+      }
       
       throw new Error(
         `KopoKopo API Error: ${response.status} - ${JSON.stringify(errorData)}`
@@ -719,17 +754,17 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
       throw new Error("Payment request ID not found in response");
     }
 
-    console.log("✅ KopoKopo STK Push initiated successfully for Fundi!");
-    console.log("   Payment Request ID:", paymentRequestId);
-    console.log("   Payment Request URL:", paymentRequestUrl);
+    logInfo("✅ KopoKopo STK Push initiated successfully for Fundi!");
+    logInfo("   Payment Request ID:", paymentRequestId);
+    logInfo("   Payment Request URL:", paymentRequestUrl);
     
     // Note about sandbox behavior
     if (KOPOKOPO_CONFIG.baseUrl.includes("sandbox")) {
-      console.log("   ⚠️  SANDBOX MODE: No actual STK push will be sent to phone.");
-      console.log("   Payment will be simulated via webhook callback.");
-      console.log("   Check webhook endpoint for payment status updates.");
+      logInfo("   ⚠️  SANDBOX MODE: No actual STK push will be sent to phone.");
+      logInfo("   Payment will be simulated via webhook callback.");
+      logInfo("   Check webhook endpoint for payment status updates.");
     } else {
-      console.log("   📱 PRODUCTION MODE: STK push should appear on phone shortly.");
+      logInfo("   📱 PRODUCTION MODE: STK push should appear on phone shortly.");
     }
 
     // Save payment log to database (PaymentLog for fundi)
@@ -750,7 +785,7 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
       },
     });
 
-    console.log("✅ Fundi payment log saved to database. ID:", paymentLog.id);
+    logInfo("✅ Fundi payment log saved to database. ID:", paymentLog.id);
 
     return {
       success: true,
@@ -1038,7 +1073,7 @@ export const processPendingFundiPayments = async (fundiId = null) => {
       take: 50, // Process up to 50 at a time
     });
 
-    console.log(`Found ${pendingPayments.length} pending fundi payments to check`);
+    logInfo(`Found ${pendingPayments.length} pending fundi payments to check`);
 
     const results = {
       checked: 0,
@@ -1067,7 +1102,7 @@ export const processPendingFundiPayments = async (fundiId = null) => {
       }
     }
 
-    console.log("Pending fundi payments processing results:", results);
+    logInfo("Pending fundi payments processing results:", results);
     return results;
   } catch (error) {
     console.error("Process Pending Fundi Payments Error:", error);
