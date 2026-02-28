@@ -550,13 +550,8 @@ export default function JobDetailsPage() {
                   </div>
                 </div>
 
-                {/* Report Job */}
-                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
-                  <button className="flex items-center text-red-600 hover:text-red-700 transition-colors gap-2 font-bold">
-                    <Flag className="w-5 h-5" />
-                    <span>Report this job</span>
-                  </button>
-                </div>
+               
+                
               </div>
             </div>
           </div>

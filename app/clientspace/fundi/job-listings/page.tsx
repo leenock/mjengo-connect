@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/fundi/Sidebar";
+import Link from "next/link";
 import {
   Menu,
   MapPin,
@@ -16,8 +17,11 @@ import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import FundiAuthService from "@/app/services/fundi_user";
+
+const FREE_PLAN_JOB_LIMIT = 3;
 
 interface Job {
   id: string;
@@ -47,7 +51,15 @@ export default function JobListingsPage() {
 
   const [jobListings, setJobListings] = useState<Job[]>([]);
   const [recentJobs, setRecentJobs] = useState<Job[]>([]);
-  const [recentApplications, setRecentApplications] = useState<Job[]>([]);
+
+  // Stats from APIs
+  const [savedJobsCount, setSavedJobsCount] = useState<number>(0);
+  const [subscriptionDetails, setSubscriptionDetails] = useState<{
+    totalPaid?: number;
+    nextBillingDate?: string | null;
+    currentPlan?: string;
+  } | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // ✅ PAGINATION STATE
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,39 +76,106 @@ export default function JobListingsPage() {
     }
   }, []);
 
-  // Fetch jobs data
- useEffect(() => {
-  async function fetchJobs() {
-    try {
-      setLoading(true);
-      const res = await fetch("http://localhost:5000/api/client/jobs");
-      if (!res.ok) {
-        throw new Error(`Failed to fetch jobs (status ${res.status})`);
-      }
-
-      const data = await res.json();
-      const jobs: Job[] = Array.isArray(data.jobs) ? data.jobs : [];
-
-      // Filter only paid jobs
-    const paidJobs = jobs.filter((job: Job) => job.isPaid);
-
-      setJobListings(paidJobs);
-      setRecentJobs(paidJobs.slice(0, 2));
-      const saved = paidJobs.filter((job) => job.saved);
-      setRecentApplications(saved);
-    } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError("An unknown error occurred");
-      }
-    } finally {
-      setLoading(false);
+  // Fetch subscription details & saved jobs count (for stats)
+  useEffect(() => {
+    const token = FundiAuthService.getToken();
+    if (!token) {
+      setStatsLoading(false);
+      return;
     }
-  }
+    const controller = new AbortController();
+    (async () => {
+      try {
+        setStatsLoading(true);
+        const [subRes, savedRes] = await Promise.all([
+          fetch("http://localhost:5000/api/fundi/subscription/details", {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          }),
+          fetch("http://localhost:5000/api/fundi/saved-jobs/count", {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          }),
+        ]);
+        if (subRes.ok) {
+          const subData = await subRes.json();
+          if (subData.success && subData.data) {
+            setSubscriptionDetails({
+              totalPaid: subData.data.totalPaid,
+              nextBillingDate: subData.data.nextBillingDate ?? subData.data.planEndDate ?? null,
+              currentPlan: subData.data.currentPlan,
+            });
+          }
+        }
+        if (savedRes.ok) {
+          const savedData = await savedRes.json();
+          if (savedData.data?.count !== undefined) {
+            setSavedJobsCount(savedData.data.count);
+          }
+        }
+      } catch (e) {
+        if ((e as Error).name !== "AbortError") {
+          console.error("Stats fetch error:", e);
+        }
+      } finally {
+        setStatsLoading(false);
+      }
+    })();
+    return () => controller.abort();
+  }, []);
 
-  fetchJobs();
-}, []);
+  const userData = FundiAuthService.getUserData();
+  const isFreePlan = useMemo(
+    () =>
+      !userData?.subscriptionPlan ||
+      userData.subscriptionPlan.toUpperCase() !== "PREMIUM",
+    [userData?.subscriptionPlan]
+  );
+
+  // Fetch jobs data
+  useEffect(() => {
+    async function fetchJobs() {
+      try {
+        setLoading(true);
+        const res = await fetch("http://localhost:5000/api/client/jobs");
+        if (!res.ok) {
+          throw new Error(`Failed to fetch jobs (status ${res.status})`);
+        }
+
+        const data = await res.json();
+        const jobs: Job[] = Array.isArray(data.jobs) ? data.jobs : [];
+
+        // Filter only paid, active jobs (same as public listing)
+        const paidJobs = jobs.filter(
+          (job: Job & { status?: string }) => job.isPaid && job.status === "ACTIVE"
+        );
+
+        // Free plan: show only 3 jobs, oldest first; Premium: show all
+        let list = paidJobs;
+        if (isFreePlan) {
+          list = [...paidJobs]
+            .sort(
+              (a, b) =>
+                new Date(a.timePosted).getTime() - new Date(b.timePosted).getTime()
+            )
+            .slice(0, FREE_PLAN_JOB_LIMIT);
+        }
+
+        setJobListings(list);
+        setRecentJobs(list.slice(0, 2));
+      } catch (err) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("An unknown error occurred");
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchJobs();
+  }, [isFreePlan]);
 
 
   // Event handlers
@@ -134,12 +213,34 @@ export default function JobListingsPage() {
     }
   };
 
-  // Stats (unchanged)
+  const isPremium = subscriptionDetails?.currentPlan?.toUpperCase() === "PREMIUM";
+  const totalPaidFormatted =
+    subscriptionDetails?.totalPaid != null
+      ? `KSh ${subscriptionDetails.totalPaid.toLocaleString()}`
+      : statsLoading
+        ? "..."
+        : "—";
+  const nextPaymentFormatted = (() => {
+    if (statsLoading) return "...";
+    const d = subscriptionDetails?.nextBillingDate;
+    if (!d || !isPremium) return "—";
+    try {
+      const date = new Date(d);
+      const now = new Date();
+      const diffDays = Math.ceil((date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays < 0) return "Expired";
+      if (diffDays <= 7) return `In ${diffDays} day${diffDays !== 1 ? "s" : ""}`;
+      return date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    } catch {
+      return "—";
+    }
+  })();
+
   const stats = [
     {
       title: "Active Jobs",
-      value: jobListings.length.toString(),
-      change: "+2 this week",
+      value: loading ? "..." : jobListings.length.toString(),
+      change: "Available to you",
       icon: Briefcase,
       color: "text-indigo-600",
       bgColor: "bg-gradient-to-br from-indigo-50 to-indigo-100",
@@ -147,17 +248,17 @@ export default function JobListingsPage() {
     },
     {
       title: "Saved Jobs",
-      value: recentApplications.length.toString(),
-      change: "+5 this week",
+      value: statsLoading ? "..." : savedJobsCount.toString(),
+      change: "Bookmarked",
       icon: Bookmark,
       color: "text-emerald-600",
       bgColor: "bg-gradient-to-br from-emerald-50 to-emerald-100",
       borderColor: "border-emerald-200",
     },
     {
-      title: "Subscription Spent",
-      value: "KSh 200",
-      change: "This month",
+      title: "Total Paid (Premium)",
+      value: totalPaidFormatted,
+      change: "All-time subscription",
       icon: CreditCard,
       color: "text-violet-600",
       bgColor: "bg-gradient-to-br from-violet-50 to-violet-100",
@@ -165,8 +266,8 @@ export default function JobListingsPage() {
     },
     {
       title: "Next Payment",
-      value: "12 days",
-      change: "Premium plan",
+      value: nextPaymentFormatted,
+      change: isPremium ? "Premium plan" : "Upgrade to Premium",
       icon: Calendar,
       color: "text-amber-600",
       bgColor: "bg-gradient-to-br from-amber-50 to-amber-100",
@@ -249,141 +350,116 @@ export default function JobListingsPage() {
                 })}
               </div>
 
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
-                <div className="xl:col-span-2">
-                  <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-indigo-50 to-purple-50">
-                      <div>
-                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">
-                          Recent Job Postings
-                        </h2>
-                        <p className="text-slate-600 font-extrabold">
-                          Fresh opportunities just for you
-                        </p>
-                      </div>
-                      <button className="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-bold hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-lg">
-                        View All
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="space-y-4 p-6 sm:p-8">
-                      {recentJobs.length > 0 ? (
-                        recentJobs.map((job) => (
-                          <div
-                            key={job.id}
-                            className="group p-4 sm:p-6 bg-gradient-to-r from-white/60 to-slate-50/60 rounded-2xl hover:from-white/80 hover:to-slate-50/80 transition-all duration-300 border border-white/40 hover:shadow-lg hover:scale-[1.02]"
-                          >
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex flex-wrap items-center gap-2 mb-3">
-                                  <h3 className="font-bold text-slate-900 text-base sm:text-lg">
-                                    {job.title}
-                                  </h3>
-                                  {job.isUrgent && (
-                                    <span className="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-sm">
-                                      Urgent
-                                    </span>
-                                  )}
-                                  {job.status && (
-                                    <span className="px-3 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700">
-                                      {job.status}
-                                    </span>
-                                  )}
-                                </div>
-                                <p className="text-sm font-semibold text-slate-600 mb-3">
-                                  {job.companyName}
-                                </p>
-                                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs sm:text-sm font-bold text-slate-600">
-                                  <div className="flex items-center">
-                                    <MapPin className="w-4 h-4 mr-2 text-slate-400" />
-                                    <span className="truncate">
-                                      {job.location}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center">
-                                    <DollarSign className="w-4 h-4 mr-2 text-emerald-500" />
-                                    <span className="text-emerald-600 font-black">
-                                      {job.salary}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center">
-                                    <Clock className="w-4 h-4 mr-2 text-slate-400" />
-                                    <span>Duration {job.duration}</span>
-                                  </div>
-                                  <div className="flex items-center">
-                                    <Calendar className="w-4 h-4 mr-2 text-slate-400" />
-                                    <span> {new Date(job.timePosted).toLocaleDateString()}</span>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-4 text-sm font-bold text-slate-600 flex-shrink-0">
-                                <div className="flex items-center text-indigo-600">
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  <span>{job.clickCount} views</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-slate-500 text-center py-4">
-                          No recent jobs available.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
-                    <div className="p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-emerald-50 to-teal-50">
+              {/* Recent Job Postings - full width */}
+              <div className="w-full">
+                <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 overflow-hidden">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-6 sm:p-8 border-b border-white/30 bg-gradient-to-r from-indigo-50 to-purple-50">
+                    <div>
                       <h2 className="text-xl sm:text-2xl font-black text-slate-900 mb-1">
-                        Saved Jobs
+                        Recent Job Postings
                       </h2>
                       <p className="text-slate-600 font-extrabold">
-                        Your bookmarked opportunities
+                        Fresh opportunities just for you
                       </p>
                     </div>
-                    <div className="space-y-4 p-6 sm:p-8">
-                      {recentApplications.length > 0 ? (
-                        recentApplications.map((application) => (
-                          <div
-                            key={application.id}
-                            className="group p-4 sm:p-5 border-2 border-slate-200 rounded-2xl hover:border-orange-300 hover:bg-gradient-to-r hover:from-orange-50 hover:to-pink-50 transition-all duration-300 hover:shadow-lg"
-                          >
-                            <div className="flex items-center justify-between mb-3">
-                              <h4 className="font-bold text-slate-900 text-sm sm:text-base truncate flex-1">
-                                {application.title}
-                              </h4>
-                              {application.status && (
-                                <span className="px-3 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 ml-2">
-                                  {application.status}
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-sm font-semibold text-slate-600 mb-3 truncate">
-                              {application.companyName}
-                            </p>
-                            <div className="flex items-center justify-between text-sm font-bold">
-                              <div className="flex items-center text-emerald-600">
-                                <DollarSign className="w-4 h-4 mr-1" />
-                                {application.salary}
+                    <button className="mt-4 sm:mt-0 flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-500 text-white rounded-xl font-bold hover:from-indigo-600 hover:to-purple-600 transition-all duration-200 shadow-lg">
+                      View All
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="space-y-4 p-6 sm:p-8">
+                    {recentJobs.length > 0 ? (
+                      recentJobs.map((job) => (
+                        <div
+                          key={job.id}
+                          className="group p-4 sm:p-6 bg-gradient-to-r from-white/60 to-slate-50/60 rounded-2xl hover:from-white/80 hover:to-slate-50/80 transition-all duration-300 border border-white/40 hover:shadow-lg hover:scale-[1.02]"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-3 sm:space-y-0">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-3">
+                                <h3 className="font-bold text-slate-900 text-base sm:text-lg">
+                                  {job.title}
+                                </h3>
+                                {job.isUrgent && (
+                                  <span className="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-sm">
+                                    Urgent
+                                  </span>
+                                )}
+                                {job.status && (
+                                  <span className="px-3 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700">
+                                    {job.status}
+                                  </span>
+                                )}
                               </div>
-                              <span className="text-slate-600">
-                                {application.timePosted}
-                              </span>
+                              <p className="text-sm font-semibold text-slate-600 mb-3">
+                                {job.companyName}
+                              </p>
+                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 text-xs sm:text-sm font-bold text-slate-600">
+                                <div className="flex items-center">
+                                  <MapPin className="w-4 h-4 mr-2 text-slate-400" />
+                                  <span className="truncate">
+                                    {job.location}
+                                  </span>
+                                </div>
+                                <div className="flex items-center">
+                                  <DollarSign className="w-4 h-4 mr-2 text-emerald-500" />
+                                  <span className="text-emerald-600 font-black">
+                                    {job.salary}
+                                  </span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Clock className="w-4 h-4 mr-2 text-slate-400" />
+                                  <span>Duration {job.duration}</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <Calendar className="w-4 h-4 mr-2 text-slate-400" />
+                                  <span> {new Date(job.timePosted).toLocaleDateString()}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-4 text-sm font-bold text-slate-600 flex-shrink-0">
+                              <div className="flex items-center text-indigo-600">
+                                <Eye className="w-4 h-4 mr-1" />
+                                <span>{job.clickCount} views</span>
+                              </div>
                             </div>
                           </div>
-                        ))
-                      ) : (
-                        <p className="text-slate-500 text-center py-4">
-                          No saved jobs yet.
-                        </p>
-                      )}
-                    </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-slate-500 text-center py-4">
+                        No recent jobs available.
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
+
+              {/* Free plan: upgrade CTA */}
+              {isFreePlan && jobListings.length > 0 && (
+                <div className="rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 p-4 sm:p-6 shadow-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-amber-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900">You&apos;re viewing limited jobs (Free Plan)</h3>
+                        <p className="text-sm text-slate-600 mt-1">
+                          Upgrade to Premium to see all jobs and never miss an opportunity.
+                        </p>
+                      </div>
+                    </div>
+                    <Link
+                      href="/clientspace/fundi/subscription"
+                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md whitespace-nowrap"
+                    >
+                      <CreditCard className="w-4 h-4" />
+                      Upgrade to Premium
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               {/* ✅ JOB LISTINGS WITH PAGINATION */}
               <div id="job-listings-top" className="space-y-6">

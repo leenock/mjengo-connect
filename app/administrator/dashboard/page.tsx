@@ -16,16 +16,20 @@ import {
   UserCheck,
   Clock,
   AlertCircle,
+  Wallet,
+  Banknote,
 } from "lucide-react";
 
 interface PlatformStats {
-  totalRevenue: string;
-  newRegistrations: number;
-  jobsCompleted: number;
+  subscriptionRevenue: number;
+  jobRevenue: number;
+  fundiWalletBalance: number;
+  clientWalletBalance: number;
   activeJobs: number;
   totalFundis: number;
   totalClients: number;
   totalJobs: number;
+  closedJobs: number;
   pendingJobs: number;
 }
 
@@ -39,7 +43,7 @@ interface JobCategory {
 interface RecentActivity {
   type: string;
   description: string;
-  amount: string;
+
   time: string;
   status: "success" | "info" | "warning";
 }
@@ -66,13 +70,15 @@ export default function AdminReports() {
   const [dateRange, setDateRange] = useState("30");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<PlatformStats>({
-    totalRevenue: "KSh 0",
-    newRegistrations: 0,
-    jobsCompleted: 0,
+    subscriptionRevenue: 0,
+    jobRevenue: 0,
+    fundiWalletBalance: 0,
+    clientWalletBalance: 0,
     activeJobs: 0,
     totalFundis: 0,
     totalClients: 0,
     totalJobs: 0,
+    closedJobs: 0,
     pendingJobs: 0,
   });
   const [topCategories, setTopCategories] = useState<JobCategory[]>([]);
@@ -88,9 +94,12 @@ export default function AdminReports() {
         setLoading(true);
         const authHeaders = AdminAuthService.getAuthHeaders();
 
-        // Fetch all necessary data (only needed APIs)
-        const [fundisResponse, clientsResponse, jobsResponse] =
+        // Fetch all necessary data: dashboard stats (revenue, closed jobs) + fundis, clients, jobs
+        const [dashboardResponse, fundisResponse, clientsResponse, jobsResponse] =
           await Promise.all([
+            fetch("http://localhost:5000/api/admin/management/dashboard/stats", {
+              headers: { ...authHeaders },
+            }),
             fetch("http://localhost:5000/api/fundi/getAllFundis", {
               headers: { ...authHeaders },
             }),
@@ -102,11 +111,14 @@ export default function AdminReports() {
             }),
           ]);
 
-        const [fundisData, clientsData, jobsData] = await Promise.all([
+        const [dashboardData, fundisData, clientsData, jobsData] = await Promise.all([
+          dashboardResponse.json(),
           fundisResponse.json(),
           clientsResponse.json(),
           jobsResponse.json(),
         ]);
+
+        const dashboardStats = dashboardData?.stats || {};
 
         // Process fundis data
         const fundisList: Fundi[] = Array.isArray(fundisData)
@@ -123,72 +135,37 @@ export default function AdminReports() {
           ? jobsData
           : jobsData?.jobs || jobsData?.data || [];
 
-        // Calculate statistics with proper typing
         const activeJobs = jobsList.filter(
           (job: Job) => job.status?.toUpperCase() === "ACTIVE"
-        ).length;
-
-        const completedJobs = jobsList.filter(
-          (job: Job) =>
-            job.status?.toUpperCase() === "COMPLETED" ||
-            job.status?.toUpperCase() === "CLOSED"
         ).length;
 
         const pendingJobs = jobsList.filter(
           (job: Job) => job.status?.toUpperCase() === "PENDING"
         ).length;
 
-        // Calculate revenue (this would come from your payment system)
-        // For now, we'll calculate a simulated revenue based on job counts
-        const simulatedRevenue = completedJobs * 15000; // Average KSh 15,000 per job
+        // Closed jobs: count only jobs with status CLOSED
+        const closedJobs = jobsList.filter(
+          (job: Job) => job.status?.toUpperCase() === "CLOSED"
+        ).length;
 
-        // Update stats
+        const num = (v: unknown) => {
+          const n = Number(v);
+          return typeof n === "number" && !Number.isNaN(n) ? n : 0;
+        };
+
         setStats({
-          totalRevenue: `KSh ${(simulatedRevenue / 1000000).toFixed(1)}M`,
-          newRegistrations: fundisList.length + clientsList.length,
-          jobsCompleted: completedJobs,
-          activeJobs: activeJobs,
+          subscriptionRevenue: num(dashboardStats.subscriptionRevenue),
+          jobRevenue: num(dashboardStats.jobRevenue),
+          fundiWalletBalance: num(dashboardStats.fundiWalletBalance),
+          clientWalletBalance: num(dashboardStats.clientWalletBalance),
+          closedJobs,
+          activeJobs,
           totalFundis: fundisList.length,
           totalClients: clientsList.length,
           totalJobs: jobsList.length,
-          pendingJobs: pendingJobs,
+          pendingJobs,
         });
 
-        // Generate top categories (this would come from your actual job categories)
-        const categories: JobCategory[] = [
-          {
-            name: "Plumbing",
-            jobs: Math.floor(jobsList.length * 0.25),
-            revenue: "KSh 680K",
-            growth: "+18%",
-          },
-          {
-            name: "Electrical",
-            jobs: Math.floor(jobsList.length * 0.22),
-            revenue: "KSh 596K",
-            growth: "+12%",
-          },
-          {
-            name: "Painting",
-            jobs: Math.floor(jobsList.length * 0.18),
-            revenue: "KSh 384K",
-            growth: "+8%",
-          },
-          {
-            name: "Roofing",
-            jobs: Math.floor(jobsList.length * 0.15),
-            revenue: "KSh 378K",
-            growth: "+15%",
-          },
-          {
-            name: "Masonry",
-            jobs: Math.floor(jobsList.length * 0.12),
-            revenue: "KSh 334K",
-            growth: "+6%",
-          },
-        ].filter((cat) => cat.jobs > 0);
-
-        setTopCategories(categories);
 
         // Generate recent activity from real data
         const activity: RecentActivity[] = [];
@@ -209,10 +186,9 @@ export default function AdminReports() {
         if (latestCompletedJob) {
           activity.push({
             type: "Job Completion",
-            description: `Job "${
-              latestCompletedJob.title || "Untitled"
-            }" completed`,
-            amount: "KSh 45,000",
+            description: `Job "${latestCompletedJob.title || "Untitled"
+              }" completed`,
+
             time: "2 hours ago",
             status: "success",
           });
@@ -223,10 +199,9 @@ export default function AdminReports() {
         if (latestFundi) {
           activity.push({
             type: "New Registration",
-            description: `${latestFundi.firstName || ""} ${
-              latestFundi.lastName || ""
-            } joined as Fundi`,
-            amount: "-",
+            description: `${latestFundi.firstName || ""} ${latestFundi.lastName || ""
+              } joined as Fundi`,
+
             time: "4 hours ago",
             status: "info",
           });
@@ -237,10 +212,9 @@ export default function AdminReports() {
         if (latestClient) {
           activity.push({
             type: "New Registration",
-            description: `${latestClient.firstName || ""} ${
-              latestClient.lastName || ""
-            } joined as Client`,
-            amount: "-",
+            description: `${latestClient.firstName || ""} ${latestClient.lastName || ""
+              } joined as Client`,
+
             time: "6 hours ago",
             status: "info",
           });
@@ -252,7 +226,7 @@ export default function AdminReports() {
           activity.push({
             type: "Job Posted",
             description: `New job "${latestJob.title || "Untitled"}" posted`,
-            amount: "KSh 35,000",
+
             time: "8 hours ago",
             status: "info",
           });
@@ -271,30 +245,60 @@ export default function AdminReports() {
 
   const displayStats = [
     {
-      title: "Total Revenue",
-      value: stats.totalRevenue,
-      change: "+15.2%",
-      trend: "up",
+      title: "Subscription revenue",
+      value: `KSh ${stats.subscriptionRevenue.toLocaleString()}`,
+      change: "Premium plans",
+      trend: "up" as const,
+      icon: DollarSign,
+      color: "text-violet-600",
+      bgColor: "bg-gradient-to-r from-violet-50 to-violet-100",
+      borderColor: "border-violet-200",
+    },
+    {
+      title: "Job revenue",
+      value: `KSh ${stats.jobRevenue.toLocaleString()}`,
+      change: "Job payments",
+      trend: "up" as const,
       icon: DollarSign,
       color: "text-emerald-600",
       bgColor: "bg-gradient-to-r from-emerald-50 to-emerald-100",
       borderColor: "border-emerald-200",
     },
     {
-      title: "Total Users",
-      value: (stats.totalFundis + stats.totalClients).toString(),
-      change: "+8.3%",
-      trend: "up",
+      title: "Fundi wallet balance",
+      value: `KSh ${stats.fundiWalletBalance.toLocaleString()}`,
+      change: "Total in fundi wallets",
+      trend: "up" as const,
+      icon: Wallet,
+      color: "text-cyan-600",
+      bgColor: "bg-gradient-to-r from-cyan-50 to-cyan-100",
+      borderColor: "border-cyan-200",
+    },
+    {
+      title: "Client wallet balance",
+      value: `KSh ${stats.clientWalletBalance.toLocaleString()}`,
+      change: "Total in client wallets",
+      trend: "up" as const,
+      icon: Banknote,
+      color: "text-sky-600",
+      bgColor: "bg-gradient-to-r from-sky-50 to-sky-100",
+      borderColor: "border-sky-200",
+    },
+    {
+      title: "Total Clients",
+      value: stats.totalClients.toString(),
+      change: "Client accounts",
+      trend: "up" as const,
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-gradient-to-r from-blue-50 to-blue-100",
       borderColor: "border-blue-200",
     },
     {
-      title: "Jobs Completed",
-      value: stats.jobsCompleted.toString(),
-      change: "+12.1%",
-      trend: "up",
+      title: "Jobs Closed",
+      value: stats.closedJobs.toString(),
+      change: "Closed listings",
+      trend: "up" as const,
       icon: CheckCircle,
       color: "text-purple-600",
       bgColor: "bg-gradient-to-r from-purple-50 to-purple-100",
@@ -303,8 +307,8 @@ export default function AdminReports() {
     {
       title: "Active Jobs",
       value: stats.activeJobs.toString(),
-      change: stats.activeJobs > 0 ? "+2.4%" : "-2.4%",
-      trend: stats.activeJobs > 0 ? "up" : "down",
+      change: stats.activeJobs > 0 ? "Live" : "None",
+      trend: (stats.activeJobs > 0 ? "up" : "down") as "up" | "down",
       icon: Building2,
       color: "text-amber-600",
       bgColor: "bg-gradient-to-r from-amber-50 to-amber-100",
@@ -313,8 +317,8 @@ export default function AdminReports() {
     {
       title: "Total Fundis",
       value: stats.totalFundis.toString(),
-      change: "+5.7%",
-      trend: "up",
+      change: "Fundi accounts",
+      trend: "up" as const,
       icon: UserCheck,
       color: "text-green-600",
       bgColor: "bg-gradient-to-r from-green-50 to-green-100",
@@ -323,8 +327,8 @@ export default function AdminReports() {
     {
       title: "Pending Jobs",
       value: stats.pendingJobs.toString(),
-      change: stats.pendingJobs > 0 ? "+3.2%" : "-3.2%",
-      trend: stats.pendingJobs > 0 ? "up" : "down",
+      change: stats.pendingJobs > 0 ? "Under review" : "None",
+      trend: (stats.pendingJobs > 0 ? "up" : "down") as "up" | "down",
       icon: Clock,
       color: "text-orange-600",
       bgColor: "bg-gradient-to-r from-orange-50 to-orange-100",
@@ -434,11 +438,10 @@ export default function AdminReports() {
                           <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mr-1 sm:mr-2" />
                         )}
                         <span
-                          className={`text-xs sm:text-sm font-bold ${
-                            stat.trend === "up"
-                              ? "text-emerald-600"
-                              : "text-red-600"
-                          }`}
+                          className={`text-xs sm:text-sm font-bold ${stat.trend === "up"
+                            ? "text-emerald-600"
+                            : "text-red-600"
+                            }`}
                         >
                           {stat.change} from last period
                         </span>
@@ -457,7 +460,7 @@ export default function AdminReports() {
                       Revenue Trends
                     </h2>
                     <p className="text-slate-600 text-sm sm:text-base font-medium">
-                      Based on {stats.jobsCompleted} completed jobs
+                      Subscription + job payments
                     </p>
                   </div>
                   <div className="p-4 sm:p-6 lg:p-8">
@@ -465,10 +468,10 @@ export default function AdminReports() {
                       <div className="text-center">
                         <BarChart3 className="w-12 h-12 sm:w-16 sm:h-16 text-emerald-400 mx-auto mb-3 sm:mb-4" />
                         <p className="text-slate-600 font-medium text-sm sm:text-base">
-                          Total Revenue: {stats.totalRevenue}
+                          Subscription: KSh {stats.subscriptionRevenue.toLocaleString()}
                         </p>
                         <p className="text-xs sm:text-sm text-slate-500 mt-1 sm:mt-2">
-                          {stats.jobsCompleted} jobs completed
+                          Jobs: KSh {stats.jobRevenue.toLocaleString()} • {stats.closedJobs} closed
                         </p>
                       </div>
                     </div>
@@ -490,7 +493,7 @@ export default function AdminReports() {
                       <div className="text-center">
                         <TrendingUp className="w-12 h-12 sm:w-16 sm:h-16 text-blue-400 mx-auto mb-3 sm:mb-4" />
                         <p className="text-slate-600 font-medium text-sm sm:text-base">
-                          Total Users: {stats.totalFundis + stats.totalClients}
+                          Total Clients: {stats.totalClients}
                         </p>
                         <div className="flex justify-center gap-4 sm:gap-6 mt-3 sm:mt-4 text-xs sm:text-sm">
                           <span className="text-blue-600 font-medium">
@@ -506,49 +509,7 @@ export default function AdminReports() {
                 </div>
               </div>
 
-              {/* Top Categories */}
-              <div className="bg-white/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-white/30 overflow-hidden">
-                <div className="p-4 sm:p-6 lg:p-8 border-b border-white/30 bg-gradient-to-r from-purple-50 to-pink-50">
-                  <h2 className="text-lg sm:text-xl lg:text-2xl font-black text-slate-900 mb-1">
-                    Top Job Categories
-                  </h2>
-                  <p className="text-slate-600 text-sm sm:text-base font-medium sm:font-bold">
-                    Based on {stats.totalJobs} total jobs
-                  </p>
-                </div>
-                <div className="p-4 sm:p-6 lg:p-8">
-                  <div className="space-y-3 sm:space-y-4">
-                    {topCategories.map((category, index) => (
-                      <div
-                        key={category.name}
-                        className="flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-white/60 to-slate-50/60 rounded-xl sm:rounded-2xl hover:from-white/80 hover:to-slate-50/80 transition-all duration-300 border border-white/40"
-                      >
-                        <div className="flex items-center space-x-3 sm:space-x-4">
-                          <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-sm sm:text-base lg:text-lg shadow-lg flex-shrink-0">
-                            {index + 1}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <h3 className="font-bold text-slate-900 text-base sm:text-lg truncate">
-                              {category.name}
-                            </h3>
-                            <p className="text-slate-600 font-medium text-sm sm:text-base">
-                              {category.jobs} jobs completed
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right flex-shrink-0 ml-2 sm:ml-4">
-                          <p className="text-lg sm:text-xl font-black text-slate-900 whitespace-nowrap">
-                            {category.revenue}
-                          </p>
-                          <p className="text-xs sm:text-sm font-bold text-emerald-600">
-                            {category.growth}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+
 
               {/* Recent Activity */}
               <div className="bg-white/70 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-white/30 overflow-hidden">
@@ -582,7 +543,7 @@ export default function AdminReports() {
                         </div>
                         <div className="text-right flex-shrink-0 ml-2 sm:ml-4">
                           <p className="font-bold text-slate-900 text-sm sm:text-base whitespace-nowrap">
-                            {activity.amount}
+
                           </p>
                           <p className="text-xs text-slate-500 whitespace-nowrap">
                             {activity.time}

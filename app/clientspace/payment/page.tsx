@@ -94,7 +94,11 @@ export default function PaymentsPage() {
         throw new Error("Failed to fetch jobs");
       }
       const data = await response.json();
-      setJobs(data.jobs || []);
+      // List only approved (ACTIVE) jobs waiting to be paid; exclude paid and PENDING/review jobs
+      const unpaidApprovedJobs = (data.jobs || []).filter(
+        (job: Job) => !job.isPaid && job.status === "ACTIVE"
+      );
+      setJobs(unpaidApprovedJobs);
     } catch (error) {
       console.error("Error fetching jobs:", error);
       setToast({
@@ -151,6 +155,14 @@ export default function PaymentsPage() {
     if (job.isPaid) {
       setToast({
         message: "This job has already been paid for.",
+        type: "error",
+      });
+      return;
+    }
+    // Only allow payment for approved jobs (ACTIVE); PENDING = under admin review
+    if (job.status !== "ACTIVE") {
+      setToast({
+        message: "This job must be approved by admin before you can pay. It is currently under review.",
         type: "error",
       });
       return;
@@ -293,14 +305,14 @@ export default function PaymentsPage() {
     return `${Math.ceil(diffDays / 30)} months ago`;
   };
 
-  const activeJobs = jobs.filter((job) => job.status === "ACTIVE"); // ← add this line here
+  // Jobs on this page are already filtered to unpaid only; use them for listing
+  const jobsWaitingPayment = jobs;
 
-  // Pagination calculations
   // Pagination calculations
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = activeJobs.slice(indexOfFirstJob, indexOfLastJob);
-  const totalPages = Math.ceil(activeJobs.length / jobsPerPage);
+  const currentJobs = jobsWaitingPayment.slice(indexOfFirstJob, indexOfLastJob);
+  const totalPages = Math.ceil(jobsWaitingPayment.length / jobsPerPage);
 
   // Pagination handlers
   const goToNextPage = () => {
@@ -483,16 +495,16 @@ export default function PaymentsPage() {
 
           {/* Job Listings for Payment */}
           <div className="space-y-5">
-            {activeJobs.length === 0 ? (
+            {jobsWaitingPayment.length === 0 ? (
               <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8 sm:p-12 text-center">
                 <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
                   <Briefcase className="w-8 h-8 text-slate-400" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">
-                  No Active Jobs
+                  No Approved Jobs Waiting for Payment
                 </h3>
                 <p className="text-slate-600 mb-6 max-w-md mx-auto">
-                  You currently have no active jobs that require payment.
+                  Only approved jobs can be paid. Jobs under review will appear here once approved by admin.
                 </p>
                 <button
                   onClick={() => router.push("/clientspace/newJob")}

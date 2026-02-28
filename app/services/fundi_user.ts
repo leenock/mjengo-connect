@@ -11,6 +11,8 @@ export interface FundiUserData {
   accountStatus?: string
   subscriptionPlan?: string
   subscriptionStatus?: string
+  planStartDate?: string
+  planEndDate?: string
   trialEndsAt?: string
   createdAt?: string
   updatedAt?: string
@@ -21,26 +23,36 @@ class FundiAuthService {
   private static readonly DATA_KEY = "fundiData";
   private static readonly SESSION_EXPIRY = 7200;
 
+  /** True when running in the browser (not during SSR). */
+  private static isClient(): boolean {
+    return typeof window !== "undefined";
+  }
+
   static setAuth(token: string, data: FundiUserData): void {
+    if (!this.isClient()) return;
     document.cookie = `${this.TOKEN_COOKIE}=${token}; path=/; max-age=${this.SESSION_EXPIRY}; secure; samesite=strict`;
     localStorage.setItem(this.DATA_KEY, JSON.stringify(data));
   }
   static saveUserData(data: Partial<FundiUserData>): void {
+    if (!this.isClient()) return;
     const existingData = this.getUserData();
     const updatedData = { ...existingData, ...data };
     localStorage.setItem(this.DATA_KEY, JSON.stringify(updatedData));
   }
 
   static clearAuth(): void {
+    if (!this.isClient()) return;
     document.cookie = `${this.TOKEN_COOKIE}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict`;
     localStorage.removeItem(this.DATA_KEY);
   }
 
   static getToken(): string | null {
+    if (!this.isClient()) return null;
     return this.getCookie(this.TOKEN_COOKIE);
   }
 
   static getUserData(): FundiUserData | null {
+    if (!this.isClient()) return null;
     const data = localStorage.getItem(this.DATA_KEY);
     return data ? JSON.parse(data) : null;
   }
@@ -50,6 +62,7 @@ class FundiAuthService {
   }
 
   static async logout(): Promise<void> {
+    if (!this.isClient()) return;
     try {
       await fetch("http://localhost:5000/api/fundi/logoutFundi", {
         method: "POST",
@@ -64,6 +77,7 @@ class FundiAuthService {
   }
 
   private static getCookie(name: string): string | null {
+    if (!this.isClient()) return null;
     const cookies = document.cookie.split(";");
     const match = cookies.find((c) => c.trim().startsWith(`${name}=`));
     return match ? match.split("=")[1] : null;

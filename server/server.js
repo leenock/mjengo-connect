@@ -97,6 +97,10 @@ app.listen(PORT, () => {
   console.log(`✅ Server is running at http://localhost:${PORT}`)
 })
 
+// Base Url 
+
+
+
 // Schedule job expiration task to run daily at 2:00 AM
 // This will expire jobs that have been paid for more than 7 days
 cron.schedule("0 2 * * *", async () => {

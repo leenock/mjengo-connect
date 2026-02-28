@@ -302,27 +302,20 @@ export default function SubscriptionPage() {
 
   const getSubscriptionStatus = () => {
     if (!currentUser) return "Unknown"
-
-    // Account status is always active since they opened an account
-    if (currentUser.subscriptionStatus === "ACTIVE" && currentUser.subscriptionPlan === "PREMIUM") {
+    // Premium: "Premium Active"; Free / Trial: show "Active"
+    if (currentUser.subscriptionPlan === "PREMIUM") {
       return "Premium Active"
-    } else if (currentUser.subscriptionStatus === "TRIAL" || currentUser.subscriptionPlan === "TRIAL") {
-      return "Trial"
-    } else {
-      return "Active"
     }
+    return "Active"
   }
 
   const getCurrentPlan = () => {
     if (!currentUser) return "Free Plan"
-
+    // Only Premium gets "Premium Plan"; Free and Trial both show "Free Plan"
     if (currentUser.subscriptionPlan === "PREMIUM") {
       return "Premium Plan"
-    } else if (currentUser.subscriptionStatus === "TRIAL" || currentUser.subscriptionPlan === "TRIAL") {
-      return "Trial Plan"
-    } else {
-      return "Free Plan"
     }
+    return "Free Plan"
   }
 
   const getAmountPaid = () => {
@@ -353,7 +346,7 @@ export default function SubscriptionPage() {
     {
       name: "Free Plan",
       price: "KSh 0",
-      features: ["Limited Jobs contact Views", "Basic support", "Ads shown"],
+      features: ["View up to 3 jobs (oldest first)", "Limited Jobs contact Views", "Basic support", "Ads shown"],
       icon: XCircle,
       bg: "bg-gradient-to-br from-slate-50 to-slate-100",
       color: "text-slate-600",

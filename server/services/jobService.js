@@ -73,10 +73,19 @@ export const getAllJobs = async (filters = {}, pagination = {}) => {
       where.status = filters.status
     } else {
       // By default, exclude CLOSED and EXPIRED jobs from active listings
-      // Only include if explicitly requested via status filter
-      where.status = { 
-        notIn: ["CLOSED", "EXPIRED"]
-      }
+      where.status = { notIn: ["CLOSED", "EXPIRED"] }
+      // Exclude paid jobs whose 7-day paid period has expired (so they never show on public listing)
+      const sevenDaysAgo = new Date()
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+      where.AND = [
+        {
+          OR: [
+            { status: { not: "ACTIVE" } },
+            { isPaid: false },
+            { isPaid: true, paidAt: { gt: sevenDaysAgo } },
+          ],
+        },
+      ]
     }
     if (filters.isUrgent !== undefined) where.isUrgent = filters.isUrgent
 
@@ -125,7 +134,7 @@ export const getAllJobs = async (filters = {}, pagination = {}) => {
  */
 export const getJobsByClientId = async (clientId, pagination = {}) => {
   try {
-    const { page = 1, limit = 10 } = pagination
+    const { page = 1, limit = 100 } = pagination
     const skip = (page - 1) * limit
 
     const [jobs, totalCount] = await Promise.all([
@@ -377,6 +386,11 @@ export const payForJob = async (jobId, clientId, amount = 300) => {
     // Check if job is already paid
     if (existingJob.isPaid) {
       throw new Error("Job has already been paid for");
+    }
+
+    // Only allow payment when job is approved by admin (ACTIVE); PENDING = under review
+    if (existingJob.status !== "ACTIVE") {
+      throw new Error("Job must be approved by admin before you can pay. It is currently under review.");
     }
 
     // Import wallet service

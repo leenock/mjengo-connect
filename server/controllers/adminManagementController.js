@@ -14,10 +14,15 @@ export const getAdminDashboardStats = async (req, res) => {
     const stats = {}
 
     if (hasPermission(adminRole, "client.read")) {
-      stats.totalClients = await prisma.client_User.count()
-      stats.activeClients = await prisma.client_User.count({
-        where: { accountStatus: "ACTIVE" },
-      })
+      const [clientCount, activeClientCount, clientWalletSum] = await Promise.all([
+        prisma.client_User.count(),
+        prisma.client_User.count({ where: { accountStatus: "ACTIVE" } }),
+        prisma.clientWallet.aggregate({ _sum: { balance: true } }),
+      ])
+      stats.totalClients = clientCount
+      stats.activeClients = activeClientCount
+      // Client wallet balance stored in cents; convert to KES
+      stats.clientWalletBalance = Math.round((clientWalletSum._sum?.balance ?? 0) / 100)
     }
 
     if (hasPermission(adminRole, "fundi.read")) {
@@ -35,6 +40,28 @@ export const getAdminDashboardStats = async (req, res) => {
       stats.pendingJobs = await prisma.job.count({
         where: { status: "PENDING" },
       })
+      stats.closedJobs = await prisma.job.count({
+        where: { status: "CLOSED" },
+      })
+    }
+
+    // Revenue + fundi wallet balance
+    if (hasPermission(adminRole, "job.read") || hasPermission(adminRole, "fundi.read")) {
+      const [subscriptionWithdrawalSum, jobWithdrawalSum, fundiWalletSum] = await Promise.all([
+        prisma.fundiWalletTransaction.aggregate({
+          where: { type: "WITHDRAWAL", status: "SUCCESS" },
+          _sum: { amount: true },
+        }),
+        prisma.clientWalletTransaction.aggregate({
+          where: { type: "WITHDRAWAL", status: "SUCCESS" },
+          _sum: { amount: true },
+        }),
+        prisma.fundiWallet.aggregate({ _sum: { balance: true } }),
+      ])
+      // Transaction amounts and balance stored in cents; convert to KES
+      stats.subscriptionRevenue = Math.round((subscriptionWithdrawalSum._sum?.amount ?? 0) / 100)
+      stats.jobRevenue = Math.round((jobWithdrawalSum._sum?.amount ?? 0) / 100)
+      stats.fundiWalletBalance = Math.round((fundiWalletSum._sum?.balance ?? 0) / 100)
     }
 
     if (hasPermission(adminRole, "support.read")) {

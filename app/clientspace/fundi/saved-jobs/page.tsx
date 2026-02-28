@@ -1,7 +1,8 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/fundi/Sidebar";
+import Link from "next/link";
 import {
   Menu,
   MapPin,
@@ -11,8 +12,12 @@ import {
   Briefcase,
   Heart,
   ArrowRight,
+  Sparkles,
+  CreditCard,
 } from "lucide-react";
 import FundiAuthService from "@/app/services/fundi_user";
+
+const FREE_PLAN_JOB_LIMIT = 3;
 
 interface Job {
   id: string;
@@ -44,36 +49,56 @@ export default function JobListingsPage() {
   const jobsPerPage = 3;
   const router = useRouter();
 
-  // Fetch user data
+  const userData = FundiAuthService.getUserData();
+  const isFreePlan = useMemo(
+    () =>
+      !userData?.subscriptionPlan ||
+      userData.subscriptionPlan.toUpperCase() !== "PREMIUM",
+    [userData?.subscriptionPlan]
+  );
+
+  // Fetch user data (run once on mount)
   useEffect(() => {
-    const userData = FundiAuthService.getUserData();
-    if (userData) {
-      if (userData.firstName) setFirstName(userData.firstName);
-      if (userData.lastName) setLastName(userData.lastName);
+    const data = FundiAuthService.getUserData();
+    if (data) {
+      if (data.firstName) setFirstName(data.firstName);
+      if (data.lastName) setLastName(data.lastName);
     }
   }, []);
 
- useEffect(() => {
-  const fetchJobs = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch("http://localhost:5000/api/client/jobs");
-      const data = await res.json();
+  useEffect(() => {
+    const fetchJobs = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("http://localhost:5000/api/client/jobs");
+        const data = await res.json();
 
-      // Filter only paid and active jobs
-      const filteredJobs = (data.jobs || []).filter(
-        (job: Job & { isPaid?: boolean }) => job.isPaid && job.status === "ACTIVE"
-      );
+        // Filter only paid and active jobs
+        let filteredJobs = (data.jobs || []).filter(
+          (job: Job & { isPaid?: boolean; status?: string }) =>
+            job.isPaid && job.status === "ACTIVE"
+        );
 
-      setJobs(filteredJobs);
-    } catch (error) {
-      console.error("Failed to load jobs:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchJobs();
-}, []);
+        // Free plan: show only 3 jobs, oldest first; Premium: show all
+        if (isFreePlan) {
+          filteredJobs = [...filteredJobs]
+            .sort(
+              (a, b) =>
+                new Date(a.timePosted).getTime() -
+                new Date(b.timePosted).getTime()
+            )
+            .slice(0, FREE_PLAN_JOB_LIMIT);
+        }
+
+        setJobs(filteredJobs);
+      } catch (error) {
+        console.error("Failed to load jobs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchJobs();
+  }, [isFreePlan]);
 
 
   const toggleSaveJob = (jobId: string) => {
@@ -120,6 +145,32 @@ const totalPages = Math.ceil(jobs.length / jobsPerPage);
               </div>
             </div>
           </div>
+
+          {/* Free plan: upgrade CTA */}
+          {isFreePlan && jobs.length > 0 && (
+            <div className="mb-6 rounded-2xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 p-4 sm:p-6 shadow-lg">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                    <Sparkles className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900">You&apos;re viewing limited jobs (Free Plan)</h3>
+                    <p className="text-sm text-slate-600 mt-1">
+                      Upgrade to Premium to see all jobs and never miss an opportunity.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/clientspace/fundi/subscription"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md whitespace-nowrap"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  Upgrade to Premium
+                </Link>
+              </div>
+            </div>
+          )}
 
           {/* Job Listings */}
           {loading ? (

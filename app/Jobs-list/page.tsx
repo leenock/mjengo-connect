@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   MapPin,
   Clock,
@@ -9,14 +9,17 @@ import {
   Shield,
   Calendar,
   ChevronDown,
+  X,
+  SlidersHorizontal,
 } from "lucide-react";
 import Header from "@/components/landingpage/Header";
 import Footer from "@/components/landingpage/Footer";
-import { useRouter } from "next/navigation"; // ✅ Add this
+import { useRouter } from "next/navigation";
 
 interface Job {
   id: string;
   title: string;
+  category?: string;
   companyName: string;
   location: string;
   salary: string;
@@ -27,6 +30,8 @@ interface Job {
   isUrgent: boolean;
   clickCount: number;
   status: string;
+  isPaid?: boolean;
+  paidAt?: string | null;
   postedBy: {
     firstName: string;
     lastName: string;
@@ -34,27 +39,61 @@ interface Job {
   };
 }
 
+const PAID_PERIOD_DAYS = 7;
+const SEARCH_DEBOUNCE_MS = 300;
+
+function isWithinPaidPeriod(paidAt: string | null | undefined): boolean {
+  if (!paidAt) return false;
+  const paid = new Date(paidAt).getTime();
+  const cutoff = Date.now() - PAID_PERIOD_DAYS * 24 * 60 * 60 * 1000;
+  return paid > cutoff;
+}
+
+/** Extract numeric value from salary string (e.g. "Ksh 10000" or "10000") for sorting */
+function parseSalaryNumber(salary: string): number {
+  const match = salary.replace(/,/g, "").match(/\d+/);
+  return match ? parseInt(match[0], 10) : 0;
+}
+
+type SortOption = "latest" | "pay_high" | "pay_low";
+
 export default function JobsListPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedLocation, setSelectedLocation] = useState("all");
+  const [sortBy, setSortBy] = useState<SortOption>("latest");
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const jobsPerPage = 6;
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const router = useRouter(); // ✅ Initialize router
+  const router = useRouter();
+
+  // Debounce search input
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery.trim());
+      setCurrentPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchQuery]);
 
   const categories = [
     { id: "all", label: "All Categories" },
-    { id: "masonry", label: "Masonry" },
-    { id: "painting", label: "Painting" },
-    { id: "plumbing", label: "Plumbing" },
-    { id: "electrical", label: "Electrical" },
-    { id: "carpentry", label: "Carpentry" },
-    { id: "roofing", label: "Roofing" },
-    { id: "tiling", label: "Tiling" },
-    { id: "welding", label: "Welding" },
+    { id: "Mason", label: "Mason" },
+    { id: "Carpenter", label: "Carpenter" },
+    { id: "Plumber", label: "Plumber" },
+    { id: "Electrician", label: "Electrician" },
+    { id: "Painter", label: "Painter" },
+    { id: "Roofer", label: "Roofer" },
+    { id: "Tiler", label: "Tiler" },
+    { id: "Welder", label: "Welder" },
+    { id: "Other", label: "Other" },
   ];
 
   const locations = [
@@ -77,10 +116,12 @@ export default function JobsListPage() {
         const res = await fetch("http://localhost:5000/api/client/jobs");
         const data = await res.json();
 
-        // Filter only paid and active jobs
+        // Filter only paid, active jobs that are still within the paid period (7 days)
         const filteredJobs = (data.jobs || []).filter(
-          (job: Job & { isPaid?: boolean }) =>
-            job.isPaid && job.status === "ACTIVE"
+          (job: Job) =>
+            job.isPaid &&
+            job.status === "ACTIVE" &&
+            isWithinPaidPeriod(job.paidAt)
         );
 
         setJobs(filteredJobs);
@@ -108,9 +149,11 @@ export default function JobsListPage() {
     }
 
     const category =
+      job.category ||
       categories.find((cat) =>
         job.title.toLowerCase().includes(cat.id.toLowerCase())
-      )?.id || "all";
+      )?.id ||
+      "all";
 
     return {
       ...job,
@@ -130,7 +173,7 @@ export default function JobsListPage() {
     };
   };
 
-  const formatTimeAgo = (date: Date) => {
+  const formatTimeAgo = useCallback((date: Date) => {
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
@@ -138,34 +181,64 @@ export default function JobsListPage() {
     if (diffHours < 24) return `${diffHours} hours ago`;
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays} days ago`;
-  };
+  }, []);
 
-  const transformedJobs = jobs.map(transformJob);
+  const transformedJobs = useMemo(
+    () => jobs.map(transformJob),
+    [jobs]
+  );
 
-  // Filter jobs
-  const filteredJobs = transformedJobs.filter((job) => {
-    const matchesSearch =
-      searchQuery === "" ||
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.skills.some((skill) =>
-        skill.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  const filteredJobs = useMemo(() => {
+    const q = debouncedSearch.toLowerCase();
+    return transformedJobs.filter((job) => {
+      const matchesSearch =
+        !q ||
+        job.title.toLowerCase().includes(q) ||
+        (job.description && job.description.toLowerCase().includes(q)) ||
+        (job.companyName && job.companyName.toLowerCase().includes(q)) ||
+        job.skills.some((s) => s.toLowerCase().includes(q));
 
-    const matchesCategory =
-      selectedCategory === "all" || job.category === selectedCategory;
-    const matchesLocation =
-      selectedLocation === "all" ||
-      job.location.toLowerCase().includes(selectedLocation);
+      const matchesCategory =
+        selectedCategory === "all" || job.category === selectedCategory;
+      const matchesLocation =
+        selectedLocation === "all" ||
+        job.location.toLowerCase().includes(selectedLocation.toLowerCase());
 
-    return matchesSearch && matchesCategory && matchesLocation;
-  });
+      return matchesSearch && matchesCategory && matchesLocation;
+    });
+  }, [transformedJobs, debouncedSearch, selectedCategory, selectedLocation]);
 
-  // Pagination Logic
-  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+  const sortedJobs = useMemo(() => {
+    const list = [...filteredJobs];
+    if (sortBy === "latest") {
+      list.sort((a, b) => new Date(b.timePosted || 0).getTime() - new Date(a.timePosted || 0).getTime());
+    } else if (sortBy === "pay_high") {
+      list.sort((a, b) => parseSalaryNumber(b.budget) - parseSalaryNumber(a.budget));
+    } else if (sortBy === "pay_low") {
+      list.sort((a, b) => parseSalaryNumber(a.budget) - parseSalaryNumber(b.budget));
+    }
+    return list;
+  }, [filteredJobs, sortBy]);
+
+  const totalPages = Math.ceil(sortedJobs.length / jobsPerPage) || 1;
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
+  const currentJobs = sortedJobs.slice(indexOfFirstJob, indexOfLastJob);
+
+  const hasActiveFilters =
+    debouncedSearch !== "" || selectedCategory !== "all" || selectedLocation !== "all";
+
+  const clearAllFilters = useCallback(() => {
+    setSearchQuery("");
+    setDebouncedSearch("");
+    setSelectedCategory("all");
+    setSelectedLocation("all");
+    setCurrentPage(1);
+  }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedCategory, selectedLocation, sortBy]);
 
   const paginate = (pageNumber: number) => {
     if (pageNumber >= 1 && pageNumber <= totalPages) {
@@ -242,6 +315,59 @@ export default function JobsListPage() {
                   <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 </div>
               </div>
+              {/* Active filters & Clear all */}
+              {hasActiveFilters && (
+                <div className="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-gray-100">
+                  <SlidersHorizontal className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                  <span className="text-sm font-medium text-gray-600">Active:</span>
+                  {debouncedSearch && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 text-orange-800 text-sm font-medium rounded-full border border-orange-200">
+                      &quot;{debouncedSearch}&quot;
+                      <button
+                        type="button"
+                        onClick={() => { setSearchQuery(""); setDebouncedSearch(""); setCurrentPage(1); }}
+                        className="p-0.5 rounded-full hover:bg-orange-200/80"
+                        aria-label="Remove search"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  )}
+                  {selectedCategory !== "all" && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 text-orange-800 text-sm font-medium rounded-full border border-orange-200">
+                      {categories.find((c) => c.id === selectedCategory)?.label}
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedCategory("all"); setCurrentPage(1); }}
+                        className="p-0.5 rounded-full hover:bg-orange-200/80"
+                        aria-label="Clear category"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  )}
+                  {selectedLocation !== "all" && (
+                    <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-orange-50 text-orange-800 text-sm font-medium rounded-full border border-orange-200">
+                      {locations.find((l) => l.id === selectedLocation)?.label}
+                      <button
+                        type="button"
+                        onClick={() => { setSelectedLocation("all"); setCurrentPage(1); }}
+                        className="p-0.5 rounded-full hover:bg-orange-200/80"
+                        aria-label="Clear location"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={clearAllFilters}
+                    className="ml-1 text-sm font-semibold text-orange-600 hover:text-orange-700 hover:underline"
+                  >
+                    Clear all
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </section>
@@ -258,7 +384,7 @@ export default function JobsListPage() {
                 <p className="text-gray-600">
                   {loading
                     ? "Loading jobs..."
-                    : `${filteredJobs.length} jobs found`}
+                    : `${sortedJobs.length} job${sortedJobs.length !== 1 ? "s" : ""} found`}
                 </p>
               </div>
 
@@ -269,10 +395,14 @@ export default function JobsListPage() {
                     jobs verified
                   </p>
                 </div>
-                <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 text-sm">
-                  <option>Sort by: Latest</option>
-                  <option>Sort by: Pay (High to Low)</option>
-                  <option>Sort by: Pay (Low to High)</option>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className="px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm bg-white"
+                >
+                  <option value="latest">Sort by: Latest</option>
+                  <option value="pay_high">Sort by: Pay (High to Low)</option>
+                  <option value="pay_low">Sort by: Pay (Low to High)</option>
                 </select>
               </div>
             </div>
@@ -313,7 +443,7 @@ export default function JobsListPage() {
                         </div>
                         {job.urgency === "Urgent" && (
                           <span className="inline-block px-3 py-1 bg-red-100 text-red-600 text-xs font-medium rounded-full mb-3">
-                            🔥 Urgent
+                             Urgent
                           </span>
                         )}
                         <div className="space-y-2 text-sm text-gray-600">

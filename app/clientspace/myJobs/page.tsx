@@ -25,8 +25,10 @@ import {
   X,
   RotateCcw,
   PlayCircle,
-  
+  Filter,
 } from "lucide-react"
+
+type JobStatusFilter = "all" | "active_paid" | "active_not_paid" | "pending_review"
 
 interface Job {
   id: string
@@ -75,8 +77,31 @@ export default function MyJobsPage() {
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1)
   const jobsPerPage = 3 // Show 3 jobs per page
+
+  // Filter: all | active & paid | active only (not paid) | pending review
+  const [statusFilter, setStatusFilter] = useState<JobStatusFilter>("all")
   
   const router = useRouter()
+
+  const filterOptions: { value: JobStatusFilter; label: string }[] = [
+    { value: "all", label: "All jobs" },
+    { value: "active_paid", label: "Active & paid" },
+    { value: "active_not_paid", label: "Active, not paid" },
+    { value: "pending_review", label: "Pending review" },
+  ]
+
+  const filteredJobs = (() => {
+    switch (statusFilter) {
+      case "active_paid":
+        return jobs.filter((j) => j.status === "ACTIVE" && j.isPaid)
+      case "active_not_paid":
+        return jobs.filter((j) => j.status === "ACTIVE" && !j.isPaid)
+      case "pending_review":
+        return jobs.filter((j) => j.status === "PENDING")
+      default:
+        return jobs
+    }
+  })()
 
   // Load user data and jobs on component mount
   useEffect(() => {
@@ -89,6 +114,11 @@ export default function MyJobsPage() {
     }
   }, [router])
 
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [statusFilter])
+
   const fetchMyJobs = async () => {
     try {
       setIsLoading(true)
@@ -96,7 +126,7 @@ export default function MyJobsPage() {
       if (!token) {
         throw new Error("Authentication required")
       }
-      const response = await fetch("http://localhost:5000/api/client/my-jobs", {
+      const response = await fetch("http://localhost:5000/api/client/my-jobs?limit=100", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -421,11 +451,11 @@ const getStatusBadge = (job: Job) => {
     },
   ]
   
-  // Pagination calculations
+  // Pagination calculations (use filtered list)
   const indexOfLastJob = currentPage * jobsPerPage
   const indexOfFirstJob = indexOfLastJob - jobsPerPage
-  const currentJobs = jobs.slice(indexOfFirstJob, indexOfLastJob)
-  const totalPages = Math.ceil(jobs.length / jobsPerPage)
+  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob)
+  const totalPages = Math.ceil(filteredJobs.length / jobsPerPage) || 1
 
   // Pagination handlers
   const goToNextPage = () => {
@@ -535,6 +565,30 @@ const getStatusBadge = (job: Job) => {
             })}
           </div>
 
+          {/* Filter */}
+          <div className="mb-6 flex flex-wrap items-center gap-3">
+            <Filter className="w-5 h-5 text-slate-600" aria-hidden />
+            <span className="text-sm font-semibold text-slate-700">Show:</span>
+            <div className="flex flex-wrap gap-2">
+              {filterOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setStatusFilter(opt.value)}
+                  className={`rounded-xl px-4 py-2 text-sm font-semibold transition-all ${
+                    statusFilter === opt.value
+                      ? "bg-indigo-600 text-white shadow-md ring-2 ring-indigo-300"
+                      : "bg-white/80 text-slate-600 border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/80"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <span className="text-sm text-slate-500">
+              {filteredJobs.length} job{filteredJobs.length !== 1 ? "s" : ""}
+            </span>
+          </div>
+
           {/* Job Listings */}
           <div className="space-y-5">
             {jobs.length === 0 ? (
@@ -549,6 +603,22 @@ const getStatusBadge = (job: Job) => {
                   className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-base font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-gradient-to-r from-orange-500 via-pink-500 to-red-500 text-white hover:from-orange-600 hover:via-pink-600 hover:to-red-600 h-12 px-6 py-3 shadow-md hover:shadow-lg"
                 >
                   Post Your First Job
+                </button>
+              </div>
+            ) : filteredJobs.length === 0 ? (
+              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-6 sm:p-8 md:p-12 text-center">
+                <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                  <Filter className="w-8 h-8 text-slate-400" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2">No jobs match this filter</h3>
+                <p className="text-slate-600 mb-5 max-w-md mx-auto">
+                  Try &quot;All jobs&quot; or another filter to see your postings.
+                </p>
+                <button
+                  onClick={() => setStatusFilter("all")}
+                  className="inline-flex items-center justify-center whitespace-nowrap rounded-xl text-base font-bold ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-indigo-600 text-white hover:bg-indigo-700 h-12 px-6 py-3 shadow-md hover:shadow-lg"
+                >
+                  Show all jobs
                 </button>
               </div>
             ) : (
