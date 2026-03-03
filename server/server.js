@@ -93,8 +93,12 @@ app.use("/api/admin/support/tickets", ticketSupportRoute) // Added ticket suppor
 
 // Start the server
 const PORT = process.env.PORT || 5000
+const HOST = process.env.HOST || "localhost"
 app.listen(PORT, () => {
-  console.log(`✅ Server is running at http://localhost:${PORT}`)
+  const base = process.env.NODE_ENV === "production" && process.env.API_BASE_URL
+    ? process.env.API_BASE_URL
+    : `http://${HOST}:${PORT}`
+  console.log(`✅ Server is running at ${base}`)
 })
 
 // Base Url 

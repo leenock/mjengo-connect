@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo, useCallback } from "react";
+
+import { API_URL } from "@/app/config";
 import AdminSidebar from "@/components/admin/Sidebar";
 import {
   Search,
@@ -161,7 +163,7 @@ export default function AdminManageFundis() {
       if (filters.status !== "all") params.set("accountStatus", filters.status);
 
       const res = await fetch(
-        `http://localhost:5000/api/fundi/getAllFundis?${params.toString()}`,
+        `${API_URL}/api/fundi/getAllFundis?${params.toString()}`,
         {
           headers: { ...AdminAuthService.getAuthHeaders() },
           cache: "no-store",
@@ -429,7 +431,7 @@ export default function AdminManageFundis() {
     setDeletingId(id);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/fundi/admin/deleteFundi/${id}`,
+        `${API_URL}/api/fundi/admin/deleteFundi/${id}`,
         {
           method: "DELETE",
           headers: { ...AdminAuthService.getAuthHeaders() },
@@ -476,7 +478,7 @@ export default function AdminManageFundis() {
     setIsSaving(true);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/fundi/admin/updateFundiAdmin/${editFundi.id}`,
+        `${API_URL}/api/fundi/admin/updateFundiAdmin/${editFundi.id}`,
         {
           method: "PUT",
           headers: {
@@ -523,7 +525,7 @@ export default function AdminManageFundis() {
         const userData = AdminAuthService.getUserData();
         if (!userData?.id) return;
 
-        const res = await fetch(`http://localhost:5000/api/admin/getAdmin/${userData.id}`, {
+        const res = await fetch(`${API_URL}/api/admin/getAdmin/${userData.id}`, {
           headers: { ...AdminAuthService.getAuthHeaders() },
         });
         if (res.ok) {

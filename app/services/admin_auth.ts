@@ -1,3 +1,5 @@
+import { API_URL } from "@/app/config";
+
 export interface AdminUserData {
   id: string;
   fullName: string;
@@ -46,8 +48,7 @@ class AdminAuthService {
 
   static async logout(): Promise<void> {
     try {
-      const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ""
-      await fetch(`${BASE_URL}/api/admin/auth/logout`, {
+      await fetch(`${API_URL}/api/admin/auth/logout`, {
         method: "POST",
         headers: { Authorization: `Bearer ${this.getToken()}` },
       });

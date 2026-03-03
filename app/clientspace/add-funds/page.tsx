@@ -1,5 +1,7 @@
 "use client";
 import type React from "react";
+
+import { API_URL } from "@/app/config";
 import { useState, useEffect, useRef } from "react";
 import {
   CheckCircle2,
@@ -56,7 +58,7 @@ export default function AddFundsPage() {
 
     setIsRefreshingBalance(true);
     try {
-      const response = await fetch("http://localhost:5000/api/client/wallet/balance", {
+      const response = await fetch(`${API_URL}/api/client/wallet/balance`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (response.ok) {
@@ -90,7 +92,7 @@ export default function AddFundsPage() {
       if (!token) return;
       try {
         const response = await fetch(
-          `http://localhost:5000/api/client/wallet/payment-status/${requestId}`,
+          `${API_URL}/api/client/wallet/payment-status/${requestId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!response.ok) return;
@@ -267,7 +269,7 @@ export default function AddFundsPage() {
       };
 
       // Make API call to backend
-      const response = await fetch("http://localhost:5000/api/client/wallet/add-funds/kopokopo", {
+      const response = await fetch(`${API_URL}/api/client/wallet/add-funds/kopokopo`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -127,14 +127,64 @@ export const calculateTotalPaid = async (fundiId) => {
   }
 };
 
+const EXPIRED_STATUSES = ["EXPIRED", "TRIAL", "CANCELLED"];
+
+/**
+ * Returns true if this Premium fundi should be on Free plan: plan ended or status is Expired/Trial/Cancelled.
+ */
+const shouldDowngradeToFree = (fundi) => {
+  if (fundi.subscriptionPlan !== "PREMIUM") return false;
+  const status = (fundi.subscriptionStatus || "").toUpperCase();
+  if (EXPIRED_STATUSES.includes(status)) return true;
+  if (!fundi.planEndDate) return false;
+  const now = new Date();
+  const planEnd = new Date(fundi.planEndDate);
+  return planEnd <= now;
+};
+
+/**
+ * Downgrade a single fundi to Free with status Active when premium has expired or status is Expired/Trial/Cancelled.
+ * Used when fetching subscription details so the user is updated to Free as soon as they load the page.
+ * @param {Object} fundi - Fundi record from DB
+ * @returns {Promise<Object|null>} Updated fundi or null if no change
+ */
+const downgradeFundiIfExpired = async (fundi) => {
+  if (!shouldDowngradeToFree(fundi)) return null;
+  const now = new Date();
+
+  await prisma.fundi_User.update({
+    where: { id: fundi.id },
+    data: {
+      subscriptionPlan: "FREE",
+      subscriptionStatus: "ACTIVE",
+    },
+  });
+
+  await prisma.subscription.updateMany({
+    where: {
+      fundiId: fundi.id,
+      status: "ACTIVE",
+      endDate: { lte: now },
+    },
+    data: { status: "EXPIRED" },
+  });
+
+  return {
+    ...fundi,
+    subscriptionPlan: "FREE",
+    subscriptionStatus: "ACTIVE",
+  };
+};
+
 /**
  * Get subscription details for a fundi
+ * If premium has expired, downgrades the user to Free first so the UI shows Free plan immediately.
  * @param {string} fundiId - Fundi user ID
  * @returns {Promise<Object>} Subscription details
  */
 export const getSubscriptionDetails = async (fundiId) => {
   try {
-    const fundi = await prisma.fundi_User.findUnique({
+    let fundi = await prisma.fundi_User.findUnique({
       where: { id: fundiId },
       include: {
         subscriptions: {
@@ -153,20 +203,31 @@ export const getSubscriptionDetails = async (fundiId) => {
       throw new Error("Fundi not found");
     }
 
+    // If premium has expired, downgrade to Free now so user sees Free plan on this request
+    const updated = await downgradeFundiIfExpired(fundi);
+    if (updated) {
+      fundi = updated;
+    }
+
     const totalPaid = await calculateTotalPaid(fundiId);
     const walletData = await getWalletBalance(fundiId);
 
     // Get current active subscription
+    const now = new Date();
     const activeSubscription = fundi.subscriptions.find(
-      (sub) => sub.status === "ACTIVE" && sub.endDate > new Date()
+      (sub) => sub.status === "ACTIVE" && sub.endDate > now
     );
+
+    // When FREE (after cron or on-the-fly downgrade), no next billing. When PREMIUM, return planEndDate so UI can show date or "Expired"
+    const nextBillingDate =
+      fundi.subscriptionPlan === "PREMIUM" && fundi.planEndDate ? fundi.planEndDate : null;
 
     return {
       currentPlan: fundi.subscriptionPlan,
       subscriptionStatus: fundi.subscriptionStatus,
       planStartDate: fundi.planStartDate,
       planEndDate: fundi.planEndDate,
-      nextBillingDate: fundi.planEndDate || null,
+      nextBillingDate,
       totalPaid: totalPaid,
       walletBalance: walletData.balance,
       activeSubscription: activeSubscription || null,
@@ -179,23 +240,20 @@ export const getSubscriptionDetails = async (fundiId) => {
 };
 
 /**
- * Downgrade expired premium subscriptions to free plan
- * This is called by the cron job
+ * Downgrade expired premium subscriptions to free plan (Subscription Plan = Free, Subscription Status = Active).
+ * Also catches Premium with status Expired, Trial, or Cancelled.
+ * This is called by the cron job.
  * @returns {Promise<Object>} Downgrade results
  */
 export const downgradeExpiredSubscriptions = async () => {
   try {
     const now = new Date();
 
-    // Find all fundis with expired premium subscriptions
-    const expiredFundis = await prisma.fundi_User.findMany({
-      where: {
-        subscriptionPlan: "PREMIUM",
-        planEndDate: {
-          lte: now, // Plan end date has passed
-        },
-      },
+    // Find all fundis who are Premium but should be Free: planEndDate passed OR status is EXPIRED/TRIAL/CANCELLED
+    const allPremium = await prisma.fundi_User.findMany({
+      where: { subscriptionPlan: "PREMIUM" },
     });
+    const expiredFundis = allPremium.filter((f) => shouldDowngradeToFree(f));
 
     if (expiredFundis.length === 0) {
       return {
@@ -204,14 +262,13 @@ export const downgradeExpiredSubscriptions = async () => {
       };
     }
 
-    // Update all expired subscriptions
+    // Update all to Free plan with Active status
     const updatePromises = expiredFundis.map(async (fundi) => {
-      // Update fundi to free plan
       await prisma.fundi_User.update({
         where: { id: fundi.id },
         data: {
           subscriptionPlan: "FREE",
-          subscriptionStatus: "EXPIRED",
+          subscriptionStatus: "ACTIVE",
         },
       });
 

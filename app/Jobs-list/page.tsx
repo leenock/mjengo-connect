@@ -15,6 +15,7 @@ import {
 import Header from "@/components/landingpage/Header";
 import Footer from "@/components/landingpage/Footer";
 import { useRouter } from "next/navigation";
+import { API_URL } from "@/app/config";
 
 interface Job {
   id: string;
@@ -113,7 +114,7 @@ export default function JobsListPage() {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:5000/api/client/jobs");
+        const res = await fetch(`${API_URL}/api/client/jobs`);
         const data = await res.json();
 
         // Filter only paid, active jobs that are still within the paid period (7 days)

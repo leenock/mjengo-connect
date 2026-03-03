@@ -1,5 +1,7 @@
 "use client"
 import type React from "react"
+
+import { API_URL } from "@/app/config"
 import { useState, useEffect, useCallback } from "react"
 import { CheckCircle2, XCircle, Menu, Send, MessageCircle, User } from "lucide-react"
 import Sidebar from "@/components/job_posting/Sidebar"
@@ -80,7 +82,7 @@ export default function MessageAdminPage() {
         throw new Error("No authentication token found")
       }
 
-      const response = await fetch(`http://localhost:5000/api/support/getClientTickets/${currentUser.id}`, {
+      const response = await fetch(`${API_URL}/api/support/getClientTickets/${currentUser.id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -161,7 +163,7 @@ export default function MessageAdminPage() {
     if (!token) {
       throw new Error("No authentication token found")
     }
-    const response = await fetch("http://localhost:5000/api/support/createTicket", {
+    const response = await fetch(`${API_URL}/api/support/createTicket`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

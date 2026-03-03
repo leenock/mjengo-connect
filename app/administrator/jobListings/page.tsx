@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+
+import { API_URL } from "@/app/config";
 import AdminSidebar from "@/components/admin/Sidebar";
 import {
   Search,
@@ -144,7 +146,7 @@ export default function AdminManageJobs() {
       console.log("🔄 Fetching jobs from API...");
       
       const response = await fetch(
-        `http://localhost:5000/api/admin/jobs/jobs/?${params.toString()}`,
+        `${API_URL}/api/admin/jobs/jobs/?${params.toString()}`,
         {
           headers: { 
             "Content-Type": "application/json",
@@ -217,7 +219,7 @@ export default function AdminManageJobs() {
     setDeletingId(id);
     try {
       const res = await fetch(
-        ` http://localhost:5000/api/admin/jobs/jobs/${id}`,
+        `${API_URL}/api/admin/jobs/jobs/${id}`,
         {
           method: "DELETE",
           headers: { ...AdminAuthService.getAuthHeaders() },
@@ -271,7 +273,7 @@ export default function AdminManageJobs() {
     setIsSaving(true);
     try {
       const res = await fetch(
-        ` http://localhost:5000/api/admin/jobs/jobs/${editJob.id}`,
+        `${API_URL}/api/admin/jobs/jobs/${editJob.id}`,
         {
           method: "PUT",
           headers: {

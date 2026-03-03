@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import AdminSidebar from "@/components/admin/Sidebar";
 import AdminAuthService from "@/app/services/admin_auth";
+import { API_URL } from "@/app/config";
 import {
   BarChart3,
   TrendingUp,
@@ -97,16 +98,16 @@ export default function AdminReports() {
         // Fetch all necessary data: dashboard stats (revenue, closed jobs) + fundis, clients, jobs
         const [dashboardResponse, fundisResponse, clientsResponse, jobsResponse] =
           await Promise.all([
-            fetch("http://localhost:5000/api/admin/management/dashboard/stats", {
+            fetch(`${API_URL}/api/admin/management/dashboard/stats`, {
               headers: { ...authHeaders },
             }),
-            fetch("http://localhost:5000/api/fundi/getAllFundis", {
+            fetch(`${API_URL}/api/fundi/getAllFundis`, {
               headers: { ...authHeaders },
             }),
-            fetch("http://localhost:5000/api/client/getAllClientUsers", {
+            fetch(`${API_URL}/api/client/getAllClientUsers`, {
               headers: { ...authHeaders },
             }),
-            fetch("http://localhost:5000/api/admin/jobs/jobs", {
+            fetch(`${API_URL}/api/admin/jobs/jobs`, {
               headers: { ...authHeaders },
             }),
           ]);

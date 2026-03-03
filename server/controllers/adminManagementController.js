@@ -228,3 +228,153 @@ export const bulkUpdateAdminStatus = async (req, res) => {
     res.status(500).json({ message: "Failed to update admin statuses" })
   }
 }
+
+/**
+ * Get fundis with subscription details for admin subscription tracking.
+ * For Premium users missing planStartDate/planEndDate, backfills from latest Subscription record.
+ */
+export const getFundiSubscriptionsForAdmin = async (req, res) => {
+  try {
+    const fundis = await prisma.fundi_User.findMany({
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        phone: true,
+        accountStatus: true,
+        subscriptionPlan: true,
+        subscriptionStatus: true,
+        planStartDate: true,
+        planEndDate: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+
+    const premiumWithMissingDates = fundis.filter(
+      (f) =>
+        (f.subscriptionPlan || "").toUpperCase() === "PREMIUM" &&
+        (f.planStartDate == null || f.planEndDate == null)
+    )
+    const fundiIds = premiumWithMissingDates.map((f) => f.id)
+
+    let latestByFundi = {}
+    if (fundiIds.length > 0) {
+      const subs = await prisma.subscription.findMany({
+        where: { fundiId: { in: fundiIds }, plan: "PREMIUM" },
+        orderBy: { endDate: "desc" },
+      })
+      for (const sub of subs) {
+        if (latestByFundi[sub.fundiId] == null) {
+          latestByFundi[sub.fundiId] = { startDate: sub.startDate, endDate: sub.endDate }
+        }
+      }
+      for (const fundi of premiumWithMissingDates) {
+        const backfill = latestByFundi[fundi.id]
+        if (backfill) {
+          try {
+            await prisma.fundi_User.update({
+              where: { id: fundi.id },
+              data: {
+                planStartDate: fundi.planStartDate ?? backfill.startDate,
+                planEndDate: fundi.planEndDate ?? backfill.endDate,
+              },
+            })
+          } catch (err) {
+            console.warn("Backfill plan dates for fundi", fundi.id, err.message)
+          }
+        }
+      }
+    }
+
+    const enriched = fundis.map((f) => {
+      const planStart = f.planStartDate ?? latestByFundi[f.id]?.startDate ?? null
+      const planEnd = f.planEndDate ?? latestByFundi[f.id]?.endDate ?? null
+      return {
+        ...f,
+        planStartDate: planStart,
+        planEndDate: planEnd,
+      }
+    })
+
+    res.status(200).json({ fundis: enriched })
+  } catch (error) {
+    console.error("Get Fundi Subscriptions For Admin Error:", error)
+    res.status(500).json({ message: "Failed to retrieve fundi subscriptions" })
+  }
+}
+
+const JOB_PAID_DAYS = 7
+const JOB_UNPAID_DAYS = 7
+
+/**
+ * Get expiry date for a job: paid jobs expire 7 days after paidAt, others 7 days after timePosted.
+ */
+function getJobExpiresAt(job) {
+  const from = job.isPaid && job.paidAt ? new Date(job.paidAt) : new Date(job.timePosted)
+  const d = new Date(from)
+  d.setDate(d.getDate() + (job.isPaid && job.paidAt ? JOB_PAID_DAYS : JOB_UNPAID_DAYS))
+  return d
+}
+
+/**
+ * Get jobs with tracking fields for admin: posted date, expires on, days remaining.
+ */
+export const getJobsTrackingForAdmin = async (req, res) => {
+  try {
+    const jobs = await prisma.job.findMany({
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        isPaid: true,
+        timePosted: true,
+        paidAt: true,
+        companyName: true,
+        contactPerson: true,
+        email: true,
+        postedById: true,
+        postedBy: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            company: true,
+          },
+        },
+      },
+      orderBy: { timePosted: "desc" },
+    })
+
+    const now = new Date()
+    const oneDayMs = 24 * 60 * 60 * 1000
+
+    const enriched = jobs.map((job) => {
+      const expiresAt = getJobExpiresAt(job)
+      const diffMs = expiresAt.getTime() - now.getTime()
+      const daysRemaining = Math.ceil(diffMs / oneDayMs)
+
+      return {
+        id: job.id,
+        title: job.title,
+        status: job.status,
+        isPaid: job.isPaid,
+        timePosted: job.timePosted,
+        paidAt: job.paidAt,
+        companyName: job.companyName,
+        contactPerson: job.contactPerson,
+        email: job.email,
+        postedBy: job.postedBy,
+        expiresAt,
+        daysRemaining: daysRemaining > 0 ? daysRemaining : 0,
+      }
+    })
+
+    res.status(200).json({ jobs: enriched })
+  } catch (error) {
+    console.error("Get Jobs Tracking For Admin Error:", error)
+    res.status(500).json({ message: "Failed to retrieve job tracking" })
+  }
+}

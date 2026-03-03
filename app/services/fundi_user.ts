@@ -1,3 +1,5 @@
+import { API_URL } from "@/app/config";
+
 export interface FundiUserData {
   id: string
   email?: string
@@ -64,7 +66,7 @@ class FundiAuthService {
   static async logout(): Promise<void> {
     if (!this.isClient()) return;
     try {
-      await fetch("http://localhost:5000/api/fundi/logoutFundi", {
+      await fetch(`${API_URL}/api/fundi/logoutFundi`, {
         method: "POST",
         headers: { Authorization: `Bearer ${this.getToken()}` },
       });

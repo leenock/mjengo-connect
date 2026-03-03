@@ -15,6 +15,7 @@ import {
   Banknote,
 } from "lucide-react";
 import FundiAuthService from "@/app/services/fundi_user";
+import { API_URL } from "@/app/config";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -96,7 +97,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         }
 
         // Fetch active jobs count
-        const jobsRes = await fetch("http://localhost:5000/api/client/jobs");
+        const jobsRes = await fetch(`${API_URL}/api/client/jobs`);
         let activeJobsCount = 0;
         let thisMonthCount = 0;
 
@@ -124,7 +125,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
         let savedJobsCount = 0;
         try {
           const savedJobsRes = await fetch(
-            "http://localhost:5000/api/fundi/saved-jobs/count",
+            `${API_URL}/api/fundi/saved-jobs/count`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,

@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
+
+import { API_URL } from "@/app/config";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/fundi/Sidebar";
 import Link from "next/link";
@@ -50,12 +52,14 @@ export default function JobListingsPage() {
   const router = useRouter();
 
   const userData = FundiAuthService.getUserData();
-  const isFreePlan = useMemo(
-    () =>
-      !userData?.subscriptionPlan ||
-      userData.subscriptionPlan.toUpperCase() !== "PREMIUM",
-    [userData?.subscriptionPlan]
-  );
+  // Treat as Free if: no plan, or plan is not Premium, or Premium but status is Expired/Trial/Cancelled (show limited jobs + upgrade CTA)
+  const LIMITED_ACCESS_STATUSES = ["EXPIRED", "TRIAL", "CANCELLED"];
+  const isFreePlan = useMemo(() => {
+    const plan = (userData?.subscriptionPlan || "").toUpperCase();
+    const status = (userData?.subscriptionStatus || "").toUpperCase();
+    if (!plan || plan !== "PREMIUM") return true;
+    return LIMITED_ACCESS_STATUSES.includes(status);
+  }, [userData?.subscriptionPlan, userData?.subscriptionStatus]);
 
   // Fetch user data (run once on mount)
   useEffect(() => {
@@ -70,7 +74,7 @@ export default function JobListingsPage() {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:5000/api/client/jobs");
+        const res = await fetch(`${API_URL}/api/client/jobs`);
         const data = await res.json();
 
         // Filter only paid and active jobs

@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+
+import { API_URL } from "@/app/config";
 import { useParams, useRouter } from "next/navigation";
 import Sidebar from "@/components/fundi/Sidebar";
 import {
@@ -62,7 +64,7 @@ export default function JobDetailsPage() {
       try {
         setLoading(true);
         const res = await fetch(
-          `http://localhost:5000/api/client/jobs/${jobId}`
+          `${API_URL}/api/client/jobs/${jobId}`
         );
         if (!res.ok)
           throw new Error(`Failed to fetch job (status ${res.status})`);
@@ -88,7 +90,7 @@ export default function JobDetailsPage() {
         }
 
         try {
-            const res = await fetch(`http://localhost:5000/api/fundi/saved-jobs/check/${jobId}`, {
+            const res = await fetch(`${API_URL}/api/fundi/saved-jobs/check/${jobId}`, {
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`,
@@ -124,7 +126,7 @@ export default function JobDetailsPage() {
     try {
       if (isSaved) {
         // Remove saved job
-        const res = await fetch(`http://localhost:5000/api/fundi/saved-jobs/remove/${jobId}`, {
+        const res = await fetch(`${API_URL}/api/fundi/saved-jobs/remove/${jobId}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -139,7 +141,7 @@ export default function JobDetailsPage() {
         }
       } else {
         // Save job
-        const res = await fetch("http://localhost:5000/api/fundi/saved-jobs/save", {
+        const res = await fetch(`${API_URL}/api/fundi/saved-jobs/save`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

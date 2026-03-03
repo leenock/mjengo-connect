@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import Sidebar from "@/components/job_posting/Sidebar"
 import ClientAuthService from "@/app/services/client_user"
 import Toast from "@/components/ui/Toast"
+import { API_URL } from "@/app/config"
 import {
   ArrowLeft,
   ArrowRight,
@@ -99,7 +100,7 @@ export default function EditJobPage() {
         router.push("/auth/job-posting")
         return
       }
-      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}`, {
+      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -313,7 +314,7 @@ export default function EditJobPage() {
         throw new Error("Authentication required. Please log in again.")
       }
       await withMinimumLoadingTime(async () => {
-        const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}`, {
+        const response = await fetch(`${API_URL}/api/client/jobs/${jobId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",

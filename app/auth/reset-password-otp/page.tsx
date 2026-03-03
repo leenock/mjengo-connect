@@ -7,6 +7,7 @@ import { Eye, EyeOff, Lock, Phone, ArrowRight, RefreshCw, Timer } from "lucide-r
 import Header from "@/components/landingpage/Header"
 import Footer from "@/components/landingpage/Footer"
 import Toast from "@/components/ui/Toast"
+import { API_URL } from "@/app/config"
 
 export default function ResetPasswordOtpPage() {
   const router = useRouter()
@@ -66,7 +67,7 @@ export default function ResetPasswordOtpPage() {
     setToast(null)
 
     try {
-      const response = await fetch("http://localhost:5000/api/client/auth/resend-otp", {
+      const response = await fetch(`${API_URL}/api/client/auth/resend-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +129,7 @@ export default function ResetPasswordOtpPage() {
 
     setIsLoading(true)
     try {
-      const response = await fetch("http://localhost:5000/api/client/auth/verify-otp", {
+      const response = await fetch(`${API_URL}/api/client/auth/verify-otp`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

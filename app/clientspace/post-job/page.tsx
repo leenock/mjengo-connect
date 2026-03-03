@@ -4,6 +4,7 @@ import Sidebar from "@/components/job_posting/Sidebar"
 import { useRouter } from "next/navigation"
 import ClientAuthService, { type ClientUserData } from "@/app/services/client_user"
 import Toast from "@/components/ui/Toast"
+import { API_URL } from "@/app/config"
 import {
   BarChart3,
   Users,
@@ -94,7 +95,7 @@ export default function DashboardPage() {
       if (!token) {
         throw new Error("Authentication required")
       }
-      const response = await fetch("http://localhost:5000/api/client/my-jobs", {
+      const response = await fetch(`${API_URL}/api/client/my-jobs`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

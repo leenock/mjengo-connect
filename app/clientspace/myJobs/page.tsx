@@ -1,5 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
+
+import { API_URL } from "@/app/config"
 import { useRouter } from "next/navigation"
 import Sidebar from "@/components/job_posting/Sidebar"
 import ClientAuthService, { type ClientUserData } from "@/app/services/client_user"
@@ -126,7 +128,7 @@ export default function MyJobsPage() {
       if (!token) {
         throw new Error("Authentication required")
       }
-      const response = await fetch("http://localhost:5000/api/client/my-jobs?limit=100", {
+      const response = await fetch(`${API_URL}/api/client/my-jobs?limit=100`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -159,7 +161,7 @@ export default function MyJobsPage() {
       const token = ClientAuthService.getToken()
       if (!token) return
 
-      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}/paid-period`, {
+      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}/paid-period`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -192,7 +194,7 @@ export default function MyJobsPage() {
       if (!token) {
         throw new Error("Authentication required")
       }
-      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}/close`, {
+      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}/close`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -229,7 +231,7 @@ export default function MyJobsPage() {
       if (!token) {
         throw new Error("Authentication required")
       }
-      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}/reactivate`, {
+      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}/reactivate`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -267,7 +269,7 @@ export default function MyJobsPage() {
       if (!token) {
         throw new Error("Authentication required")
       }
-      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}/rerun`, {
+      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}/rerun`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -304,7 +306,7 @@ export default function MyJobsPage() {
       if (!token) {
         throw new Error("Authentication required")
       }
-      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}`, {
+      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -20,6 +20,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import FundiAuthService from "@/app/services/fundi_user";
+import { API_URL } from "@/app/config";
 
 const FREE_PLAN_JOB_LIMIT = 3;
 
@@ -58,6 +59,7 @@ export default function JobListingsPage() {
     totalPaid?: number;
     nextBillingDate?: string | null;
     currentPlan?: string;
+    subscriptionStatus?: string;
   } | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -88,11 +90,11 @@ export default function JobListingsPage() {
       try {
         setStatsLoading(true);
         const [subRes, savedRes] = await Promise.all([
-          fetch("http://localhost:5000/api/fundi/subscription/details", {
+          fetch(`${API_URL}/api/fundi/subscription/details`, {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
           }),
-          fetch("http://localhost:5000/api/fundi/saved-jobs/count", {
+          fetch(`${API_URL}/api/fundi/saved-jobs/count`, {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
           }),
@@ -104,6 +106,7 @@ export default function JobListingsPage() {
               totalPaid: subData.data.totalPaid,
               nextBillingDate: subData.data.nextBillingDate ?? subData.data.planEndDate ?? null,
               currentPlan: subData.data.currentPlan,
+              subscriptionStatus: subData.data.subscriptionStatus,
             });
           }
         }
@@ -125,19 +128,21 @@ export default function JobListingsPage() {
   }, []);
 
   const userData = FundiAuthService.getUserData();
-  const isFreePlan = useMemo(
-    () =>
-      !userData?.subscriptionPlan ||
-      userData.subscriptionPlan.toUpperCase() !== "PREMIUM",
-    [userData?.subscriptionPlan]
-  );
+  // Treat as Free if: no plan, or plan is not Premium, or Premium but status is Expired/Trial/Cancelled (show limited jobs + upgrade CTA)
+  const LIMITED_ACCESS_STATUSES = ["EXPIRED", "TRIAL", "CANCELLED"];
+  const isFreePlan = useMemo(() => {
+    const plan = (userData?.subscriptionPlan || "").toUpperCase();
+    const status = (userData?.subscriptionStatus || "").toUpperCase();
+    if (!plan || plan !== "PREMIUM") return true;
+    return LIMITED_ACCESS_STATUSES.includes(status);
+  }, [userData?.subscriptionPlan, userData?.subscriptionStatus]);
 
   // Fetch jobs data
   useEffect(() => {
     async function fetchJobs() {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:5000/api/client/jobs");
+        const res = await fetch(`${API_URL}/api/client/jobs`);
         if (!res.ok) {
           throw new Error(`Failed to fetch jobs (status ${res.status})`);
         }
@@ -213,7 +218,9 @@ export default function JobListingsPage() {
     }
   };
 
-  const isPremium = subscriptionDetails?.currentPlan?.toUpperCase() === "PREMIUM";
+  const isPremium =
+    subscriptionDetails?.currentPlan?.toUpperCase() === "PREMIUM" &&
+    subscriptionDetails?.subscriptionStatus?.toUpperCase() === "ACTIVE";
   const totalPaidFormatted =
     subscriptionDetails?.totalPaid != null
       ? `KSh ${subscriptionDetails.totalPaid.toLocaleString()}`

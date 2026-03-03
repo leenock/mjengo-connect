@@ -4,6 +4,8 @@ import {
   getRecentActivities,
   getSystemHealth,
   bulkUpdateAdminStatus,
+  getFundiSubscriptionsForAdmin,
+  getJobsTrackingForAdmin,
 } from "../controllers/adminManagementController.js"
 import { adminAuthMiddleware, superAdminMiddleware } from "../middleware/adminAuth.js"
 
@@ -16,5 +18,11 @@ router.get("/system/health", adminAuthMiddleware, getSystemHealth)
 
 // Bulk operations (Super Admin only)
 router.put("/bulk/status", adminAuthMiddleware, superAdminMiddleware, bulkUpdateAdminStatus)
+
+// Subscription tracking: fundis with plan start/end and days remaining
+router.get("/subscriptions/fundis", adminAuthMiddleware, getFundiSubscriptionsForAdmin)
+
+// Job tracking: posted date, expires on, days remaining
+router.get("/jobs/tracking", adminAuthMiddleware, getJobsTrackingForAdmin)
 
 export default router

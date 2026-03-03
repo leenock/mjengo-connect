@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
+import { API_URL } from "@/app/config";
 import AdminSidebar from "@/components/admin/Sidebar";
 import {
   MessageSquare,
@@ -103,7 +105,7 @@ export default function AdminSupportTickets() {
       params.set("limit", "10");
 
       const res = await fetch(
-        `http://localhost:5000/api/admin/support/tickets?${params.toString()}`,
+        `${API_URL}/api/admin/support/tickets?${params.toString()}`,
         {
           headers: { ...AdminAuthService.getAuthHeaders() },
           cache: "no-store",
@@ -180,7 +182,7 @@ export default function AdminSupportTickets() {
 
   const loadAdmins = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/getAllAdmins`, {
+      const res = await fetch(`${API_URL}/api/admin/getAllAdmins`, {
         headers: { ...AdminAuthService.getAuthHeaders() },
       });
 
@@ -219,7 +221,7 @@ export default function AdminSupportTickets() {
     setAssigningId(ticketId);
     try {
       const res = await fetch(
-        `http://localhost:5000/api/admin/support/tickets/${ticketId}/assign`,
+        `${API_URL}/api/admin/support/tickets/${ticketId}/assign`,
         {
           method: "PUT",
           headers: {

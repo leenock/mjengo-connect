@@ -1,3 +1,5 @@
+import { API_URL } from "@/app/config";
+
 export interface ClientUserData {
   id: string;
   email?: string; // Email address of the client user
@@ -45,7 +47,7 @@ class ClientAuthService {
 
   static async logout(): Promise<void> {
     try {
-      await fetch("http://localhost:5000/api/client/auth/logout", {
+      await fetch(`${API_URL}/api/client/auth/logout`, {
         method: "POST",
         headers: { Authorization: `Bearer ${this.getToken()}` },
       });

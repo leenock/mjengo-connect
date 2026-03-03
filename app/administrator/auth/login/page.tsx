@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import { Crown, Lock, Mail, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import AdminAuthService from "@/app/services/admin_auth"
+import { API_URL } from "@/app/config"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -32,7 +33,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const response = await fetch("http://localhost:5000/api/admin/auth/login", {
+      const response = await fetch(`${API_URL}/api/admin/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

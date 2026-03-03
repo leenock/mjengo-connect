@@ -2,6 +2,8 @@
 
 import type React from "react"
 
+
+import { API_URL } from "@/app/config"
 import { useState, useEffect } from "react"
 import AdminSidebar from "@/components/admin/Sidebar" // Added AdminSidebar import
 import {
@@ -86,7 +88,7 @@ export default function AdminSettings() {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/admin/getAllAdmins", {
+      const response = await fetch(`${API_URL}/api/admin/getAllAdmins`, {
         headers: {
           "Content-Type": "application/json",
           ...AdminAuthService.getAuthHeaders(),
@@ -130,7 +132,7 @@ export default function AdminSettings() {
     setSuccess(null)
 
     try {
-      const response = await fetch("http://localhost:5000/api/admin/createAdmin", {
+      const response = await fetch(`${API_URL}/api/admin/createAdmin`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -197,7 +199,7 @@ export default function AdminSettings() {
         delete (updateData as { password?: string }).password
       }
 
-      const response = await fetch(`http://localhost:5000/api/admin/updateAdmin/${editingUser.id}`, {
+      const response = await fetch(`${API_URL}/api/admin/updateAdmin/${editingUser.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -245,7 +247,7 @@ export default function AdminSettings() {
     setSuccess(null)
 
     try {
-      const response = await fetch(`http://localhost:5000/api/admin/deleteAdmin/${deletingUser.id}`, {
+      const response = await fetch(`${API_URL}/api/admin/deleteAdmin/${deletingUser.id}`, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",

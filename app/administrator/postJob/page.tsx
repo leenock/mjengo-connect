@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+
+import { API_URL } from "@/app/config";
 import type React from "react";
 import AdminSidebar from "@/components/admin/Sidebar";
 import AdminAuthService from "@/app/services/admin_auth";
@@ -270,7 +272,7 @@ export default function AdminPostJob() {
       console.log("📤 Submitting job data to server:", submissionData);
 
       const response = await fetch(
-        "http://localhost:5000/api/admin/jobs/jobs",
+        `${API_URL}/api/admin/jobs/jobs`,
         {
           method: "POST",
           headers: {

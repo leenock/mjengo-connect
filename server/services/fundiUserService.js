@@ -94,6 +94,8 @@ export const getAllFundis = async () => {
         accountStatus: true,
         subscriptionPlan: true,
         subscriptionStatus: true,
+        planStartDate: true,
+        planEndDate: true,
         createdAt: true,
         updatedAt: true,
       },

@@ -26,6 +26,7 @@ import {
   Trash2,
   XCircle,
 } from "lucide-react"
+import { API_URL } from "@/app/config"
 
 interface Job {
   id: string
@@ -80,7 +81,7 @@ export default function JobDetailsPage() {
         router.push("/auth/job-posting")
         return
       }
-      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}`, {
+      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -118,7 +119,7 @@ export default function JobDetailsPage() {
       if (!token) {
         throw new Error("Authentication required")
       }
-      const response = await fetch(`http://localhost:5000/api/client/jobs/${jobId}`, {
+      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,

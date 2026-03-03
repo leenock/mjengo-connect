@@ -1,6 +1,9 @@
 "use client"
 import { useState, useEffect } from "react"
+
+import { API_URL } from "@/app/config"
 import Sidebar from "@/components/fundi/Sidebar"
+import Toast from "@/components/ui/Toast"
 import FundiAuthService, { type FundiUserData } from "@/app/services/fundi_user"
 import {
   CreditCard,
@@ -38,7 +41,7 @@ function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) 
       const token = FundiAuthService.getToken()
       if (!token) return
 
-      const response = await fetch("http://localhost:5000/api/fundi/wallet/balance", {
+      const response = await fetch(`${API_URL}/api/fundi/wallet/balance`, {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -80,7 +83,7 @@ function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) 
       }
 
       // Subscribe to premium (deducts 200 KES from wallet)
-      const response = await fetch("http://localhost:5000/api/fundi/subscription/premium", {
+      const response = await fetch(`${API_URL}/api/fundi/subscription/premium`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -236,6 +239,7 @@ export default function SubscriptionPage() {
   const [isOpen, setIsOpen] = useState(false)
   const [currentUser, setCurrentUser] = useState<FundiUserData | null>(null)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [successToast, setSuccessToast] = useState<{ message: string } | null>(null)
   const [subscriptionUpdated, setSubscriptionUpdated] = useState(false)
   const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null)
   const [isLoadingDetails, setIsLoadingDetails] = useState(true)
@@ -252,7 +256,7 @@ export default function SubscriptionPage() {
       try {
         const token = FundiAuthService.getToken()
         if (token) {
-          const response = await fetch("http://localhost:5000/api/fundi/subscription/details", {
+          const response = await fetch(`${API_URL}/api/fundi/subscription/details`, {
             headers: { Authorization: `Bearer ${token}` },
           })
           if (response.ok) {
@@ -284,8 +288,15 @@ export default function SubscriptionPage() {
   }, [subscriptionUpdated])
 
   const handlePaymentSuccess = () => {
+    setSuccessToast({ message: "You're now on Premium! Enjoy unlimited job access." })
     setSubscriptionUpdated(!subscriptionUpdated)
   }
+
+  // Prefer API subscription details so after cron downgrade we show Free as current immediately
+  const effectivePlan = subscriptionDetails?.currentPlan ?? currentUser?.subscriptionPlan
+  const effectiveStatus = subscriptionDetails?.subscriptionStatus ?? currentUser?.subscriptionStatus
+  const isPremium = effectivePlan === "PREMIUM" && effectiveStatus === "ACTIVE"
+  const isFree = effectivePlan === "FREE" || effectiveStatus === "EXPIRED" || !effectivePlan
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "Not set"
@@ -301,20 +312,12 @@ export default function SubscriptionPage() {
   }
 
   const getSubscriptionStatus = () => {
-    if (!currentUser) return "Unknown"
-    // Premium: "Premium Active"; Free / Trial: show "Active"
-    if (currentUser.subscriptionPlan === "PREMIUM") {
-      return "Premium Active"
-    }
+    if (isPremium) return "Premium Active"
     return "Active"
   }
 
   const getCurrentPlan = () => {
-    if (!currentUser) return "Free Plan"
-    // Only Premium gets "Premium Plan"; Free and Trial both show "Free Plan"
-    if (currentUser.subscriptionPlan === "PREMIUM") {
-      return "Premium Plan"
-    }
+    if (isPremium) return "Premium Plan"
     return "Free Plan"
   }
 
@@ -326,13 +329,23 @@ export default function SubscriptionPage() {
   }
 
   const getNextBillingDate = () => {
-    if (subscriptionDetails?.nextBillingDate) {
-      return formatDate(subscriptionDetails.nextBillingDate)
+    if (!isPremium) {
+      return "—"
     }
-    if (!currentUser || currentUser.subscriptionPlan !== "PREMIUM") {
-      return "Not applicable"
+    const nextDate = subscriptionDetails?.nextBillingDate
+    if (!nextDate) {
+      return "—"
     }
-    return "Not set"
+    try {
+      const date = new Date(nextDate)
+      const now = new Date()
+      if (date.getTime() <= now.getTime()) {
+        return "Expired"
+      }
+      return formatDate(nextDate)
+    } catch {
+      return "—"
+    }
   }
 
   const currentSubscription = {
@@ -353,9 +366,7 @@ export default function SubscriptionPage() {
       borderColor: "border-slate-200",
       buttonBg: "bg-gradient-to-r from-slate-500 to-slate-600",
       buttonHoverBg: "hover:from-slate-600 hover:to-slate-700",
-      isCurrent:
-        currentUser?.subscriptionPlan === "FREE" ||
-        (!currentUser?.subscriptionPlan && currentUser?.subscriptionStatus !== "TRIAL"),
+      isCurrent: isFree,
     },
     {
       name: "Premium Plan",
@@ -368,18 +379,26 @@ export default function SubscriptionPage() {
       buttonBg: "bg-gradient-to-r from-orange-500 via-pink-500 to-red-500",
       buttonHoverBg: "hover:from-orange-600 hover:via-pink-600 hover:to-red-600",
       recommended: true,
-      isCurrent: currentUser?.subscriptionPlan === "PREMIUM",
+      isCurrent: isPremium,
     },
   ]
 
   const handleUpgrade = (planName: string) => {
-    if (planName === "Premium Plan" && currentUser?.subscriptionPlan !== "PREMIUM") {
+    if (planName === "Premium Plan" && !isPremium) {
       setShowPaymentModal(true)
     }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 lg:flex font-inter">
+      {successToast && (
+        <Toast
+          message={successToast.message}
+          type="success"
+          onClose={() => setSuccessToast(null)}
+          duration={5000}
+        />
+      )}
       <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
 
       <PaymentModal
@@ -413,6 +432,23 @@ export default function SubscriptionPage() {
               </div>
             </div>
           </div>
+
+          {/* Free Plan notice – show when on Free (e.g. after premium expired) */}
+          {!isLoadingDetails && isFree && (
+            <div className="mb-8 rounded-2xl bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 p-6 shadow-lg">
+              <p className="text-slate-800 font-semibold mb-2">
+                You&apos;re on the Free Plan. Upgrade to Premium to see all jobs and never miss an opportunity.
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowPaymentModal(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-pink-500 text-white font-bold rounded-xl hover:from-orange-600 hover:to-pink-600 shadow-md transition-all"
+              >
+                Upgrade to Premium
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           {/* Current Subscription */}
           <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-6 sm:p-8 mb-10">

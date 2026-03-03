@@ -1,5 +1,7 @@
 "use client"
 import Link from "next/link"
+
+import { API_URL } from "@/app/config"
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import AdminAuthService from "@/app/services/admin_auth"
@@ -18,6 +20,8 @@ import {
   LogOut,
   X,
   Crown,
+  CreditCard,
+  Calendar,
 } from "lucide-react"
 
 interface AdminSidebarProps {
@@ -160,7 +164,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchJobCounts = async () => {
       try {
         setLoadingJobs(true)
-        const response = await fetch('http://localhost:5000/api/admin/jobs/jobs', {
+        const response = await fetch(`${API_URL}/api/admin/jobs/jobs`, {
           headers: { 
             "Content-Type": "application/json",
             ...AdminAuthService.getAuthHeaders() 
@@ -222,7 +226,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchClientCounts = async () => {
       try {
         setLoadingClients(true)
-        const response = await fetch('http://localhost:5000/api/client/getAllClientUsers', {
+        const response = await fetch(`${API_URL}/api/client/getAllClientUsers`, {
           headers: { 
             "Content-Type": "application/json",
             ...AdminAuthService.getAuthHeaders() 
@@ -281,7 +285,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchFundiCounts = async () => {
       try {
         setLoadingFundis(true)
-        const response = await fetch('http://localhost:5000/api/fundi/getAllFundis', {
+        const response = await fetch(`${API_URL}/api/fundi/getAllFundis`, {
           headers: { 
             "Content-Type": "application/json",
             ...AdminAuthService.getAuthHeaders() 
@@ -340,7 +344,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchUserCounts = async () => {
       try {
         setLoadingUsers(true)
-        const response = await fetch('http://localhost:5000/api/admin/getAllAdmins', {
+        const response = await fetch(`${API_URL}/api/admin/getAllAdmins`, {
           headers: { 
             "Content-Type": "application/json",
             ...AdminAuthService.getAuthHeaders() 
@@ -404,7 +408,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchMessageCounts = async () => {
       try {
         setLoadingMessages(true)
-        const response = await fetch('http://localhost:5000/api/admin/support/tickets', {
+        const response = await fetch(`${API_URL}/api/admin/support/tickets`, {
           headers: { 
             "Content-Type": "application/json",
             ...AdminAuthService.getAuthHeaders() 
@@ -476,6 +480,18 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
       icon: UserCheck,
       badge: loadingFundis ? "..." : fundiCounts.total.toString(),
       description: `Active: ${fundiCounts.active}, Suspended: ${fundiCounts.suspended}, Pending: ${fundiCounts.pending}`,
+    },
+    {
+      name: "Fundi Subscriptions",
+      href: "/administrator/subscriptions",
+      icon: CreditCard,
+      description: "Track premium subscriptions and days until expiry",
+    },
+    {
+      name: "Job Tracking",
+      href: "/administrator/job-tracking",
+      icon: Calendar,
+      description: "Track job posted dates, expiry and days remaining",
     },
     {
       name: "Manage Clients",
