@@ -3,193 +3,188 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { Search, Briefcase, MapPin, Sparkles, ArrowRight, Building2, Users, FileCheck } from "lucide-react";
 
 export default function HeroSection() {
   const [isVisible, setIsVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsVisible(true), 100);
+    const timer = setTimeout(() => setIsVisible(true), 80);
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <section className="relative min-h-screen w-full bg-gradient-to-br from-yellow-50 via-white to-yellow-50 overflow-hidden">
-      {/* Background blobs */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-yellow-300 rounded-full mix-blend-multiply blur-xl animate-pulse" />
-        <div className="absolute top-40 right-10 w-64 h-64 bg-orange-400 rounded-full mix-blend-multiply blur-xl animate-pulse delay-2000" />
-        <div className="absolute bottom-20 left-20 w-64 h-64 bg-gray-400 rounded-full mix-blend-multiply blur-xl animate-pulse delay-4000" />
+    <section className="relative min-h-screen w-full overflow-hidden bg-[#0f172a]">
+      {/* AI-style mesh gradient background */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(251,146,60,0.15),transparent)]" />
+        <div className="absolute top-1/2 -right-1/3 w-[80%] h-[80%] bg-[radial-gradient(ellipse_60%_60%_at_100%_50%,rgba(234,88,12,0.08),transparent)]" />
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-slate-900/40 to-transparent" />
+        {/* Subtle grid */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: "64px 64px",
+          }}
+        />
       </div>
 
-      <div className="relative z-10 px-6 sm:px-10 lg:px-20 xl:px-28 pt-20 lg:pt-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center max-w-screen-xl mx-auto min-h-[calc(100vh-6rem)]">
-          {/* Left - Text */}
-          <div
-            className={`transition-all duration-1000 ease-out ${
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-10"
-            }`}
-          >
-            {/* Badge */}
-            <div className="inline-flex items-center px-4 py-2 bg-yellow-200 text-yellow-900 rounded-full text-sm font-medium border border-yellow-300 mb-4">
-              <span className="w-2 h-2 bg-yellow-600 rounded-full mr-2 animate-pulse" />
-              🚧 Connecting Kenya Construction Industry
-            </div>
-
-            {/* Heading */}
-            <div className="space-y-4 max-w-xl">
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-5xl font-bold leading-tight tracking-tight text-gray-900">
-                <span>Connecting </span>
-                <span className="bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
-                  Skilled Fundis
+      <div className="relative z-10 px-4 sm:px-6 lg:px-8 pt-24 pb-16 lg:pt-28 lg:pb-24">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[calc(100vh-8rem)]">
+            {/* Left column - copy + search + stats */}
+            <div
+              className={`transition-all duration-700 ease-out ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+              }`}
+            >
+              {/* Badge */}
+              <div className="flex flex-wrap items-center gap-2 mb-6">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-300 text-sm font-medium">
+                  <Sparkles className="w-4 h-4 text-amber-400" />
+                  Kenya&apos;s construction job platform
                 </span>
+                <span className="text-slate-500 text-sm">Trusted by clients & fundis</span>
+              </div>
+
+              {/* Headline + description */}
+              <h1 className="text-4xl sm:text-5xl lg:text-5xl xl:text-6xl font-extrabold tracking-tight text-white leading-[1.1]">
+                Find your next
                 <br />
-                <span>with Construction</span>
-                <br />
-                <span className="text-gray-700">Services</span>
+                <span className="bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 bg-clip-text text-transparent">
+                  construction job
+                </span>
               </h1>
-              <div className="w-20 h-1.5 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-full" />
-            </div>
+              <p className="mt-5 text-lg sm:text-xl text-slate-400 max-w-xl leading-relaxed">
+                Post jobs or discover skilled fundis — masons, plumbers, electricians, painters & more.{" "}
+                <span className="text-slate-300 font-medium">Reliable. Verified. Across Kenya.</span>
+              </p>
 
-            {/* Description */}
-            <p className="mt-6 text-base sm:text-lg lg:text-xl text-gray-700 leading-relaxed max-w-2xl font-[Inter] tracking-tight">
-              Whether you are building, renovating, or repairing — quickly find
-              skilled{" "}
-              <span className="font-semibold text-balance text-orange-600 italic">
-                fundis, masons, plumbers, painters, welders, and electricians
-              </span>{" "}
-              near you. <br className="hidden sm:inline" />
-              <span className="block mt-4 text-lg sm:text-xl lg:text-balance font-extrabold text-gray-900">
-                Reliable. Affordable. Nearby.
-              </span>
-            </p>
-
-            {/* Stats */}
-            <div className="flex flex-wrap gap-6 py-4">
-              {[
-                ["1000+", "Skilled Workers"],
-                ["500+", "Jobs Posted"],
-                ["5+", "Counties Served"],
-              ].map(([stat, label], i) => (
-                <div key={i} className="text-center">
-                  <div className="text-2xl lg:text-3xl font-bold text-yellow-700">
-                    {stat}
-                  </div>
-                  <div className="text-sm text-gray-600 font-medium">
-                    {label}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Link href="/auth/job-posting" passHref>
-                <div className="group relative px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-semibold text-base transition hover:from-yellow-700 hover:to-orange-700 hover:shadow-lg transform hover:-translate-y-1 cursor-pointer">
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className="w-5 h-5 group-hover:scale-110 transition-transform"
-                      fill="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                    </svg>
-                    <span>Post a Job</span>
-                  </div>
-                </div>
-              </Link>
-              <Link href="/Jobs-list" passHref>
-                <div className="group px-6 py-3 bg-white text-yellow-800 border border-yellow-300 rounded-xl font-semibold text-base transition hover:border-yellow-600 hover:text-yellow-700 hover:shadow-md transform hover:-translate-y-1 cursor-pointer">
-                  <div className="flex items-center space-x-2">
-                    <svg
-                      className="w-5 h-5 group-hover:scale-110 transition-transform"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              {/* Hero search / CTA block */}
+              <div
+                className={`mt-8 transition-all duration-700 ease-out delay-150 ${
+                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                }`}
+              >
+                <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-4 sm:p-5 shadow-2xl shadow-black/20">
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                      <input
+                        type="text"
+                        placeholder="Job title, skill or keyword..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-white/10 border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                       />
-                    </svg>
-                    <span>Job Listings</span>
+                    </div>
+                    <div className="flex gap-2">
+                      <Link
+                        href={searchQuery.trim() ? `/Jobs-list?q=${encodeURIComponent(searchQuery.trim())}` : "/Jobs-list"}
+                        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold shadow-lg shadow-amber-500/25 hover:from-amber-400 hover:to-orange-400 hover:shadow-amber-500/30 transition-all"
+                      >
+                        <Search className="w-5 h-5" />
+                        Find jobs
+                      </Link>
+                      <Link
+                        href="/auth/job-posting"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/15 transition-all"
+                      >
+                        <Briefcase className="w-5 h-5" />
+                        Post a job
+                      </Link>
+                    </div>
                   </div>
+                  <p className="mt-3 text-slate-500 text-sm">
+                    e.g. Mason, Plumber, Electrician, Nairobi, Mombasa
+                  </p>
                 </div>
-              </Link>
-            </div>
+              </div>
 
-            {/* Trust */}
-            <div className="flex items-center space-x-4 pt-6 border-t border-yellow-200 mt-6">
-              <div className="flex -space-x-2">
-                {["👨‍🔧", "👷‍♀️", "🔨"].map((emoji, i) => (
-                  <div
-                    key={i}
-                    className="w-8 h-8 bg-yellow-200 rounded-full border-2 border-white flex items-center justify-center text-sm"
-                  >
-                    {emoji}
+              {/* Stats */}
+              <div
+                className={`mt-8 flex flex-wrap gap-8 sm:gap-10 transition-all duration-700 ease-out delay-300 ${
+                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                }`}
+              >
+                {[
+                  { value: "500+", label: "Live jobs", icon: FileCheck },
+                  { value: "200+", label: "Skilled fundis", icon: Users },
+                  { value: "Kenya", label: "Nationwide", icon: MapPin },
+                ].map(({ value, label, icon: Icon }, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                    <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10">
+                      <Icon className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div>
+                      <div className="text-xl sm:text-2xl font-bold text-white">{value}</div>
+                      <div className="text-sm text-slate-500 font-medium">{label}</div>
+                    </div>
                   </div>
                 ))}
               </div>
-              <span className="text-sm text-gray-700 font-medium">
-                Trusted by 1000+ professionals
-              </span>
+
+              {/* Secondary CTAs */}
+              <div
+                className={`mt-8 flex flex-wrap items-center gap-4 transition-all duration-700 ease-out delay-[400ms] ${
+                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+                }`}
+              >
+                <Link
+                  href="/Jobs-list"
+                  className="group inline-flex items-center gap-2 text-amber-400 font-semibold hover:text-amber-300 transition-colors"
+                >
+                  Browse all jobs
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <span className="text-slate-600">|</span>
+                <Link
+                  href="/auth/job-listing"
+                  className="inline-flex items-center gap-2 text-slate-400 font-medium hover:text-white transition-colors"
+                >
+                  <Building2 className="w-4 h-4" />
+                  I&apos;m a fundi
+                </Link>
+              </div>
             </div>
-          </div>
 
-          {/* Right - Image */}
-          <div
-            className={`relative transition-all duration-1000 ease-out delay-300 ${
-              isVisible
-                ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-10"
-            }`}
-          >
-            <div className="relative mx-auto rounded-3xl shadow-2xl overflow-hidden">
-              {/* Background Glow */}
-              <div className="absolute -top-4 -right-4 w-full h-full bg-gradient-to-br from-yellow-600 to-orange-600 rounded-3xl transform rotate-3 opacity-15" />
-              <div className="absolute -bottom-4 -left-4 w-full h-full bg-gradient-to-br from-gray-600 to-yellow-600 rounded-3xl transform -rotate-2 opacity-15" />
-
+            {/* Right column - image side by side */}
+            <div
+              className={`relative transition-all duration-700 ease-out delay-300 ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+              }`}
+            >
               <div className="relative">
-                <Image
-                  src="/images/workers.jpg"
-                  alt="Construction workers using MJENGO Connect"
-                  width={700}
-                  height={400}
-                  className="object-cover transition-transform duration-700 hover:scale-105 rounded-3xl"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-3xl" />
-
-                {/* Rating card */}
-                <div className="absolute bottom-4 left-4 right-4 md:right-auto md:w-64 bg-white/95 backdrop-blur-md rounded-xl p-3 shadow-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-yellow-200 rounded-lg flex items-center justify-center">
-                      <svg
-                        className="w-5 h-5 text-yellow-700"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <div className="font-semibold text-gray-900">
-                        4.9/5 Rating
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        From 500+ satisfied customers
+                <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent z-10 pointer-events-none" />
+                  <Image
+                    src="/images/workers.jpg"
+                    alt="Construction professionals - MJENGO Connect"
+                    width={700}
+                    height={480}
+                    className="w-full h-auto object-cover aspect-[4/3] lg:aspect-[3/2]"
+                    priority
+                  />
+                  <div className="absolute bottom-4 left-4 right-4 sm:right-auto sm:max-w-xs z-20">
+                    <div className="rounded-xl bg-slate-900/90 backdrop-blur-md border border-white/10 p-4 shadow-xl">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                          <Briefcase className="w-5 h-5 text-amber-400" />
+                        </div>
+                        <div>
+                          <p className="font-semibold text-white text-sm">Verified jobs daily</p>
+                          <p className="text-slate-400 text-xs">New postings from real clients</p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
+                <div className="absolute -inset-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 rounded-3xl blur-2xl -z-10" />
               </div>
             </div>
-
-            {/* Decorative elements */}
-            <div className="absolute -bottom-6 -left-6 w-16 h-16 bg-gradient-to-br from-gray-600 to-yellow-600 rounded-full shadow-lg animate-pulse hidden md:block" />
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import {
   ChevronDown,
   Search,
@@ -86,7 +87,7 @@ export default function FAQs() {
       category: "clients",
       question: "How do I post a job?",
       answer:
-        "Just fill in job details like type of work, location, time, and budget. Then pay a small listing fee (like Ksh 300), and we will post your job.",
+        "Just fill in job details like type of work, location, time, and budget. Then pay a small listing fee (Ksh 300), and after your Job is verified, and payed it will be listed on the platform for fundis to browse and contact you directly.",
     },
     {
       id: "can-they-conatact-me",
@@ -101,14 +102,14 @@ export default function FAQs() {
       id: "how-to-see-jobs",
       category: "fundis",
       question: "How do I see jobs?",
-      answer: "You can browse jobs by location or trade present on the site.",
+      answer: "You can browse jobs by location or type of work present on the site.",
     },
     {
       id: "how-to-apply",
       category: "fundis",
       question: "How do I apply for a job?",
       answer:
-        "After you register, you get 7 days of free access to full job details. After that, you can subscribe for only Ksh 200 per month.",
+        "After you register, you get to see full job details listed on the site and can contact the client directly. You can subscribe for only Ksh 200 per month to get access to all jobs and be able to save jobs for later.",
     },
   ];
 
@@ -155,9 +156,8 @@ export default function FAQs() {
       <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 lg:px-20">
         {/* Header Section */}
         <div
-          className={`text-center mb-16 transition-all duration-1000 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`text-center mb-16 transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
         >
           <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-100 to-yellow-100 rounded-full text-sm font-medium text-orange-800 mb-6">
             <MessageCircle className="w-4 h-4 mr-2" />
@@ -174,9 +174,8 @@ export default function FAQs() {
 
         {/* Search Bar */}
         <div
-          className={`max-w-2xl mx-auto mb-12 transition-all duration-1000 delay-300 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`max-w-2xl mx-auto mb-12 transition-all duration-1000 delay-300 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
         >
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -194,16 +193,14 @@ export default function FAQs() {
 
         {/* Category Tabs */}
         <div
-          className={`flex flex-wrap justify-center gap-2 mb-12 transition-all duration-1000 delay-500 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`flex flex-wrap justify-center gap-2 mb-12 transition-all duration-1000 delay-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
         >
           <button
-            className={`px-5 py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center space-x-2 ${
-              activeCategory === "all"
+            className={`px-5 py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center space-x-2 ${activeCategory === "all"
                 ? "bg-orange-500 text-white shadow-lg"
                 : "bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600"
-            }`}
+              }`}
             onClick={() => setActiveCategory("all")}
           >
             <HelpCircle className="w-4 h-4" />
@@ -213,11 +210,10 @@ export default function FAQs() {
           {categories.map((category) => (
             <button
               key={category.id}
-              className={`px-5 py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center space-x-2 ${
-                activeCategory === category.id
+              className={`px-5 py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center space-x-2 ${activeCategory === category.id
                   ? "bg-orange-500 text-white shadow-lg"
                   : "bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600"
-              }`}
+                }`}
               onClick={() => setActiveCategory(category.id)}
             >
               {category.icon}
@@ -228,18 +224,16 @@ export default function FAQs() {
 
         {/* FAQ Accordion */}
         <div
-          className={`max-w-4xl mx-auto transition-all duration-1000 delay-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`max-w-4xl mx-auto transition-all duration-1000 delay-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
         >
           <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
             {filteredFaqs.length > 0 ? (
               filteredFaqs.map((faq) => (
                 <div
                   key={faq.id}
-                  className={`border-b border-gray-100 last:border-b-0 transition-all duration-300 ${
-                    expandedItems[faq.id] ? "bg-orange-50" : "hover:bg-gray-50"
-                  }`}
+                  className={`border-b border-gray-100 last:border-b-0 transition-all duration-300 ${expandedItems[faq.id] ? "bg-orange-50" : "hover:bg-gray-50"
+                    }`}
                 >
                   <button
                     className="w-full px-8 py-6 text-left flex justify-between items-center focus:outline-none"
@@ -248,11 +242,10 @@ export default function FAQs() {
                   >
                     <div className="flex items-center">
                       <span
-                        className={`w-8 h-8 rounded-full flex items-center justify-center mr-4 transition-colors duration-300 ${
-                          expandedItems[faq.id]
+                        className={`w-8 h-8 rounded-full flex items-center justify-center mr-4 transition-colors duration-300 ${expandedItems[faq.id]
                             ? "bg-orange-500 text-white"
                             : "bg-orange-100 text-orange-600"
-                        }`}
+                          }`}
                       >
                         Q
                       </span>
@@ -261,19 +254,17 @@ export default function FAQs() {
                       </span>
                     </div>
                     <ChevronDown
-                      className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${
-                        expandedItems[faq.id]
+                      className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${expandedItems[faq.id]
                           ? "transform rotate-180 text-orange-500"
                           : ""
-                      }`}
+                        }`}
                     />
                   </button>
                   <div
-                    className={`overflow-hidden transition-all duration-300 ${
-                      expandedItems[faq.id]
+                    className={`overflow-hidden transition-all duration-300 ${expandedItems[faq.id]
                         ? "max-h-96 opacity-100"
                         : "max-h-0 opacity-0"
-                    }`}
+                      }`}
                   >
                     <div className="px-8 pb-6 pt-2 text-gray-600 leading-relaxed">
                       <span className="font-medium text-orange-600">A: </span>
@@ -310,9 +301,8 @@ export default function FAQs() {
 
         {/* Still Have Questions */}
         <div
-          className={`mt-16 text-center transition-all duration-1000 delay-1000 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`mt-16 text-center transition-all duration-1000 delay-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+            }`}
         >
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl p-10 text-white relative overflow-hidden">
             {/* Background Pattern */}
@@ -336,9 +326,12 @@ export default function FAQs() {
                 help with your construction needs.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="px-8 py-4 bg-white text-orange-600 rounded-xl font-semibold transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1">
+                <Link
+                  href="/contact-us"
+                  className="inline-block px-8 py-4 bg-white text-orange-600 rounded-xl font-semibold transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1"
+                >
                   Contact Support
-                </button>
+                </Link>
                 <button className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl font-semibold transition-all duration-300 hover:bg-white/10 transform hover:-translate-y-1">
                   Live Chat
                 </button>

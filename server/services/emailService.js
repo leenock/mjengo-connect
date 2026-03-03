@@ -72,3 +72,84 @@ export async function sendPasswordResetEmail(to, resetLink, expiresMinutes = 60)
 export function isEmailConfigured() {
   return !!(GMAIL_USER && GMAIL_APP_PASSWORD);
 }
+
+const CONTACT_EMAIL_TO = process.env.CONTACT_EMAIL_TO || "info@findm.online";
+
+/**
+ * Send contact form submission to the configured inbox (e.g. info@findm.online).
+ * @param {{ name: string, email: string, phone?: string, subject: string, message: string }} data
+ * @returns {Promise<{ messageId: string }>}
+ */
+export async function sendContactFormEmail(data) {
+  const { name, email, phone, subject, message } = data;
+  const to = CONTACT_EMAIL_TO;
+  const emailSubject = `[Contact] ${subject} – from ${name}`;
+  const html = `
+    <div style="font-family: sans-serif; max-width: 560px; margin: 0 auto;">
+      <h2 style="color: #1e293b;">New contact form submission</h2>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Name</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">${escapeHtml(name)}</td></tr>
+        <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Email</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></td></tr>
+        <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Phone</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">${phone ? escapeHtml(phone) : "—"}</td></tr>
+        <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Subject</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">${escapeHtml(subject)}</td></tr>
+      </table>
+      <h3 style="color: #334155; margin-top: 20px;">Message</h3>
+      <p style="color: #475569; white-space: pre-wrap;">${escapeHtml(message)}</p>
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+      <p style="color: #94a3b8; font-size: 12px;">MJENGO Connect – Contact form. Reply to this email to respond to ${escapeHtml(name)}.</p>
+    </div>
+  `;
+  const transport = getTransporter();
+  const info = await transport.sendMail({
+    from: `"MJENGO Connect" <${GMAIL_USER}>`,
+    to,
+    replyTo: email,
+    subject: emailSubject,
+    html,
+    text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone || "—"}\nSubject: ${subject}\n\nMessage:\n${message}`,
+  });
+  return { messageId: info.messageId };
+}
+
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/**
+ * Send app launch notify signup to domain email (e.g. info@findm.online).
+ * @param {string} email - Subscriber email
+ * @returns {Promise<{ messageId: string }>}
+ */
+export async function sendLaunchNotifyEmail(email) {
+  const to = CONTACT_EMAIL_TO;
+  const trimmed = String(email).trim();
+  const subject = "[App launch] New signup – MJENGO Connect";
+  const date = new Date().toISOString();
+  const html = `
+    <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+      <h2 style="color: #1e293b;">App launch notification signup</h2>
+      <p style="color: #475569;">Someone wants to be notified when the MJENGO Connect mobile app launches.</p>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Email</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;"><a href="mailto:${escapeHtml(trimmed)}">${escapeHtml(trimmed)}</a></td></tr>
+        <tr><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #64748b;">Date</td><td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">${escapeHtml(date)}</td></tr>
+      </table>
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+      <p style="color: #94a3b8; font-size: 12px;">MJENGO Connect – Coming soon page.</p>
+    </div>
+  `;
+  const transport = getTransporter();
+  const info = await transport.sendMail({
+    from: `"MJENGO Connect" <${GMAIL_USER}>`,
+    to,
+    replyTo: trimmed,
+    subject,
+    html,
+    text: `App launch signup\nEmail: ${trimmed}\nDate: ${date}`,
+  });
+  return { messageId: info.messageId };
+}

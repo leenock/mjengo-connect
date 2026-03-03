@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Briefcase, Users } from "lucide-react";
+import Link from "next/link";
+import { Briefcase, Search, Handshake } from "lucide-react";
 
 export default function Service() {
   const [isVisible, setIsVisible] = useState(false);
@@ -10,45 +11,40 @@ export default function Service() {
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
-
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) setIsVisible(true);
       },
       { threshold: 0.1 }
     );
-
     observer.observe(section);
-
-    return () => {
-      observer.unobserve(section);
-    };
+    return () => observer.unobserve(section);
   }, []);
 
   const services = [
     {
-      icon: <Briefcase className="w-10 h-10" />,
+      icon: Briefcase,
       title: "Post a Job",
       description:
-        "Need a mason, plumber, or welder? Post your job with location and budget for just Ksh 300. Registered fundis nearby will see your listing and contact you directly.",
-      color: "from-gray-800 to-black",
+        "Need a mason, plumber, or welder? Post your job with location and budget for just Ksh 300. Registered fundis  will see your listing and contact you directly.",
+      step: 1,
       delay: 0,
     },
     {
-      icon: <Users className="w-10 h-10" />,
-      title: "A fundi Browse Listings",
+      icon: Search,
+      title: "Browse Listings",
       description:
-        "Are you a fundi looking for work? Browse listings by trade and location. Create a free account and get a 7-day full access trial.",
-      color: "from-gray-900 to-gray-800", // dark but accessible
+        "Are you a fundi looking for work? Browse listings by trade and location. Create a free account and  access all jobs for just Ksh 200 Monthly Subscription.",
+      step: 2,
       delay: 100,
     },
     {
-      icon: <Users className="w-10 h-10" />,
+      icon: Handshake,
       title: "Connect & Work",
       description:
-        "Post your construction job and let qualified fundis reach out. They browse listings by trade and location, then contact you directly.",
-      color: "from-gray-700 to-gray-900",
-      delay: 100,
+        "Post your construction job and let qualified fundis reach out. They browse listings by trade and location, then contact you directly by Email or Phone.",
+      step: 3,
+      delay: 200,
     },
   ];
 
@@ -56,74 +52,77 @@ export default function Service() {
     <section
       ref={sectionRef}
       id="services-section"
-      className="py-20 bg-white relative overflow-hidden"
+      className="relative py-20 lg:py-28 overflow-hidden bg-slate-800"
       aria-label="How MJENGO Connect Works"
     >
-      {/* Background Glow Effects */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
-        <div className="absolute top-20 right-10 w-64 h-64 bg-orange-300 rounded-full mix-blend-multiply blur-2xl" />
-        <div className="absolute bottom-20 left-10 w-64 h-64 bg-yellow-300 rounded-full mix-blend-multiply blur-2xl" />
+      {/* Background – slightly different from Hero: lighter slate + soft warm glow */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-slate-900/50 to-transparent" />
+        <div className="absolute top-1/2 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-0 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-screen-xl mx-auto px-6 sm:px-10 lg:px-20 xl:px-28 relative z-10">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-extrabold mb-4 text-gray-900 tracking-tight leading-tight">
-            How MJENGO Connect Works
+        <div
+          className={`text-center mb-14 transition-all duration-700 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          }`}
+        >
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
+            How MJENGO Connect{" "}
+            <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+              Works
+            </span>
           </h2>
-
-          <div className="w-20 h-1.5 bg-gradient-to-r from-orange-500 to-orange-600 rounded-full mx-auto mb-6" />
-          <p className="text-lg text-gray-700 max-w-2xl mx-auto">
-            Our platform simplifies the construction process by connecting you
-            with skilled professionals in just three easy steps.
+          <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            Our platform simplifies the construction process by connecting you with skilled professionals in three easy steps.
           </p>
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
-          {services.map((service, index) => (
-            <div
-              key={index}
-              className={`bg-white rounded-2xl shadow-xl overflow-hidden transform transition-all duration-700 ${
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-12"
-              }`}
-              style={{ transitionDelay: `${service.delay}ms` }}
-            >
-              <div className="p-8">
-                <div className="mb-6">
-                  <div
-                    className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${service.color} text-white flex items-center justify-center shadow-md`}
-                  >
-                    {service.icon}
+        {/* Cards – glass style to match Hero */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+          {services.map((service, index) => {
+            const Icon = service.icon;
+            return (
+              <div
+                key={index}
+                className={`rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 lg:p-8 transition-all duration-700 ${
+                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                } hover:border-white/20 hover:bg-white/[0.07]`}
+                style={{ transitionDelay: `${service.delay}ms` }}
+              >
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400">
+                    <Icon className="w-6 h-6" />
                   </div>
+                  <span className="text-sm font-bold text-amber-400/90">
+                    Step {service.step}
+                  </span>
                 </div>
-
-                <div className="flex items-center mb-4">
-                  <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm">
-                    {index + 1}
-                  </div>
-                  <div className="h-px flex-1 bg-orange-200 ml-3"></div>
-                </div>
-
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                <h3 className="text-xl font-bold text-white mb-3">
                   {service.title}
                 </h3>
-                <p className="text-gray-600 mb-6">{service.description}</p>
-
-              
+                <p className="text-slate-400 leading-relaxed">
+                  {service.description}
+                </p>
               </div>
-              
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* CTA */}
-        <div className="mt-16 text-center">
-          <button className="px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold transition hover:from-orange-600 hover:to-orange-700 hover:shadow-lg transform hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-orange-300">
+        {/* CTA – same orange gradient as Hero */}
+        <div
+          className={`mt-14 text-center transition-all duration-700 delay-300 ${
+            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
+          }`}
+        >
+          <Link
+            href="/Jobs-list"
+            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold shadow-lg shadow-amber-500/25 hover:from-amber-400 hover:to-orange-400 hover:shadow-amber-500/30 transition-all"
+          >
             Get Started Today
-          </button>
+          </Link>
         </div>
       </div>
     </section>

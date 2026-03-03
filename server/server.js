@@ -24,6 +24,7 @@ import adminJobRoutes from './routes/adminJobRoutes.js'; // Import admin job rou
 import clientWalletRoute from './routes/clientWalletRoute.js'; // Import client wallet routes
 import fundiWalletRoute from './routes/fundiWalletRoute.js'; // Import fundi wallet routes
 import subscriptionRoute from './routes/subscriptionRoute.js'; // Import subscription routes
+import contactRoute from './routes/contactRoute.js';
 
 // Load environment variables
 dotenv.config()
@@ -90,6 +91,9 @@ app.use("/api/fundi/tickets", ticketsFundiRoute) // Added fundi tickets routes
 
 // Ticket Support Reply Routes
 app.use("/api/admin/support/tickets", ticketSupportRoute) // Added ticket support reply routes
+
+// Contact form (sends email to info@findm.online)
+app.use("/api/contact", contactRoute)
 
 // Start the server
 const PORT = process.env.PORT || 5000
