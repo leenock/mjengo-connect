@@ -8,12 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "setup-admin": "node scripts/setup-admin.js"
-
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "joi": "^18.0.2",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.511.0",
