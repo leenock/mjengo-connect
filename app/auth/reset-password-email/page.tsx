@@ -226,7 +226,7 @@ function ResetPasswordEmailFallback() {
       <main className="flex-grow pt-20 bg-gradient-to-br from-orange-50 via-white to-yellow-50 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl p-6 border border-gray-100 text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-orange-500 border-t-transparent mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">Loading....</p>
         </div>
       </main>
       <Footer />
