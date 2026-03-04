@@ -7,7 +7,7 @@ import { CheckCircle2, XCircle, Menu, Send, MessageCircle, User } from "lucide-r
 import Sidebar from "@/components/job_posting/Sidebar"
 import ClientAuthService, { type ClientUserData } from "@/app/services/client_user"
 import Toast from "@/components/ui/Toast"
-import { validateSupportTicket } from "@/lib/supportTicketValidation"
+import { createSupportTicketSchema } from "@/server/utils/validation/supportTicketValidation"
 
 
 // Add this interface after the imports
@@ -210,8 +210,8 @@ export default function MessageAdminPage() {
       clientId: currentUser.id,
     }
 
-    // Perform client-side validation (mirrors server rules)
-    const { error } = validateSupportTicket(ticketData)
+    // Perform client-side validation using Joi schema
+    const { error } = createSupportTicketSchema.validate(ticketData, { abortEarly: false })
 
     if (error) {
       // Map Joi errors to state variables

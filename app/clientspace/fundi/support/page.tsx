@@ -166,7 +166,7 @@ export default function FundiSupportPage() {
       fundiId: currentUser.id,
     }
 
-    const { error } = validateFundiSupportTicket(ticketData)
+    const { error } = createFundiSupportTicketSchema.validate(ticketData, { abortEarly: false })
 
     if (error) {
       error.details.forEach((detail) => {

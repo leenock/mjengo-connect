@@ -84,7 +84,7 @@ export default function ContactUsPage() {
     {
       icon: Phone,
       title: "Phone",
-      items: ["+254 xxx xxx xxx", "+254 xxx xxx xxx"],
+      items: ["+254 735520926"],
     },
     {
       icon: Mail,
@@ -94,7 +94,7 @@ export default function ContactUsPage() {
     {
       icon: MapPin,
       title: "Office",
-      items: ["Nairobi, Kenya", "Westlands, ABC Place"],
+      items: ["Nairobi, Kenya"],
     },
     {
       icon: Clock,
@@ -363,7 +363,7 @@ export default function ContactUsPage() {
                         className="mt-2 inline-flex items-center gap-1.5 text-amber-600 font-semibold hover:text-amber-700"
                       >
                         <Phone className="w-4 h-4" />
-                        +254 700 EMERGENCY
+                        +254 735520926
                       </a>
                     </div>
                   </div>
