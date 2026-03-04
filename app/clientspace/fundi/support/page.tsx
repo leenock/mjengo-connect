@@ -7,7 +7,8 @@ import { CheckCircle2, XCircle, Menu, Send, MessageCircle, User } from "lucide-r
 import Sidebar from "@/components/fundi/Sidebar"
 import FundiAuthService, { type FundiUserData } from "@/app/services/fundi_user"
 import Toast from "@/components/ui/Toast"
-import { validateFundiSupportTicket } from "@/lib/supportTicketValidation"
+import type { ValidationErrorItem } from "joi"
+import { createFundiSupportTicketSchema } from "../../../../lib/supportTicketValidation"
 
 interface SupportTicket {
   id: string
@@ -169,8 +170,9 @@ export default function FundiSupportPage() {
     const { error } = createFundiSupportTicketSchema.validate(ticketData, { abortEarly: false })
 
     if (error) {
-      error.details.forEach((detail) => {
-        switch (detail.context?.key) {
+      error.details.forEach((detail: ValidationErrorItem) => {
+        const field = (detail.context?.key ?? detail.path[0]) as string
+        switch (field) {
           case "category":
             setCategoryError(detail.message)
             break
