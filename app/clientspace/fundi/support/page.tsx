@@ -7,7 +7,7 @@ import { CheckCircle2, XCircle, Menu, Send, MessageCircle, User } from "lucide-r
 import Sidebar from "@/components/fundi/Sidebar"
 import FundiAuthService, { type FundiUserData } from "@/app/services/fundi_user"
 import Toast from "@/components/ui/Toast"
-import { createFundiSupportTicketSchema } from "@/server/utils/validation/fundiSupportTicketValidation"
+import { validateFundiSupportTicket } from "@/lib/supportTicketValidation"
 
 interface SupportTicket {
   id: string
@@ -166,7 +166,7 @@ export default function FundiSupportPage() {
       fundiId: currentUser.id,
     }
 
-    const { error } = createFundiSupportTicketSchema.validate(ticketData, { abortEarly: false })
+    const { error } = validateFundiSupportTicket(ticketData)
 
     if (error) {
       error.details.forEach((detail) => {
