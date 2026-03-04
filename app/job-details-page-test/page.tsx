@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { use, useState } from "react";
 import {
   MapPin,
   Clock,
@@ -22,10 +22,13 @@ import Footer from "@/components/landingpage/Footer";
 import Link from "next/link";
 
 interface JobDetailsPageProps {
-  jobId: string;
+  searchParams?: Promise<{ jobId?: string | string[] }>;
 }
 
-export default function JobDetailsPage({ jobId }: JobDetailsPageProps) {
+export default function JobDetailsPage({ searchParams }: JobDetailsPageProps) {
+  const resolved = searchParams ? use(searchParams) : undefined;
+  const raw = resolved?.jobId;
+  const jobIdStr = raw == null ? "1" : Array.isArray(raw) ? raw[0] ?? "1" : raw;
   // Mock job listings data - in real app, this would be fetched from API
   const jobListings = [
     {
@@ -123,8 +126,8 @@ export default function JobDetailsPage({ jobId }: JobDetailsPageProps) {
     },
   ];
 
-  // Find the specific job based on jobId
-  const jobData = jobListings.find((job) => job.id === Number.parseInt(jobId));
+  // Find the specific job based on jobId (from URL searchParams, e.g. ?jobId=1)
+  const jobData = jobListings.find((job) => job.id === Number.parseInt(jobIdStr));
 
   // view state to determine if user is logged in
   const [isLoggedIn] = useState(false);
