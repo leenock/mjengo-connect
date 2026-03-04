@@ -33,6 +33,15 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# setup docs (may contain env/setup details)
+GMAIL_SMTP_SETUP.md
+KOPOKOPO_SETUP.md
+
+# admin creation scripts
+create-admin.js
+setup-admin.js
+
+
 # vercel
 .vercel
 
