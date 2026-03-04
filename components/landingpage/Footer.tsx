@@ -21,8 +21,8 @@ export default function Footer() {
       title: "Company",
       id: "company",
       links: [
-        { label: "About Us", href: "/about" },
-        { label: "Contact Us", href: "/contact" },
+        { label: "About Us", href: "/about_us" },
+        { label: "Contact Us", href: "/contact-us" },
       ],
     },
     {
@@ -37,8 +37,8 @@ export default function Footer() {
       title: "Resources",
       id: "resources",
       links: [
-        { label: "Privacy Policy", href: "/privacy" },
-        { label: "FAQs", href: "/faqs" },
+        { label: "Privacy Policy", href: "/" },
+        { label: "FAQs", href: "/" },
       ],
     },
   ]

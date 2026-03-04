@@ -89,7 +89,7 @@ export default function ContactUsPage() {
     {
       icon: Mail,
       title: "Email",
-      items: ["info@mjengoconnect.com", "support@mjengoconnect.com"],
+      items: ["info@mjengoconnect.com", "mjengoconnect@gmail.com"],
     },
     {
       icon: MapPin,
