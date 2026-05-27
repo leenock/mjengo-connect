@@ -3,14 +3,12 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import {
   MapPin,
-  Briefcase,
   Search,
   ChevronDown,
   X,
   ChevronLeft,
   ChevronRight,
   Building2,
-  Clock,
 } from "lucide-react";
 import Header from "@/components/landingpage/Header";
 import Footer from "@/components/landingpage/Footer";
@@ -44,6 +42,29 @@ interface Job {
 const PAID_PERIOD_DAYS = 7;
 const SEARCH_DEBOUNCE_MS = 300;
 const JOBS_PER_PAGE = 5;
+const CATEGORIES = [
+  { id: "all", label: "Any Category" },
+  { id: "Mason", label: "Mason" },
+  { id: "Carpenter", label: "Carpenter" },
+  { id: "Plumber", label: "Plumber" },
+  { id: "Electrician", label: "Electrician" },
+  { id: "Painter", label: "Painter" },
+  { id: "Roofer", label: "Roofer" },
+  { id: "Tiler", label: "Tiler" },
+  { id: "Welder", label: "Welder" },
+  { id: "Other", label: "Other" },
+];
+const LOCATIONS = [
+  { id: "all", label: "Any Location" },
+  { id: "nairobi", label: "Nairobi" },
+  { id: "mombasa", label: "Mombasa" },
+  { id: "kisumu", label: "Kisumu" },
+  { id: "nakuru", label: "Nakuru" },
+  { id: "eldoret", label: "Eldoret" },
+  { id: "thika", label: "Thika" },
+  { id: "machakos", label: "Machakos" },
+  { id: "meru", label: "Meru" },
+];
 
 function isWithinPaidPeriod(paidAt: string | null | undefined): boolean {
   if (!paidAt) return false;
@@ -94,31 +115,6 @@ export default function JobsListPage() {
     };
   }, [searchQuery]);
 
-  const categories = [
-    { id: "all", label: "Any Category" },
-    { id: "Mason", label: "Mason" },
-    { id: "Carpenter", label: "Carpenter" },
-    { id: "Plumber", label: "Plumber" },
-    { id: "Electrician", label: "Electrician" },
-    { id: "Painter", label: "Painter" },
-    { id: "Roofer", label: "Roofer" },
-    { id: "Tiler", label: "Tiler" },
-    { id: "Welder", label: "Welder" },
-    { id: "Other", label: "Other" },
-  ];
-
-  const locations = [
-    { id: "all", label: "Any Location" },
-    { id: "nairobi", label: "Nairobi" },
-    { id: "mombasa", label: "Mombasa" },
-    { id: "kisumu", label: "Kisumu" },
-    { id: "nakuru", label: "Nakuru" },
-    { id: "eldoret", label: "Eldoret" },
-    { id: "thika", label: "Thika" },
-    { id: "machakos", label: "Machakos" },
-    { id: "meru", label: "Meru" },
-  ];
-
   useEffect(() => {
     const fetchJobs = async () => {
       try {
@@ -145,7 +141,7 @@ export default function JobsListPage() {
   const transformJob = useCallback((job: Job) => {
     const category =
       job.category ||
-      categories.find((c) =>
+      CATEGORIES.find((c) =>
         (job.title || "").toLowerCase().includes(c.id.toLowerCase())
       )?.id ||
       "Other";
@@ -269,7 +265,7 @@ export default function JobsListPage() {
                     onChange={(e) => setSelectedCategory(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-800"
                   >
-                    {categories.map((c) => (
+                    {CATEGORIES.map((c) => (
                       <option key={c.id} value={c.id}>{c.label}</option>
                     ))}
                   </select>
@@ -281,7 +277,7 @@ export default function JobsListPage() {
                     onChange={(e) => setSelectedLocation(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-800"
                   >
-                    {locations.map((l) => (
+                    {LOCATIONS.map((l) => (
                       <option key={l.id} value={l.id}>{l.label}</option>
                     ))}
                   </select>
@@ -339,13 +335,13 @@ export default function JobsListPage() {
               )}
               {selectedCategory !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-800 text-sm rounded-md border border-blue-200">
-                  {categories.find((c) => c.id === selectedCategory)?.label}
+                  {CATEGORIES.find((c) => c.id === selectedCategory)?.label}
                   <button type="button" onClick={() => setSelectedCategory("all")} className="hover:bg-blue-200/50 rounded p-0.5" aria-label="Remove"><X className="w-3.5 h-3.5" /></button>
                 </span>
               )}
               {selectedLocation !== "all" && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-800 text-sm rounded-md border border-blue-200">
-                  {locations.find((l) => l.id === selectedLocation)?.label}
+                  {LOCATIONS.find((l) => l.id === selectedLocation)?.label}
                   <button type="button" onClick={() => setSelectedLocation("all")} className="hover:bg-blue-200/50 rounded p-0.5" aria-label="Remove"><X className="w-3.5 h-3.5" /></button>
                 </span>
               )}

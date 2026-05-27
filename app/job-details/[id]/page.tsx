@@ -18,7 +18,6 @@ import {
   Star,
   Award,
   Users,
-  Flag,
 } from "lucide-react";
 import Header from "@/components/landingpage/Header";
 import Footer from "@/components/landingpage/Footer";

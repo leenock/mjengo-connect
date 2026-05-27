@@ -24,7 +24,7 @@ export default function AddFundsPage() {
   const [currentBalance, setCurrentBalance] = useState(0); // Wallet balance in KES
   const [amount, setAmount] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isProcessing] = useState(false);
   const [transactionStatus, setTransactionStatus] = useState<
     "success" | "error" | null
   >(null);
@@ -45,7 +45,6 @@ export default function AddFundsPage() {
     "success" | "error" | null
   >(null); // State for STK push status
   const [stkPushError, setStkPushError] = useState<string>(""); // Detailed error message
-  const [paymentRequestId, setPaymentRequestId] = useState<string>(""); // Store payment request ID for polling
   const [isRefreshingBalance, setIsRefreshingBalance] = useState(false); // Balance refresh state
   const [isOpen, setIsOpen] = useState(false); // State for sidebar visibility
   const [paymentToast, setPaymentToast] = useState<{ show: boolean; message: string; type: "success" | "cancelled" }>({ show: false, message: "", type: "success" });
@@ -107,7 +106,6 @@ export default function AddFundsPage() {
           setPaymentToast({ show: true, message: "Payment successful! Your wallet has been updated.", type: "success" });
           setShowMpesaModal(false);
           setStkPushStatus(null);
-          setPaymentRequestId("");
           setAmount("");
           setPaymentMethod("");
           setTimeout(() => setPaymentToast({ show: false, message: "", type: "success" }), 4000);
@@ -119,7 +117,6 @@ export default function AddFundsPage() {
           setPaymentToast({ show: true, message: "You cancelled the payment.", type: "cancelled" });
           setShowMpesaModal(false);
           setStkPushStatus(null);
-          setPaymentRequestId("");
           setAmount("");
           setPaymentMethod("");
           setTimeout(() => setPaymentToast({ show: false, message: "", type: "success" }), 4000);
@@ -288,7 +285,6 @@ export default function AddFundsPage() {
 
       const requestId = data.data?.paymentRequestId;
       if (requestId) {
-        setPaymentRequestId(requestId);
         startPaymentStatusPolling(requestId);
       }
 
@@ -508,7 +504,6 @@ export default function AddFundsPage() {
                       }
                       setShowMpesaModal(false);
                       setStkPushStatus(null);
-                      setPaymentRequestId("");
                       setAmount("");
                       setPaymentMethod("");
                     }}

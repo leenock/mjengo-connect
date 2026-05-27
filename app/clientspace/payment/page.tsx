@@ -17,7 +17,6 @@ import {
   CheckCircle,
   XCircle,
   CreditCard,
-  Phone,
   Loader2,
   ChevronLeft,
   ChevronRight,
@@ -253,10 +252,13 @@ export default function PaymentsPage() {
         setShowPaymentModal(false);
         setSelectedJobForPayment(null);
       }, 1500);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Payment error:", error);
       setToast({
-        message: error.message || "Failed to process payment. Please try again.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to process payment. Please try again.",
         type: "error",
       });
     } finally {

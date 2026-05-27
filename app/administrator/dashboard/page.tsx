@@ -34,13 +34,6 @@ interface PlatformStats {
   pendingJobs: number;
 }
 
-interface JobCategory {
-  name: string;
-  jobs: number;
-  revenue: string;
-  growth: string;
-}
-
 interface RecentActivity {
   type: string;
   description: string;
@@ -82,7 +75,6 @@ export default function AdminReports() {
     closedJobs: 0,
     pendingJobs: 0,
   });
-  const [topCategories, setTopCategories] = useState<JobCategory[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
 
   // Close sidebar when clicking on overlay

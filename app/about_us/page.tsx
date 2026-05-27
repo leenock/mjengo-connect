@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Heart, Lightbulb, Users, ArrowRight, Briefcase, Shield, Target, Zap } from "lucide-react"
+import { Heart, Lightbulb, Users, Briefcase, Target, Zap } from "lucide-react"
 import Header from "@/components/landingpage/Header"
 import Footer from "@/components/landingpage/Footer"
 import Image from "next/image"

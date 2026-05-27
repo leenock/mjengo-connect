@@ -6,10 +6,7 @@ import AdminSidebar from "@/components/admin/Sidebar"
 import AdminAuthService from "@/app/services/admin_auth"
 import {
   Menu,
-  CreditCard,
-  Calendar,
   User,
-  Mail,
   ShieldCheck,
   XCircle,
   Loader2,

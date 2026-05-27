@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 import { API_URL } from "@/app/config"
 import Sidebar from "@/components/fundi/Sidebar"
@@ -17,8 +17,6 @@ import {
   Award,
   ArrowRight,
   X,
-  Smartphone,
-  Globe,
   Loader2,
   Wallet,
 } from "lucide-react"
@@ -29,13 +27,22 @@ interface PaymentModalProps {
   onPaymentSuccess: () => void
 }
 
+interface SubscriptionDetails {
+  currentPlan?: string
+  subscriptionStatus?: string
+  totalPaid?: number
+  nextBillingDate?: string | null
+  planStartDate?: string
+  planEndDate?: string
+}
+
 function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) {
   const [walletBalance, setWalletBalance] = useState(0)
   const [isLoadingBalance, setIsLoadingBalance] = useState(true)
   const [isProcessing, setIsProcessing] = useState(false)
   const [error, setError] = useState<string>("")
 
-  const fetchWalletBalance = async () => {
+  const fetchWalletBalance = useCallback(async () => {
     setIsLoadingBalance(true)
     try {
       const token = FundiAuthService.getToken()
@@ -56,14 +63,11 @@ function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) 
     } finally {
       setIsLoadingBalance(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    if (isOpen) {
-      fetchWalletBalance()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen])
+    if (isOpen) fetchWalletBalance()
+  }, [isOpen, fetchWalletBalance])
 
   const handlePayment = async () => {
     setIsProcessing(true)
@@ -241,7 +245,7 @@ export default function SubscriptionPage() {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [successToast, setSuccessToast] = useState<{ message: string } | null>(null)
   const [subscriptionUpdated, setSubscriptionUpdated] = useState(false)
-  const [subscriptionDetails, setSubscriptionDetails] = useState<any>(null)
+  const [subscriptionDetails, setSubscriptionDetails] = useState<SubscriptionDetails | null>(null)
   const [isLoadingDetails, setIsLoadingDetails] = useState(true)
 
   useEffect(() => {

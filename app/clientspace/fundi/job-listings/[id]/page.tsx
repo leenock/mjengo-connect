@@ -22,7 +22,6 @@ import {
   Phone,
   Mail,
   Share2,
-  Flag,
   Shield,
   Award,
   Users,

@@ -1,5 +1,5 @@
 "use client"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 
 import { API_URL } from "@/app/config"
 import { useRouter } from "next/navigation"
@@ -26,7 +26,6 @@ import {
   ChevronRight,
   X,
   RotateCcw,
-  PlayCircle,
   Filter,
 } from "lucide-react"
 
@@ -105,23 +104,34 @@ export default function MyJobsPage() {
     }
   })()
 
-  // Load user data and jobs on component mount
-  useEffect(() => {
-    const userData = ClientAuthService.getUserData()
-    if (userData) {
-      setCurrentUser(userData)
-      fetchMyJobs()
-    } else {
-      router.push("/auth/job-posting")
+  const checkJobPaidPeriod = useCallback(async (jobId: string) => {
+    try {
+      const token = ClientAuthService.getToken()
+      if (!token) return
+
+      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}/paid-period`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setJobPaidPeriods((prev) => ({
+          ...prev,
+          [jobId]: {
+            isWithinPeriod: data.isWithinPeriod,
+            remainingDays: data.remainingDays,
+          },
+        }))
+      }
+    } catch (error) {
+      console.error("Error checking paid period:", error)
     }
-  }, [router])
+  }, [])
 
-  // Reset to page 1 when filter changes
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [statusFilter])
-
-  const fetchMyJobs = async () => {
+  const fetchMyJobs = useCallback(async () => {
     try {
       setIsLoading(true)
       const token = ClientAuthService.getToken()
@@ -154,34 +164,23 @@ export default function MyJobsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [checkJobPaidPeriod])
 
-  const checkJobPaidPeriod = async (jobId: string) => {
-    try {
-      const token = ClientAuthService.getToken()
-      if (!token) return
-
-      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}/paid-period`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        setJobPaidPeriods((prev) => ({
-          ...prev,
-          [jobId]: {
-            isWithinPeriod: data.isWithinPeriod,
-            remainingDays: data.remainingDays,
-          },
-        }))
-      }
-    } catch (error) {
-      console.error("Error checking paid period:", error)
+  // Load user data and jobs on component mount
+  useEffect(() => {
+    const userData = ClientAuthService.getUserData()
+    if (userData) {
+      setCurrentUser(userData)
+      fetchMyJobs()
+    } else {
+      router.push("/auth/job-posting")
     }
-  }
+  }, [router, fetchMyJobs])
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [statusFilter])
 
   const handleCloseJob = async (jobId: string) => {
     try {
@@ -213,44 +212,6 @@ export default function MyJobsPage() {
       console.error("Error closing job:", error)
       setToast({
         message: error instanceof Error ? error.message : "Failed to close job. Please try again.",
-        type: "error",
-      })
-    } finally {
-      setProcessingJobId(null)
-    }
-  }
-
-  const handleReactivateJob = async (jobId: string) => {
-    try {
-      setProcessingJobId(jobId)
-      setToast({
-        message: "Reactivating job...",
-        type: "loading",
-      })
-      const token = ClientAuthService.getToken()
-      if (!token) {
-        throw new Error("Authentication required")
-      }
-      const response = await fetch(`${API_URL}/api/client/jobs/${jobId}/reactivate`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || "Failed to reactivate job")
-      }
-      const data = await response.json()
-      await fetchMyJobs()
-      setToast({
-        message: data.message || `Job reactivated! ${data.remainingDays} day(s) remaining.`,
-        type: "success",
-      })
-    } catch (error) {
-      console.error("Error reactivating job:", error)
-      setToast({
-        message: error instanceof Error ? error.message : "Failed to reactivate job. Please try again.",
         type: "error",
       })
     } finally {

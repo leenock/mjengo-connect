@@ -23,6 +23,7 @@ import FundiAuthService from "@/app/services/fundi_user";
 import { API_URL } from "@/app/config";
 
 const FREE_PLAN_JOB_LIMIT = 3;
+const LIMITED_ACCESS_STATUSES = ["EXPIRED", "TRIAL", "CANCELLED"];
 
 interface Job {
   id: string;
@@ -129,7 +130,6 @@ export default function JobListingsPage() {
 
   const userData = FundiAuthService.getUserData();
   // Treat as Free if: no plan, or plan is not Premium, or Premium but status is Expired/Trial/Cancelled (show limited jobs + upgrade CTA)
-  const LIMITED_ACCESS_STATUSES = ["EXPIRED", "TRIAL", "CANCELLED"];
   const isFreePlan = useMemo(() => {
     const plan = (userData?.subscriptionPlan || "").toUpperCase();
     const status = (userData?.subscriptionStatus || "").toUpperCase();
