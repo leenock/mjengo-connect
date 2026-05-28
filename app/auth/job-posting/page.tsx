@@ -214,7 +214,7 @@ export default function JobPostingPage() {
     <div className="min-h-screen flex flex-col">
       <Header />
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
-      <main className="flex-grow pt-20 bg-gradient-to-br from-orange-50 via-white to-yellow-50">
+      <main className="flex-grow bg-white pt-20">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Side - Marketing Content */}
@@ -225,7 +225,7 @@ export default function JobPostingPage() {
                   <span className="text-orange-600"> Minutes</span>
                 </h1>
                 <p className="text-xl text-gray-600 leading-relaxed">
-                  Connecting Skilled Fundis with Construction Services
+                  Post verified jobs and connect directly with skilled fundis across Kenya.
                 </p>
               </div>
               <div className="space-y-6">
@@ -261,12 +261,12 @@ export default function JobPostingPage() {
               </div>
             </div>
             {/* Right Side - Auth Forms */}
-            <div className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
+            <div className="rounded-xl bg-white p-6 shadow-sm">
               {/* Auth Toggle */}
-              <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
+              <div className="mb-8 flex rounded-lg bg-slate-100 p-1">
                 <button
                   onClick={() => setAuthMode("login")}
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 text-sm sm:text-base ${
+                  className={`flex-1 rounded-md px-4 py-3 text-sm font-semibold transition-all duration-200 sm:text-base ${
                     authMode === "login" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
@@ -274,7 +274,7 @@ export default function JobPostingPage() {
                 </button>
                 <button
                   onClick={() => setAuthMode("signup")}
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 text-sm sm:text-base ${
+                  className={`flex-1 rounded-md px-4 py-3 text-sm font-semibold transition-all duration-200 sm:text-base ${
                     authMode === "signup" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
@@ -286,6 +286,10 @@ export default function JobPostingPage() {
               {authMode === "login" && (
                 <>
                   <form onSubmit={handleLogin} className="space-y-6">
+                    <div>
+                      <h2 className="text-xl font-semibold text-slate-900">Welcome back</h2>
+                      <p className="mt-1 text-sm text-slate-600">Sign in to manage and post your construction jobs.</p>
+                    </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
                       <div className="relative">
@@ -350,7 +354,7 @@ export default function JobPostingPage() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group"
+                      className="group w-full rounded-md bg-slate-900 px-8 py-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {isLoading ? (
                         <span className="flex items-center justify-center">
@@ -368,7 +372,7 @@ export default function JobPostingPage() {
                 </>
               )}
               {error && (
-                <div className="bg-red-500 text-white p-4 rounded-lg shadow-lg mb-6 flex items-center justify-between">
+                <div className="mb-6 flex items-center justify-between rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
                   <div className="flex items-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -382,7 +386,7 @@ export default function JobPostingPage() {
                     </svg>
                     <span>{error}</span>
                   </div>
-                  <button onClick={() => setError(null)} className="text-white ml-4 hover:text-gray-300">
+                  <button onClick={() => setError(null)} className="ml-4 text-red-600 hover:text-red-700">
                     &times;
                   </button>
                 </div>
@@ -514,7 +518,7 @@ export default function JobPostingPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group"
+                    className="group w-full rounded-md bg-slate-900 px-8 py-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center">
@@ -558,7 +562,7 @@ export default function JobPostingPage() {
                     <button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group"
+                      className="group w-full rounded-md bg-slate-900 px-8 py-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {isLoading ? (
                         <span className="flex items-center justify-center">

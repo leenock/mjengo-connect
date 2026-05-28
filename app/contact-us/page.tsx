@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect, useRef } from "react"
+import { useState } from "react"
 import {
   MapPin,
   Phone,
@@ -18,7 +18,6 @@ import Footer from "@/components/landingpage/Footer"
 import { API_URL } from "@/app/config"
 
 export default function ContactUsPage() {
-  const [visible, setVisible] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -29,18 +28,6 @@ export default function ContactUsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const sectionRef = useRef<HTMLElement>(null)
-
-  useEffect(() => {
-    const el = sectionRef.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => entry.isIntersecting && setVisible(true),
-      { threshold: 0.08 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -104,38 +91,33 @@ export default function ContactUsPage() {
   ]
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
 
       <main className="flex-grow pt-20">
-        {/* Hero */}
-        <section className="relative py-16 sm:py-20 bg-slate-900 overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(251,146,60,0.12),transparent)]" />
-          <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+        <section className="border-b border-slate-200 bg-white py-12 sm:py-14">
+          <div className="mx-auto max-w-5xl px-4 text-center sm:px-6 lg:px-8">
+            <p className="text-sm font-semibold uppercase tracking-wide text-orange-600">Support</p>
+            <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
               Contact us
             </h1>
-            <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
-              Have a question or need help? We’re here to support you with the platform, your account, or finding the right fundi.
+            <p className="mx-auto mt-4 max-w-2xl text-lg text-slate-600">
+              Have a question or need help with your account, listings, or hiring process? Our team is here to help.
             </p>
           </div>
         </section>
 
-        {/* Contact cards */}
-        <section className="py-12 sm:py-16 bg-white border-b border-slate-200">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {contactCards.map((card, i) => {
+        <section className="border-b border-slate-200 bg-slate-50 py-10 sm:py-12">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+              {contactCards.map((card) => {
                 const Icon = card.icon
                 return (
                   <div
                     key={card.title}
-                    className={`rounded-2xl border border-slate-200 bg-slate-50/50 p-6 transition-all duration-500 ${
-                      visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                    } hover:border-slate-300 hover:bg-slate-50`}
-                    style={{ transitionDelay: `${i * 60}ms` }}
+                    className="rounded-lg bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
                   >
-                    <div className="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-md bg-orange-50 text-orange-600">
                       <Icon className="w-5 h-5" />
                     </div>
                     <h2 className="mt-4 text-sm font-semibold text-slate-900 uppercase tracking-wider">
@@ -155,28 +137,19 @@ export default function ContactUsPage() {
           </div>
         </section>
 
-        {/* Form + sidebar */}
-        <section ref={sectionRef} className="py-16 sm:py-20 lg:py-24 bg-slate-50">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16">
-              {/* Form */}
+        <section className="bg-white py-12 sm:py-14 lg:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 gap-10 lg:grid-cols-5 lg:gap-12">
               <div className="lg:col-span-3">
-                <div
-                  className={`transition-all duration-600 ${
-                    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                  }`}
-                >
-                  <div className="rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm">
-                    <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-                      Send a message
-                    </h2>
+                <div className="rounded-lg bg-white p-6 shadow-sm sm:p-8">
+                    <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Send a message</h2>
                     <p className="mt-2 text-slate-600 text-sm">
-                      We’ll get back to you within 24 hours on business days.
+                      We usually reply within one business day.
                     </p>
 
                     {isSubmitted ? (
                       <div className="py-12 text-center">
-                        <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600">
+                        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                           <CheckCircle className="w-7 h-7" />
                         </div>
                         <h3 className="mt-4 text-lg font-bold text-slate-900">
@@ -202,7 +175,7 @@ export default function ContactUsPage() {
                                 value={formData.name}
                                 onChange={handleChange}
                                 required
-                                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                className="w-full rounded-md border border-slate-300 py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                                 placeholder="Your name"
                               />
                             </div>
@@ -220,7 +193,7 @@ export default function ContactUsPage() {
                                 value={formData.email}
                                 onChange={handleChange}
                                 required
-                                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                className="w-full rounded-md border border-slate-300 py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                                 placeholder="you@example.com"
                               />
                             </div>
@@ -240,7 +213,7 @@ export default function ContactUsPage() {
                                 name="phone"
                                 value={formData.phone}
                                 onChange={handleChange}
-                                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                                className="w-full rounded-md border border-slate-300 py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                                 placeholder="+254 700 000 000"
                               />
                             </div>
@@ -255,7 +228,7 @@ export default function ContactUsPage() {
                               value={formData.subject}
                               onChange={handleChange}
                               required
-                              className="w-full px-4 py-3 border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
+                              className="w-full rounded-md border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                             >
                               <option value="">Select subject</option>
                               <option value="general">General inquiry</option>
@@ -280,14 +253,14 @@ export default function ContactUsPage() {
                               onChange={handleChange}
                               required
                               rows={4}
-                              className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none"
+                              className="w-full resize-none rounded-md border border-slate-300 py-3 pl-10 pr-4 text-slate-900 placeholder-slate-400 focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200"
                               placeholder="How can we help?"
                             />
                           </div>
                         </div>
 
                         {submitError && (
-                          <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                          <p className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                             {submitError}
                           </p>
                         )}
@@ -295,7 +268,7 @@ export default function ContactUsPage() {
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className="w-full sm:w-auto min-w-[180px] px-6 py-3.5 rounded-xl bg-amber-500 text-white font-semibold shadow-lg shadow-amber-500/20 hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:opacity-60 disabled:pointer-events-none transition-colors inline-flex items-center justify-center gap-2"
+                          className="inline-flex w-full min-w-[180px] items-center justify-center gap-2 rounded-md bg-slate-900 px-6 py-3.5 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 disabled:pointer-events-none disabled:opacity-60 sm:w-auto"
                         >
                           {isSubmitting ? (
                             <>
@@ -311,48 +284,34 @@ export default function ContactUsPage() {
                         </button>
                       </form>
                     )}
-                  </div>
                 </div>
               </div>
 
-              {/* Sidebar */}
               <div className="lg:col-span-2 space-y-6">
-                <div
-                  className={`transition-all duration-600 delay-100 ${
-                    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                  }`}
-                >
+                <div>
                   <h2 className="text-lg font-bold text-slate-900">
                     Get in touch
                   </h2>
                   <p className="mt-3 text-slate-600 text-sm leading-relaxed">
-                    Whether you need a skilled fundi, want to post a job, or have feedback — we’d love to hear from you.
+                    Reach out for account help, listing support, partnership questions, or general feedback.
                   </p>
                 </div>
 
-                <div
-                  className={`rounded-2xl border border-slate-200 bg-white p-6 transition-all duration-600 delay-150 ${
-                    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                  }`}
-                >
+                <div className="rounded-lg bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-orange-50 text-orange-600">
                       <Clock className="w-5 h-5" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900">Response time</h3>
-                      <p className="text-sm text-slate-600">Usually 2–4 hours during business hours</p>
+                      <p className="text-sm text-slate-600">Usually within one business day</p>
                     </div>
                   </div>
                 </div>
 
-                <div
-                  className={`rounded-2xl border border-slate-200 bg-white p-6 transition-all duration-600 delay-200 ${
-                    visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                  }`}
-                >
+                <div className="rounded-lg bg-white p-6 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-100 text-slate-600">
                       <Headphones className="w-5 h-5" />
                     </div>
                     <div>
@@ -360,7 +319,7 @@ export default function ContactUsPage() {
                       <p className="text-sm text-slate-600 mt-0.5">For urgent issues, call our hotline:</p>
                       <a
                         href="tel:+254700000000"
-                        className="mt-2 inline-flex items-center gap-1.5 text-amber-600 font-semibold hover:text-amber-700"
+                        className="mt-2 inline-flex items-center gap-1.5 font-semibold text-orange-600 transition-colors hover:text-orange-700"
                       >
                         <Phone className="w-4 h-4" />
                         +254 735520926

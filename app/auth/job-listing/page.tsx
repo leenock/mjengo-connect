@@ -235,19 +235,18 @@ export default function JobListingPage() {
       <Header />
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <main className="flex-grow pt-20 bg-gradient-to-br from-orange-50 via-white to-yellow-50">
+      <main className="flex-grow bg-white pt-20">
         <div className="max-w-7xl mx-auto px-6 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Left Side - Marketing Content for Fundis */}
             <div className="space-y-8">
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+                <h1 className="mb-6 text-4xl font-bold text-gray-900 md:text-5xl">
                   Find Your Next
                   <span className="text-orange-600"> Construction Job</span>
                 </h1>
-                <p className="text-xl text-gray-600 leading-relaxed">
-                  Join thousands of skilled fundis earning good money through verified construction projects across
-                  Kenya.
+                <p className="text-xl leading-relaxed text-gray-600">
+                  Access verified projects across Kenya and connect directly with clients looking for your skill.
                 </p>
               </div>
 
@@ -291,12 +290,12 @@ export default function JobListingPage() {
             </div>
 
             {/* Right Side - Auth Forms */}
-            <div className="bg-white rounded-3xl shadow-2xl p-6 border border-gray-100">
+            <div className="rounded-xl bg-white p-6 shadow-sm">
               {/* Auth Toggle */}
-              <div className="flex bg-gray-100 rounded-xl p-1 mb-8">
+              <div className="mb-8 flex rounded-lg bg-slate-100 p-1">
                 <button
                   onClick={() => setAuthMode("login")}
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 text-sm sm:text-base ${
+                  className={`flex-1 rounded-md px-4 py-3 text-sm font-semibold transition-all duration-200 sm:text-base ${
                     authMode === "login" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
@@ -304,8 +303,8 @@ export default function JobListingPage() {
                 </button>
                 <button
                   onClick={() => setAuthMode("signup")}
-                  className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 text-sm sm:text-base ${
-                    authMode === "signup" ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+                  className={`flex-1 rounded-md px-4 py-3 text-sm font-semibold transition-all duration-200 sm:text-base ${
+                    authMode === "signup" ? "bg-slate-900 text-white shadow-sm" : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   <span className="hidden sm:inline">Join as Fundi</span>
@@ -315,7 +314,7 @@ export default function JobListingPage() {
 
               {/* Error Display */}
               {error && (
-                <div className="bg-red-500 text-white p-4 rounded-lg shadow-lg mb-6 flex items-center justify-between">
+                <div className="mb-6 flex items-center justify-between rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
                   <div className="flex items-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -333,7 +332,7 @@ export default function JobListingPage() {
                     </svg>
                     <span>{error}</span>
                   </div>
-                  <button onClick={() => setError(null)} className="text-white ml-4 hover:text-gray-300">
+                  <button onClick={() => setError(null)} className="ml-4 text-red-600 hover:text-red-700">
                     &times;
                   </button>
                 </div>
@@ -342,6 +341,12 @@ export default function JobListingPage() {
               {/* Login Form */}
               {authMode === "login" && (
                 <form onSubmit={handleLogin} className="space-y-6">
+                  <div>
+                    <h2 className="text-xl font-semibold text-slate-900">Welcome back</h2>
+                    <p className="mt-1 text-sm text-slate-600">
+                      Sign in to access job listings and your fundi profile.
+                    </p>
+                  </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Email or Phone Number</label>
                     <div className="relative">
@@ -352,7 +357,7 @@ export default function JobListingPage() {
                         required
                         value={loginData.emailOrPhone}
                         onChange={handleChange}
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                        className="w-full rounded-md border border-gray-300 py-3 pl-10 pr-4 transition-colors focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                         placeholder="Email or Phone Number"
                       />
                     </div>
@@ -368,7 +373,7 @@ export default function JobListingPage() {
                         required
                         value={loginData.password}
                         onChange={handleChange}
-                        className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors"
+                        className="w-full rounded-md border border-gray-300 py-3 pl-10 pr-12 transition-colors focus:border-slate-400 focus:ring-2 focus:ring-slate-200"
                         placeholder="Enter your password"
                       />
                       <button
@@ -392,7 +397,7 @@ export default function JobListingPage() {
                     <button
                       type="button"
                       onClick={() => { setAuthMode("forgotPassword"); setError(null); setToast(null); }}
-                      className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                      className="text-sm font-medium text-orange-600 transition-colors hover:text-orange-700"
                     >
                       Forgot password?
                     </button>
@@ -401,7 +406,7 @@ export default function JobListingPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group"
+                    className="group w-full rounded-md bg-slate-900 px-8 py-4 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center">
@@ -635,7 +640,7 @@ export default function JobListingPage() {
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group"
+                    className="w-full px-8 py-4 bg-gradient-to-r from-black to-black text-white rounded-xl font-semibold transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none group"
                   >
                     {isLoading ? (
                       <span className="flex items-center justify-center">
@@ -644,7 +649,7 @@ export default function JobListingPage() {
                       </span>
                     ) : (
                       <span className="flex items-center justify-center">
-                        Join as Fundi
+                        Create Account
                         <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                       </span>
                     )}

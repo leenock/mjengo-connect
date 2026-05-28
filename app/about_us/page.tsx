@@ -1,236 +1,209 @@
-"use client"
+"use client";
 
-import { useState, useEffect, useRef } from "react"
-import { Heart, Lightbulb, Users, Briefcase, Target, Zap } from "lucide-react"
-import Header from "@/components/landingpage/Header"
-import Footer from "@/components/landingpage/Footer"
-import Image from "next/image"
-import Link from "next/link"
+import { Briefcase, Building2, Handshake, ShieldCheck, Target, Users } from "lucide-react";
+import Header from "@/components/landingpage/Header";
+import Footer from "@/components/landingpage/Footer";
+import Image from "next/image";
+import Link from "next/link";
+
+const highlights = [
+  {
+    title: "Verified job listings",
+    description: "Every paid listing is reviewed before publishing to maintain quality and trust.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Built for local realities",
+    description: "Trades, locations, and hiring flows are designed for Kenya's construction market.",
+    icon: Building2,
+  },
+  {
+    title: "Direct client-fundi connection",
+    description: "Clients and fundis communicate directly to agree on timelines, scope, and terms.",
+    icon: Handshake,
+  },
+];
+
+const values = [
+  {
+    title: "Trust and accountability",
+    description: "We prioritize transparent listings, clear job details, and responsible platform standards.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Opportunity for skilled workers",
+    description: "We help fundis become visible to more clients and access meaningful work opportunities.",
+    icon: Users,
+  },
+  {
+    title: "Practical innovation",
+    description: "We focus on tools that simplify hiring and reduce friction for real construction projects.",
+    icon: Target,
+  },
+];
+
+const stats = [
+  { value: "500+", label: "Jobs posted" },
+  { value: "200+", label: "Skilled fundis" },
+  { value: "5+", label: "Counties reached" },
+  { value: "Daily", label: "Listing activity" },
+];
 
 export default function AboutUs() {
-  const [visible, setVisible] = useState<Record<string, boolean>>({})
-  const sectionRefs = useRef<Record<string, HTMLElement | null>>({
-    story: null,
-    stats: null,
-    values: null,
-    cta: null,
-  })
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.target.id) {
-            setVisible((v) => ({ ...v, [entry.target.id]: true }))
-          }
-        })
-      },
-      { threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
-    )
-    Object.values(sectionRefs.current).forEach((el) => {
-      if (el) observer.observe(el)
-    })
-    return () => observer.disconnect()
-  }, [])
-
-  const values = [
-    {
-      icon: Heart,
-      title: "Community first",
-      description: "We build trust between skilled workers and clients. Every feature we ship is designed to strengthen those connections across Kenya.",
-    },
-    {
-      icon: Lightbulb,
-      title: "Access through innovation",
-      description: "Technology should make construction hiring simple and transparent. We’re here to make quality labour visible and bookable for everyone.",
-    },
-    {
-      icon: Users,
-      title: "Growth and impact",
-      description: "We care about sustainable livelihoods for fundis and better outcomes for clients. Our success is measured by theirs.",
-    },
-  ]
-
-  const stats = [
-    { value: "200+", label: "Skilled fundis", sub: "professionals" },
-    { value: "500+", label: "Jobs posted", sub: "Across the platform" },
-    { value: "5+", label: "Counties", sub: "Nationwide reach" },
-    { value: "24/7", label: "Support", sub: "When you need us" },
-  ]
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 antialiased">
+    <div className="min-h-screen bg-white text-slate-900 antialiased">
       <Header />
 
       <main className="pt-20">
-        {/* Hero */}
-        <section className="relative bg-slate-900 px-4 pt-16 pb-24 sm:pt-20 sm:pb-28 lg:pt-24 lg:pb-32 overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(251,146,60,0.12),transparent)]" />
-          <div className="relative max-w-4xl mx-auto text-center">
-            <p className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/10 text-slate-300 text-sm font-medium mb-8">
-              <Heart className="w-4 h-4 text-amber-400" />
-              About MJENGO Connect
-            </p>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight leading-[1.15]">
-              Building Kenya’s construction future, together
-            </h1>
-            <p className="mt-6 text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              We connect skilled fundis with people who need them — so projects get done well, and workers get the opportunities they deserve.
-            </p>
-          </div>
-        </section>
-
-        {/* Story */}
-        <section
-          id="story"
-          ref={(el) => { sectionRefs.current.story = el }}
-          className="py-16 sm:py-20 lg:py-24 bg-white"
-        >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-              <div
-                className={`transition-all duration-700 ${
-                  visible.story ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
-              >
-                <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                  Why we started
-                </h2>
-                <p className="mt-4 text-slate-600 leading-relaxed">
-                  Kenya has no shortage of talented fundis. What was missing was a simple, trusted way to find them. Clients relied on word-of-mouth; skilled workers had no central place to be seen. We built MJENGO Connect to fix that.
+        <section className="border-b border-slate-200 bg-white py-14 lg:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-orange-600">About MJENGO Connect</p>
+                <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl lg:text-[3.1rem] lg:leading-[1.14]">
+                  A trusted platform for construction hiring in Kenya
+                </h1>
+                <p className="mt-5 max-w-2xl text-lg leading-relaxed text-slate-600">
+                  MJENGO Connect helps clients post trusted job listings and helps fundis discover quality
+                  opportunities. We are building reliable infrastructure for how construction work is found
+                  and delivered.
                 </p>
-                <p className="mt-4 text-slate-600 leading-relaxed">
-                  Today we help clients post jobs and get in touch with fundis — and we help fundis find work, grow their reputation. One platform, two sides of the same goal: better construction outcomes for everyone.
-                </p>
-                <div className="mt-8 flex items-center gap-3">
-                  <div className="flex items-center gap-2 text-amber-600 font-semibold">
-                    <Target className="w-5 h-5" />
-                    <span>Our mission</span>
-                  </div>
-                  <p className="text-slate-500 text-sm max-w-xs">
-                    Make skilled labour visible, bookable, and trusted across Kenya.
-                  </p>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link
+                    href="/auth/job-posting"
+                    className="inline-flex items-center justify-center gap-2 rounded-md bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800"
+                  >
+                    <Briefcase className="h-4 w-4" />
+                    Post a job
+                  </Link>
+                  <Link
+                    href="/Jobs-list"
+                    className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-50"
+                  >
+                    Browse jobs
+                  </Link>
                 </div>
               </div>
-              <div
-                className={`relative transition-all duration-700 delay-150 ${
-                  visible.story ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                }`}
-              >
-                <div className="relative rounded-2xl overflow-hidden bg-slate-100 aspect-[4/3] shadow-xl">
+
+              <div className="group relative">
+                <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100 shadow-sm transition-shadow duration-300 group-hover:shadow-md">
                   <Image
                     src="/images/workers1.jpg"
-                    alt="Skilled fundis and construction professionals in Kenya"
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 50vw"
-                    priority={false}
+                    alt="Construction professionals collaborating on site"
+                    width={720}
+                    height={520}
+                    className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
                   />
                 </div>
-                <div className="absolute -bottom-4 -right-4 w-24 h-24 bg-amber-500/20 rounded-2xl blur-2xl -z-10" />
+                <div className="absolute -bottom-4 left-4 rounded-md border border-slate-200 bg-white px-4 py-3 shadow-sm transition-all duration-300 group-hover:-translate-y-0.5 group-hover:shadow-md sm:left-6">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Our mission</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">
+                    Make skilled labour visible, trusted, and easier to hire.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Stats */}
-        <section
-          id="stats"
-          ref={(el) => { sectionRefs.current.stats = el }}
-          className="py-16 sm:py-20 bg-slate-800"
-        >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 className="text-center text-2xl sm:text-3xl font-bold text-white mb-12">
-              Our impact in numbers
-            </h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-              {stats.map((stat, i) => (
-                <div
-                  key={stat.label}
-                  className={`rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 text-center transition-all duration-600 ${
-                    visible.stats ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                  }`}
-                  style={{ transitionDelay: `${i * 80}ms` }}
-                >
-                  <p className="text-2xl sm:text-3xl font-bold text-white">{stat.value}</p>
-                  <p className="mt-1 text-sm font-semibold text-amber-400/90">{stat.label}</p>
-                  <p className="mt-0.5 text-xs text-slate-400">{stat.sub}</p>
+        <section className="border-b border-slate-200 bg-slate-50 py-12 lg:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 lg:gap-6">
+              {stats.map((stat) => (
+                <div className="rounded-lg border border-slate-200 bg-white p-5 text-center transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm" key={stat.label}>
+                  <p className="text-2xl font-bold text-slate-900 sm:text-3xl">{stat.value}</p>
+                  <p className="mt-1 text-sm text-slate-600">{stat.label}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* Values */}
-        <section
-          id="values"
-          ref={(el) => { sectionRefs.current.values = el }}
-          className="py-16 sm:py-20 lg:py-24 bg-slate-50"
-        >
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-14">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                What we believe
-              </h2>
-              <p className="mt-3 text-slate-600 leading-relaxed">
-                These principles guide how we build the product and serve our community.
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-              {values.map((item, i) => {
-                const Icon = item.icon
-                return (
-                  <div
-                    key={item.title}
-                    className={`rounded-2xl border border-slate-200 bg-white p-6 sm:p-8 shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-300 ${
-                      visible.values ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-                    }`}
-                    style={{ transitionDelay: `${i * 100}ms` }}
-                  >
-                    <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600">
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <h3 className="mt-4 text-lg font-bold text-slate-900">{item.title}</h3>
-                    <p className="mt-2 text-slate-600 text-sm leading-relaxed">{item.description}</p>
-                  </div>
-                )
-              })}
+        <section className="border-b border-slate-200 bg-white py-14 lg:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-orange-600">Our story</p>
+                <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                  Why we built MJENGO Connect
+                </h2>
+                <p className="mt-5 leading-relaxed text-slate-600">
+                  Construction hiring has traditionally depended on referrals and fragmented networks. That
+                  model leaves clients uncertain and limits visibility for many skilled professionals.
+                </p>
+                <p className="mt-4 leading-relaxed text-slate-600">
+                  We created MJENGO Connect to provide a structured digital marketplace where jobs can be
+                  posted clearly and fundis can find opportunities aligned with their trade and location.
+                </p>
+                <p className="mt-4 leading-relaxed text-slate-600">
+                  Our goal is long-term: strengthen trust, improve hiring outcomes, and support sustainable
+                  growth across the construction ecosystem.
+                </p>
+              </div>
+
+              <div className="grid gap-4">
+                {highlights.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <article
+                      key={item.title}
+                      className="rounded-lg border border-slate-200 bg-slate-50 p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm sm:p-6"
+                    >
+                      <div className="inline-flex rounded-md bg-white p-2 text-orange-600 ring-1 ring-slate-200 transition-colors duration-200 hover:bg-orange-50">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="mt-4 text-lg font-semibold text-slate-900">{item.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.description}</p>
+                    </article>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* CTA */}
-        <section
-          id="cta"
-          ref={(el) => { sectionRefs.current.cta = el }}
-          className="py-16 sm:py-20 lg:py-24 bg-slate-900"
-        >
-          <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div
-              className={`transition-all duration-700 ${
-                visible.cta ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-              }`}
-            >
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tight">
-                Ready to get started?
-              </h2>
-              <p className="mt-4 text-slate-400 leading-relaxed">
-                Post a job and find skilled fundis, or sign up as a fundi and browse opportunities.
+        <section className="bg-white py-14 lg:py-20">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center">
+              <p className="text-sm font-semibold uppercase tracking-wide text-orange-600">What guides us</p>
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">Our core values</h2>
+            </div>
+            <div className="mt-10 grid gap-6 md:grid-cols-3">
+              {values.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <article
+                    key={item.title}
+                    className="rounded-lg border border-slate-200 bg-white p-6 transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-sm"
+                  >
+                    <div className="inline-flex rounded-md bg-orange-50 p-2 text-orange-600">
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold text-slate-900">{item.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-600">{item.description}</p>
+                  </article>
+                );
+              })}
+            </div>
+
+            <div className="mt-12 rounded-lg border border-slate-200 bg-slate-900 p-8 text-center sm:p-10">
+              <h3 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Work with us on your next project</h3>
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
+                Whether you are hiring a fundi or looking for your next opportunity, MJENGO Connect gives
+                you a clear and reliable place to start.
               </p>
-              <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
                 <Link
                   href="/auth/job-posting"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-amber-500 text-white font-semibold shadow-lg shadow-amber-500/25 hover:bg-amber-400 transition-colors"
+                  className="inline-flex items-center justify-center rounded-md bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-100"
                 >
-                  <Briefcase className="w-5 h-5" />
                   Post a job
                 </Link>
                 <Link
-                  href="/Jobs-list"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-white/20 text-white font-semibold hover:bg-white/10 transition-colors"
+                  href="/auth/job-listing"
+                  className="inline-flex items-center justify-center rounded-md border border-slate-500 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800"
                 >
-                  <Zap className="w-5 h-5" />
-                  Browse jobs
+                  I&apos;m a fundi
                 </Link>
               </div>
             </div>
@@ -240,5 +213,5 @@ export default function AboutUs() {
 
       <Footer />
     </div>
-  )
+  );
 }

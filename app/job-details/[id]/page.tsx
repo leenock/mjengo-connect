@@ -197,7 +197,7 @@ export default function JobDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="min-h-screen flex flex-col bg-white">
         <Header />
         <main className="flex-grow pt-20 flex items-center justify-center">
           <div className="text-center">
@@ -212,7 +212,7 @@ export default function JobDetailsPage() {
 
   if (error || !job) {
     return (
-      <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="min-h-screen flex flex-col bg-white">
         <Header />
         <main className="flex-grow pt-20 flex items-center justify-center">
           <div className="text-center max-w-md mx-auto px-6">
@@ -231,12 +231,12 @@ export default function JobDetailsPage() {
             </p>
             <div className="space-y-3">
               <Link href="/jobs">
-                <button className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300">
+                <button className="w-full rounded-md bg-slate-900 px-6 py-3 font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-slate-800">
                   Browse All Jobs
                 </button>
               </Link>
               <Link href="/">
-                <button className="w-full px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all duration-300">
+                <button className="w-full rounded-md bg-slate-100 px-6 py-3 font-semibold text-gray-700 transition-colors hover:bg-slate-200">
                   Go to Homepage
                 </button>
               </Link>
@@ -249,7 +249,7 @@ export default function JobDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-white">
       <Header />
       <main className="flex-grow pt-20">
         {/* Breadcrumb */}
@@ -282,7 +282,7 @@ export default function JobDetailsPage() {
               </Link>
 
               {/* Job Header */}
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+              <div className="rounded-lg bg-white p-8 shadow-sm">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-start mb-6">
                   <div className="flex-1 mb-4 md:mb-0">
                     <div className="flex flex-wrap items-center gap-2 mb-4">
@@ -335,7 +335,7 @@ export default function JobDetailsPage() {
               </div>
 
               {/* Job Description */}
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+              <div className="rounded-lg bg-white p-8 shadow-sm">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">
                   Project Description
                 </h2>
@@ -350,10 +350,10 @@ export default function JobDetailsPage() {
               </div>
 
               {/* Requirements */}
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+              <div className="rounded-lg bg-white p-8 shadow-sm">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <Shield className="w-5 h-5 text-white" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-100">
+                    <Shield className="h-5 w-5 text-emerald-700" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">
                     Requirements
@@ -372,10 +372,10 @@ export default function JobDetailsPage() {
               </div>
 
               {/* Key Responsibilities */}
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+              <div className="rounded-lg bg-white p-8 shadow-sm">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <Users className="w-5 h-5 text-white" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-indigo-100">
+                    <Users className="h-5 w-5 text-indigo-700" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">
                     Key Responsibilities
@@ -394,10 +394,10 @@ export default function JobDetailsPage() {
               </div>
 
               {/* Benefits & Perks */}
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+              <div className="rounded-lg bg-white p-8 shadow-sm">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <Award className="w-5 h-5 text-white" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-amber-100">
+                    <Award className="h-5 w-5 text-amber-700" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">
                     Benefits & Perks
@@ -421,10 +421,10 @@ export default function JobDetailsPage() {
             {/* Sidebar */}
             <div className="lg:sticky lg:top-6 space-y-8">
               {/* Contact Information */}
-              <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/30 p-8">
+              <div className="rounded-lg bg-white p-8 shadow-sm">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center shadow-lg">
-                    <Phone className="w-5 h-5 text-white" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-100">
+                    <Phone className="h-5 w-5 text-emerald-700" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900">
                     Contact Information
@@ -435,7 +435,7 @@ export default function JobDetailsPage() {
 
 
                 {isLoggedIn ? (
-                  <div className="bg-white/60 rounded-2xl p-6 border border-white/40 shadow-lg space-y-4">
+                  <div className="space-y-4 rounded-lg bg-slate-50 p-6">
                     <div className="flex items-center">
                       <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center mr-4">
                         <User className="w-5 h-5 text-slate-600" />
@@ -512,7 +512,7 @@ export default function JobDetailsPage() {
                     </div>
                     <Link
                       href="/auth/job-listing"
-                      className="block text-center w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-xl font-semibold transition-all duration-300 hover:shadow-lg"
+                      className="block w-full rounded-md bg-slate-900 px-6 py-3 text-center font-semibold text-white transition-colors hover:bg-slate-800"
                     >
                       Sign In to View Contact
                     </Link>
@@ -523,7 +523,7 @@ export default function JobDetailsPage() {
 
 
               {/* Job Statistics */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+              <div className="rounded-lg bg-white p-6 shadow-sm">
                 <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
                   Job Statistics
                 </h3>
