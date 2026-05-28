@@ -136,6 +136,40 @@ export const getJobsByClientId = async (clientId, pagination = {}) => {
   try {
     const { page = 1, limit = 100 } = pagination
     const skip = (page - 1) * limit
+    const sevenDaysAgo = new Date()
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+    // Keep "my jobs" accurate even if scheduled cron hasn't run yet.
+    // 1) Paid ACTIVE jobs older than 7 days are no longer live.
+    await prisma.job.updateMany({
+      where: {
+        postedById: clientId,
+        status: "ACTIVE",
+        isPaid: true,
+        paidAt: {
+          not: null,
+          lte: sevenDaysAgo,
+        },
+      },
+      data: {
+        status: "EXPIRED",
+      },
+    })
+
+    // 2) Unpaid ACTIVE jobs older than 7 days should be EXPIRED.
+    await prisma.job.updateMany({
+      where: {
+        postedById: clientId,
+        status: "ACTIVE",
+        isPaid: false,
+        timePosted: {
+          lte: sevenDaysAgo,
+        },
+      },
+      data: {
+        status: "EXPIRED",
+      },
+    })
 
     const [jobs, totalCount] = await Promise.all([
       prisma.job.findMany({
@@ -486,7 +520,7 @@ export const isJobWithinPaidPeriod = (paidAt) => {
 
 /**
  * Expire jobs that have been paid for more than 7 days
- * Sets status to CLOSED for jobs where paidAt is older than 7 days
+ * Sets status to EXPIRED for jobs where paidAt is older than 7 days
  * @returns {Object} Expiration results
  */
 export const expirePaidJobs = async () => {
@@ -494,12 +528,12 @@ export const expirePaidJobs = async () => {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    // Find all paid jobs where paidAt is older than 7 days and status is not already CLOSED
+    // Find all paid jobs where paidAt is older than 7 days and status is not already EXPIRED
     const expiredJobs = await prisma.job.findMany({
       where: {
         isPaid: true,
         status: {
-          not: "CLOSED", // Don't update jobs that are already closed
+          not: "EXPIRED", // Don't update jobs that are already expired
         },
         paidAt: {
           not: null,
@@ -521,8 +555,8 @@ export const expirePaidJobs = async () => {
       };
     }
 
-    // Update all expired jobs to set status to CLOSED
-    // Keep isPaid = true for historical record
+    // Update all expired jobs to set status to EXPIRED.
+    // Keep isPaid = true for historical record.
     const updateResult = await prisma.job.updateMany({
       where: {
         id: {
@@ -530,17 +564,17 @@ export const expirePaidJobs = async () => {
         },
       },
       data: {
-        status: "CLOSED",
+        status: "EXPIRED",
         // Keep isPaid = true and paidAt for historical record
       },
     });
 
-    console.log(`✅ Closed ${updateResult.count} job(s) after 7-day paid period`);
+    console.log(`✅ Expired ${updateResult.count} paid job(s) after 7-day paid period`);
 
     return {
       expired: updateResult.count,
       jobs: expiredJobs,
-      message: `Successfully closed ${updateResult.count} job(s) after 7-day paid period`,
+      message: `Successfully expired ${updateResult.count} paid job(s) after 7-day paid period`,
     };
   } catch (error) {
     console.error("Expire Paid Jobs Service Error:", error);
@@ -628,9 +662,9 @@ export const closeJob = async (jobId, clientId) => {
       throw new Error("Unauthorized: You can only close your own jobs");
     }
 
-    // Check if job is already closed
-    if (existingJob.status === "CLOSED") {
-      throw new Error("Job is already closed");
+    // Check if job is already ended.
+    if (["CLOSED", "EXPIRED"].includes(existingJob.status)) {
+      throw new Error("Job is already ended");
     }
 
     // Update job status to CLOSED
@@ -660,7 +694,7 @@ export const closeJob = async (jobId, clientId) => {
 }
 
 /**
- * Reactivate a closed job (if still within paid period)
+ * Reactivate an ended job (if still within paid period)
  * @param {String} jobId - Job ID
  * @param {String} clientId - Client user ID (for authorization)
  * @returns {Object} Updated job and remaining days
@@ -680,9 +714,9 @@ export const reactivateJob = async (jobId, clientId) => {
       throw new Error("Unauthorized: You can only reactivate your own jobs");
     }
 
-    // Check if job is closed
-    if (existingJob.status !== "CLOSED") {
-      throw new Error("Job is not closed. Only closed jobs can be reactivated.");
+    // During transition, allow both CLOSED and EXPIRED as ended statuses.
+    if (!["CLOSED", "EXPIRED"].includes(existingJob.status)) {
+      throw new Error("Job is not ended. Only closed/expired jobs can be reactivated.");
     }
 
     // Check if job is paid
@@ -727,7 +761,7 @@ export const reactivateJob = async (jobId, clientId) => {
 }
 
 /**
- * Re-run a closed job
+ * Re-run an ended job
  * If still within paid period: set to ACTIVE (no approval needed)
  * If outside paid period: set to PENDING (requires approval and new payment)
  * @param {String} jobId - Job ID
@@ -749,9 +783,9 @@ export const rerunJob = async (jobId, clientId) => {
       throw new Error("Unauthorized: You can only re-run your own jobs");
     }
 
-    // Check if job is closed
-    if (existingJob.status !== "CLOSED") {
-      throw new Error("Only closed jobs can be re-run.");
+    // During transition, allow both CLOSED and EXPIRED as ended statuses.
+    if (!["CLOSED", "EXPIRED"].includes(existingJob.status)) {
+      throw new Error("Only closed/expired jobs can be re-run.");
     }
 
     // Check if job is paid and still within the 7-day paid period
