@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -33,6 +34,16 @@ export default function Header() {
       document.body.style.overflow = "";
     };
   }, [isMenuOpen]);
+
+  const openMenu = () => {
+    setIsMenuVisible(true);
+    requestAnimationFrame(() => setIsMenuOpen(true));
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+    window.setTimeout(() => setIsMenuVisible(false), 250);
+  };
 
   return (
     <>
@@ -84,7 +95,7 @@ export default function Header() {
           <button
             type="button"
             className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 hover:bg-slate-100 lg:hidden"
-            onClick={() => setIsMenuOpen((open) => !open)}
+            onClick={() => (isMenuOpen ? closeMenu() : openMenu())}
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMenuOpen}
           >
@@ -93,20 +104,26 @@ export default function Header() {
         </div>
       </header>
 
-      {isMenuOpen && (
+      {isMenuVisible && (
         <div className="fixed inset-0 z-40 lg:hidden" role="dialog" aria-modal="true">
           <button
             type="button"
-            className="absolute inset-0 bg-slate-900/40"
+            className={`absolute inset-0 bg-slate-900/40 transition-opacity duration-250 ${
+              isMenuOpen ? "opacity-100" : "opacity-0"
+            }`}
             aria-label="Close menu"
-            onClick={() => setIsMenuOpen(false)}
+            onClick={closeMenu}
           />
-          <div className="absolute right-0 top-0 flex h-full w-full max-w-sm flex-col border-l border-slate-200 bg-white shadow-xl">
+          <div
+            className={`absolute right-0 top-0 flex h-full w-full max-w-sm flex-col border-l border-slate-200 bg-white shadow-xl transition-transform duration-250 ease-out ${
+              isMenuOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
               <span className="text-sm font-semibold text-slate-900">Menu</span>
               <button
                 type="button"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={closeMenu}
                 className="rounded-md p-2 text-slate-500 hover:bg-slate-100"
                 aria-label="Close menu"
               >
@@ -118,7 +135,7 @@ export default function Header() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={closeMenu}
                   className="block rounded-md px-4 py-3 text-base font-medium text-slate-700 hover:bg-slate-50"
                 >
                   {item.label}
@@ -128,14 +145,14 @@ export default function Header() {
             <div className="space-y-3 border-t border-slate-200 p-5">
               <Link
                 href="/auth/job-listing"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={closeMenu}
                 className="block w-full rounded-md border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-800"
               >
                 Fundi login
               </Link>
               <Link
                 href="/auth/job-posting"
-                onClick={() => setIsMenuOpen(false)}
+                onClick={closeMenu}
                 className="block w-full rounded-md bg-slate-900 px-4 py-3 text-center text-sm font-semibold text-white"
               >
                 Post a job
