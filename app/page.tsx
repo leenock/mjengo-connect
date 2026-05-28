@@ -9,13 +9,15 @@ import Footer from "@/components/landingpage/Footer";
 
 export default function Page() {
   return (
-    <div>
+    <div className="min-h-screen bg-white font-sans text-slate-900 antialiased">
       <Header />
-      <Hero />
-      <Service />
-      <Vision />
-      <FAQs />
+      <main>
+        <Hero />
+        <Service />
+        <Vision />
+        <FAQs />
+      </main>
       <Footer />
     </div>
-  )
+  );
 }

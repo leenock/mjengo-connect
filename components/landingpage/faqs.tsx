@@ -1,341 +1,185 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import {
-  ChevronDown,
-  Search,
-  MessageCircle,
-  HelpCircle,
-  Users,
-  Briefcase,
-} from "lucide-react";
+import { ChevronDown, Clock3, MessageCircle } from "lucide-react";
+
+type FaqCategory = "all" | "general" | "clients" | "fundis";
+
+interface FaqItem {
+  id: string;
+  category: Exclude<FaqCategory, "all">;
+  question: string;
+  answer: string;
+}
+
+const categories: { id: FaqCategory; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "general", label: "General" },
+  { id: "clients", label: "For clients" },
+  { id: "fundis", label: "For fundis" },
+];
+
+const faqItems: FaqItem[] = [
+  {
+    id: "what-is-mjengo",
+    category: "general",
+    question: "What is MJENGO Connect?",
+    answer:
+      "MJENGO Connect is a platform that connects clients who need construction work with skilled fundis — masons, plumbers, painters, welders, electricians, and related trades.",
+  },
+  {
+    id: "how-does-it-help",
+    category: "general",
+    question: "How does the platform help me?",
+    answer:
+      "Clients post jobs and fundis browse listings by trade and location. Fundis contact clients directly using the details on each listing.",
+  },
+  {
+    id: "who-can-use",
+    category: "general",
+    question: "Who can use MJENGO Connect?",
+    answer:
+      "Anyone hiring for construction work, and any skilled worker looking for job opportunities in Kenya.",
+  },
+  {
+    id: "how-to-post-job",
+    category: "clients",
+    question: "How do I post a job?",
+    answer:
+      "Create a client account, submit your job details, and pay the listing fee. After admin verification, your job is published for fundis to view.",
+  },
+  {
+    id: "how-contact",
+    category: "clients",
+    question: "How do fundis contact me?",
+    answer:
+      "Fundis view your listing and reach out using the phone number or email you provide on the job post.",
+  },
+  {
+    id: "how-to-see-jobs",
+    category: "fundis",
+    question: "How do I find jobs?",
+    answer:
+      "Register as a fundi, browse listings by location and trade, and open a job to see full details before contacting the client.",
+  },
+  {
+    id: "how-to-apply",
+    category: "fundis",
+    question: "Is there a subscription?",
+    answer:
+      "Fundis can subscribe for expanded access to listings and saved jobs. Pricing and plan details are shown in your fundi account.",
+  },
+];
 
 export default function FAQs() {
-  const [isVisible, setIsVisible] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("general");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [expandedItems, setExpandedItems] = useState<Record<string, boolean>>(
-    {}
+  const [activeCategory, setActiveCategory] = useState<FaqCategory>("general");
+  const [expandedId, setExpandedId] = useState<string | null>("what-is-mjengo");
+
+  const filteredFaqs = faqItems.filter(
+    (item) => activeCategory === "all" || item.category === activeCategory
   );
-  const sectionRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    const element = sectionRef.current;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (element) {
-      observer.observe(element);
-    }
-
-    return () => {
-      if (element) {
-        observer.unobserve(element);
-      }
-    };
-  }, []);
-
-  const categories = [
-    {
-      id: "general",
-      label: "General",
-      icon: <HelpCircle className="w-5 h-5" />,
-    },
-    {
-      id: "clients",
-      label: "For Clients",
-      icon: <Briefcase className="w-5 h-5" />,
-    },
-    { id: "fundis", label: "For Fundis", icon: <Users className="w-5 h-5" /> },
-  ];
-
-  const faqItems = [
-    // General FAQs
-    {
-      id: "what-is-mjengo",
-      category: "general",
-      question: "What is MJENGO Connect?",
-      answer:
-        "MJENGO Connect is a platform that helps people find local fundis (skilled workers) like masons, plumbers, painters, welders, and electricians.",
-    },
-    {
-      id: "how-does-it-help",
-      category: "general",
-      question: "How does MJENGO Connect help me?",
-      answer:
-        "Whether you're looking for a skilled worker or you're a fundi seeking jobs, MJENGO Connect bridges the gap. Post a job and nearby qualified workers will reach out. If you're a fundi, discover job opportunities and get hired with ease.",
-    },
-    {
-      id: "who-can-use",
-      category: "general",
-      question: "Who can use MJENGO Connect?",
-      answer:
-        "Anyone! Whether you are building a house or looking for work as a fundi, MJENGO Connect is for you.",
-    },
-
-    // For Clients / Job Posters
-    {
-      id: "how-to-post-job",
-      category: "clients",
-      question: "How do I post a job?",
-      answer:
-        "Just fill in job details like type of work, location, time, and budget. Then pay a small listing fee (Ksh 300), and after your Job is verified, and payed it will be listed on the platform for fundis to browse and contact you directly.",
-    },
-    {
-      id: "can-they-conatact-me",
-      category: "clients",
-      question: "How do they contact me for the job?",
-      answer:
-        "Once you post a job, fundis can see it and contact you directly through the provided contact information.",
-    },
-
-    // For Fundis / Workers
-    {
-      id: "how-to-see-jobs",
-      category: "fundis",
-      question: "How do I see jobs?",
-      answer: "You can browse jobs by location or type of work present on the site.",
-    },
-    {
-      id: "how-to-apply",
-      category: "fundis",
-      question: "How do I apply for a job?",
-      answer:
-        "After you register, you get to see full job details listed on the site and can contact the client directly. You can subscribe for only Ksh 200 per month to get access to all jobs and be able to save jobs for later.",
-    },
-  ];
-
-  const toggleItem = (id: string) => {
-    setExpandedItems((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-
-  const filteredFaqs = faqItems.filter((item) => {
-    const matchesCategory =
-      activeCategory === "all" || item.category === activeCategory;
-    const matchesSearch =
-      searchQuery === "" ||
-      item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.answer.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
 
   return (
-    <section
-      ref={sectionRef}
-      id="faqs-section"
-      className="relative py-24 bg-gradient-to-br from-gray-50 via-white to-gray-100 overflow-hidden"
-    >
-      {/* Background Elements */}
-      <div className="absolute inset-0 opacity-30 pointer-events-none">
-        <div className="absolute top-20 right-10 w-72 h-72 bg-orange-200 rounded-full mix-blend-multiply filter blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-blue-200 rounded-full mix-blend-multiply filter blur-3xl animate-pulse" />
-      </div>
-
-      {/* Dot Pattern */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
-        <div
-          className="w-full h-full"
-          style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(0,0,0,0.15) 1px, transparent 0)`,
-            backgroundSize: "20px 20px",
-          }}
-        />
-      </div>
-
-      <div className="relative z-10 max-w-7xl mx-auto px-6 sm:px-10 lg:px-20">
-        {/* Header Section */}
-        <div
-          className={`text-center mb-16 transition-all duration-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-        >
-          <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-100 to-yellow-100 rounded-full text-sm font-medium text-orange-800 mb-6">
-            <MessageCircle className="w-4 h-4 mr-2" />
-            Frequently Asked Questions
-          </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-orange-800 to-gray-900 bg-clip-text text-transparent">
-            Got Questions? We have Got Answers
+    <section id="faqs-section" className="border-b border-slate-200 bg-slate-50 py-12 lg:py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-sm font-semibold uppercase tracking-wide text-orange-600">Support</p>
+          <h2 className="mt-3 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+            Frequently asked questions
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Find answers to common questions about MJENGO Connect, our services,
-            and how we are transforming construction in Kenya.
+          <p className="mt-4 text-lg text-slate-600">
+            Quick answers about posting jobs, finding work, and using the platform.
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div
-          className={`max-w-2xl mx-auto mb-12 transition-all duration-1000 delay-300 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-        >
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-300 shadow-sm"
-              placeholder="Search for answers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Category Tabs */}
-        <div
-          className={`flex flex-wrap justify-center gap-2 mb-12 transition-all duration-1000 delay-500 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-        >
-          <button
-            className={`px-5 py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center space-x-2 ${activeCategory === "all"
-                ? "bg-orange-500 text-white shadow-lg"
-                : "bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600"
-              }`}
-            onClick={() => setActiveCategory("all")}
-          >
-            <HelpCircle className="w-4 h-4" />
-            <span>All Questions</span>
-          </button>
-
+        <div className="mx-auto mt-10 flex max-w-3xl flex-wrap justify-center gap-2">
           {categories.map((category) => (
             <button
               key={category.id}
-              className={`px-5 py-3 rounded-xl font-medium text-sm transition-all duration-300 flex items-center space-x-2 ${activeCategory === category.id
-                  ? "bg-orange-500 text-white shadow-lg"
-                  : "bg-white text-gray-700 hover:bg-orange-50 hover:text-orange-600"
-                }`}
+              type="button"
               onClick={() => setActiveCategory(category.id)}
+              className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
+                activeCategory === category.id
+                  ? "bg-slate-900 text-white"
+                  : "bg-white text-slate-600 ring-1 ring-slate-200 hover:bg-slate-100"
+              }`}
             >
-              {category.icon}
-              <span>{category.label}</span>
+              {category.label}
             </button>
           ))}
         </div>
 
-        {/* FAQ Accordion */}
-        <div
-          className={`max-w-4xl mx-auto transition-all duration-1000 delay-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-        >
-          <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-            {filteredFaqs.length > 0 ? (
-              filteredFaqs.map((faq) => (
-                <div
-                  key={faq.id}
-                  className={`border-b border-gray-100 last:border-b-0 transition-all duration-300 ${expandedItems[faq.id] ? "bg-orange-50" : "hover:bg-gray-50"
-                    }`}
+        <div className="mt-10 divide-y divide-slate-200 rounded-lg border border-slate-200 bg-white">
+          {filteredFaqs.map((faq) => {
+            const isOpen = expandedId === faq.id;
+            return (
+              <div key={faq.id}>
+                <button
+                  type="button"
+                  className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left transition-colors hover:bg-slate-50"
+                  onClick={() => setExpandedId(isOpen ? null : faq.id)}
+                  aria-expanded={isOpen}
                 >
-                  <button
-                    className="w-full px-8 py-6 text-left flex justify-between items-center focus:outline-none"
-                    onClick={() => toggleItem(faq.id)}
-                    aria-expanded={expandedItems[faq.id]}
-                  >
-                    <div className="flex items-center">
-                      <span
-                        className={`w-8 h-8 rounded-full flex items-center justify-center mr-4 transition-colors duration-300 ${expandedItems[faq.id]
-                            ? "bg-orange-500 text-white"
-                            : "bg-orange-100 text-orange-600"
-                          }`}
-                      >
-                        Q
-                      </span>
-                      <span className="font-semibold text-lg text-gray-900">
-                        {faq.question}
-                      </span>
-                    </div>
-                    <ChevronDown
-                      className={`w-5 h-5 text-gray-500 transition-transform duration-300 ${expandedItems[faq.id]
-                          ? "transform rotate-180 text-orange-500"
-                          : ""
-                        }`}
-                    />
-                  </button>
-                  <div
-                    className={`overflow-hidden transition-all duration-300 ${expandedItems[faq.id]
-                        ? "max-h-96 opacity-100"
-                        : "max-h-0 opacity-0"
-                      }`}
-                  >
-                    <div className="px-8 pb-6 pt-2 text-gray-600 leading-relaxed">
-                      <span className="font-medium text-orange-600">A: </span>
-                      {faq.answer}
-                    </div>
+                  <span className="font-medium text-slate-900">{faq.question}</span>
+                  <ChevronDown
+                    className={`h-5 w-5 shrink-0 text-slate-400 transition-transform ${
+                      isOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                <div
+                  className={`grid overflow-hidden transition-all duration-300 ease-out ${
+                    isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}
+                >
+                  <div className="min-h-0">
+                    <p className="px-6 pb-5 text-sm leading-relaxed text-slate-600">{faq.answer}</p>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="px-8 py-12 text-center">
-                <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Search className="w-8 h-8 text-orange-500" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  No results found
-                </h3>
-                <p className="text-gray-600 max-w-md mx-auto">
-                  We couldnot find any questions matching your search. Try
-                  different keywords or browse all categories.
-                </p>
-                <button
-                  className="mt-6 px-6 py-3 bg-orange-500 text-white rounded-xl font-medium transition-all duration-300 hover:bg-orange-600"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setActiveCategory("all");
-                  }}
-                >
-                  View all FAQs
-                </button>
               </div>
-            )}
-          </div>
+            );
+          })}
         </div>
 
-        {/* Still Have Questions */}
-        <div
-          className={`mt-16 text-center transition-all duration-1000 delay-1000 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-        >
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-3xl p-10 text-white relative overflow-hidden">
-            {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-10">
-              <div
-                className="w-full h-full"
-                style={{
-                  backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)`,
-                  backgroundSize: "20px 20px",
-                }}
-              />
+        <div className="mt-10 rounded-lg border border-slate-200 bg-white p-6 sm:p-8 lg:p-10">
+          <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-center">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-600">
+                Chat with support
+              </p>
+              <h3 className="mt-3 text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+                Still need help?
+              </h3>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+                We can guide you on account setup, job listings, payments, and subscriptions. Send us a
+                message and our team will assist you quickly.
+              </p>
+              <div className="mt-5 flex flex-wrap items-center gap-4 text-sm text-slate-600">
+                <span className="inline-flex items-center gap-2 rounded-md bg-slate-100 px-3 py-2">
+                  <Clock3 className="h-4 w-4 text-slate-500" />
+                  Typical response: same day
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-md bg-slate-100 px-3 py-2">
+                  <MessageCircle className="h-4 w-4 text-slate-500" />
+                  Friendly human support
+                </span>
+              </div>
             </div>
 
-            <div className="relative z-10">
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">
-                Still Have Questions?
-              </h3>
-              <p className="text-white/90 mb-8 max-w-2xl mx-auto">
-                Our team is here to help. Contact us for personalized assistance
-                with any questions about our services, platform, or how we can
-                help with your construction needs.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  href="/contact-us"
-                  className="inline-block px-8 py-4 bg-white text-orange-600 rounded-xl font-semibold transition-all duration-300 hover:shadow-xl transform hover:-translate-y-1"
-                >
-                  Contact Support
-                </Link>
-                <button className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-xl font-semibold transition-all duration-300 hover:bg-white/10 transform hover:-translate-y-1">
-                  Live Chat
-                </button>
-              </div>
+            <div className="flex flex-col gap-3 lg:items-end">
+              <Link
+                href="/contact-us"
+                className="inline-flex w-full items-center justify-center rounded-md bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800 lg:w-auto"
+              >
+                Start a chat
+              </Link>
+              <Link
+                href="/contact-us"
+                className="inline-flex w-full items-center justify-center rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 lg:w-auto"
+              >
+                Contact support
+              </Link>
             </div>
           </div>
         </div>

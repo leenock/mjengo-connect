@@ -1,127 +1,122 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Briefcase, Search, Handshake } from "lucide-react";
+
+type StageStatus = "live" | "expanding" | "future";
+
+interface ValueStage {
+  number: number;
+  status: StageStatus;
+  statusLabel: string;
+  title: string;
+  description: string;
+}
+
+const stages: ValueStage[] = [
+  {
+    number: 1,
+    status: "live",
+    statusLabel: "Stage 1 · Live today",
+    title: "Post & verify jobs",
+    description:
+      "Clients submit construction jobs with clear scope, location, and budget. Listings are reviewed and published once approved and paid.",
+  },
+  {
+    number: 2,
+    status: "live",
+    statusLabel: "Stage 2 · Live today",
+    title: "Discover skilled fundis",
+    description:
+      "Fundis browse listings by trade and location, review job details, and identify opportunities that match their skills.",
+  },
+  {
+    number: 3,
+    status: "expanding",
+    statusLabel: "Stage 3 · Expanding",
+    title: "Connect directly",
+    description:
+      "Clients and fundis agree terms through direct contact. Subscriptions, saved jobs, and verified listings strengthen trust on both sides.",
+  },
+  {
+    number: 4,
+    status: "future",
+    statusLabel: "Stage 4 · Near future",
+    title: "Construction marketplace",
+    description:
+      "A full workforce marketplace for Kenya — hiring, payments, and project visibility in one trusted platform for the industry.",
+  },
+];
+
+const stageItemHover =
+  "transition-transform duration-300 ease-out hover:-translate-y-2 hover:[&_.stage-num]:scale-125 hover:[&_.stage-title]:text-orange-700 hover:[&_.stage-desc]:text-slate-800";
 
 export default function Service() {
-  const [isVisible, setIsVisible] = useState(false);
-  const sectionRef = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setIsVisible(true);
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(section);
-    return () => observer.unobserve(section);
-  }, []);
-
-  const services = [
-    {
-      icon: Briefcase,
-      title: "Post a Job",
-      description:
-        "Need a mason, plumber, or welder? Post your job with location and budget for just Ksh 300. Registered fundis  will see your listing and contact you directly.",
-      step: 1,
-      delay: 0,
-    },
-    {
-      icon: Search,
-      title: "Browse Listings",
-      description:
-        "Are you a fundi looking for work? Browse listings by trade and location. Create a free account and  access all jobs for just Ksh 200 Monthly Subscription.",
-      step: 2,
-      delay: 100,
-    },
-    {
-      icon: Handshake,
-      title: "Connect & Work",
-      description:
-        "Post your construction job and let qualified fundis reach out. They browse listings by trade and location, then contact you directly by Email or Phone.",
-      step: 3,
-      delay: 200,
-    },
-  ];
-
   return (
     <section
-      ref={sectionRef}
       id="services-section"
-      className="relative py-20 lg:py-28 overflow-hidden bg-slate-800"
-      aria-label="How MJENGO Connect Works"
+      className="bg-white py-12 lg:py-16"
+      aria-label="How MJENGO Connect builds value"
     >
-      {/* Background – slightly different from Hero: lighter slate + soft warm glow */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-slate-900/50 to-transparent" />
-        <div className="absolute top-1/2 right-0 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 left-0 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl" />
-      </div>
-
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div
-          className={`text-center mb-14 transition-all duration-700 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
-        >
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
-            How MJENGO Connect{" "}
-            <span className="bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-              Works
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-3xl text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-orange-600">
+            How we build value
+          </p>
+          <h2 className="mt-5 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl lg:text-[2.75rem] lg:leading-tight">
+            From job posting to a trusted{" "}
+            <span className="font-serif text-[1.05em] font-normal italic text-slate-800">
+              construction marketplace.
             </span>
           </h2>
-          <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Our platform simplifies the construction process by connecting you with skilled professionals in three easy steps.
+          <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-slate-600">
+            MJENGO Connect follows a clear path. We are not building isolated features — we are building
+            infrastructure that becomes more useful the longer clients and fundis use the platform.
           </p>
         </div>
 
-        {/* Cards – glass style to match Hero */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-          {services.map((service, index) => {
-            const Icon = service.icon;
+        <ol className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:mt-12 lg:grid-cols-4 lg:gap-5">
+          {stages.map((stage) => {
+            const isFuture = stage.status === "future";
             return (
-              <div
-                key={index}
-                className={`rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 lg:p-8 transition-all duration-700 ${
-                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-                } hover:border-white/20 hover:bg-white/[0.07]`}
-                style={{ transitionDelay: `${service.delay}ms` }}
-              >
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 text-amber-400">
-                    <Icon className="w-6 h-6" />
-                  </div>
-                  <span className="text-sm font-bold text-amber-400/90">
-                    Step {service.step}
+              <li key={stage.number}>
+                <div
+                  className={`stage-item cursor-default border border-slate-200 px-4 py-8 text-center sm:px-5 ${stageItemHover}`}
+                >
+                  <span
+                    className={`stage-num inline-block origin-center text-4xl font-semibold tabular-nums transition-transform duration-300 ease-out ${
+                      isFuture ? "text-slate-300" : "text-orange-600"
+                    }`}
+                  >
+                    {stage.number}
                   </span>
+
+                  <p className="mt-5 text-[11px] font-semibold uppercase tracking-wider text-slate-500 transition-colors duration-300 ease-out">
+                    {stage.statusLabel}
+                  </p>
+                  <h3 className="stage-title mt-2 text-lg font-bold text-slate-900 transition-colors duration-300 ease-out sm:text-xl">
+                    {stage.title}
+                  </h3>
+                  <p className="stage-desc mx-auto mt-3 max-w-xs text-sm leading-relaxed text-slate-600 transition-colors duration-300 ease-out">
+                    {stage.description}
+                  </p>
                 </div>
-                <h3 className="text-xl font-bold text-white mb-3">
-                  {service.title}
-                </h3>
-                <p className="text-slate-400 leading-relaxed">
-                  {service.description}
-                </p>
-              </div>
+              </li>
             );
           })}
-        </div>
+        </ol>
 
-        {/* CTA – same orange gradient as Hero */}
-        <div
-          className={`mt-14 text-center transition-all duration-700 delay-300 ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
-          }`}
-        >
+        <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/Jobs-list"
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold shadow-lg shadow-amber-500/25 hover:from-amber-400 hover:to-orange-400 hover:shadow-amber-500/30 transition-all"
+            className="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50"
           >
-            Get Started Today
+            Browse jobs
+          </Link>
+          <Link
+            href="/auth/job-posting"
+            className="inline-flex items-center justify-center rounded-md bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+          >
+            Post a job
           </Link>
         </div>
       </div>
