@@ -6,6 +6,11 @@ import {
 } from "./fundiAddFunds.js";
 
 const prisma = new PrismaClient();
+const DEFAULT_PUBLIC_API_BASE =
+  process.env.API_BASE_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "https://mjengoconnect.site"
+    : "http://localhost:5000");
 
 /**
  * KopoKopo API Configuration
@@ -21,7 +26,9 @@ const KOPOKOPO_CONFIG = {
   clientSecret: process.env.KOPOKOPO_CLIENT_SECRET,
   tillNumber: process.env.KOPOKOPO_TILL_NUMBER,
   baseUrl: process.env.KOPOKOPO_BASE_URL || "https://sandbox.kopokopo.com",
-  callbackUrl: process.env.KOPOKOPO_CALLBACK_URL || "http://localhost:5000/api/client/wallet/kopokopo/webhook",
+  callbackUrl:
+    process.env.KOPOKOPO_CALLBACK_URL ||
+    `${DEFAULT_PUBLIC_API_BASE.replace(/\/$/, "")}/api/client/wallet/kopokopo/webhook`,
   grantType: "client_credentials"
 };
 
@@ -655,8 +662,9 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
     }
 
     // Use fundi-specific callback URL
-    const fundiCallbackUrl = process.env.KOPOKOPO_FUNDI_CALLBACK_URL || 
-      "http://localhost:5000/api/fundi/wallet/kopokopo/webhook";
+    const fundiCallbackUrl =
+      process.env.KOPOKOPO_FUNDI_CALLBACK_URL ||
+      `${DEFAULT_PUBLIC_API_BASE.replace(/\/$/, "")}/api/fundi/wallet/kopokopo/webhook`;
 
     // Get access token
     const accessToken = await getKopokopoAccessToken();

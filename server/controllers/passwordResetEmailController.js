@@ -4,7 +4,12 @@ import {
 } from "../services/passwordResetEmailService.js";
 import { isEmailConfigured } from "../services/emailService.js";
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const FRONTEND_URL =
+  process.env.FRONTEND_URL ||
+  process.env.NEXT_PUBLIC_APP_URL ||
+  (process.env.NODE_ENV === "production"
+    ? "https://mjengoconnect.site"
+    : "http://localhost:3000");
 
 /**
  * POST /api/client/auth/forgot-password

@@ -32,8 +32,38 @@ dotenv.config()
 // Initialize Express app
 const app = express()
 
+const defaultFrontendOrigins = [
+  "https://mjengoconnect.site",
+  "https://www.mjengoconnect.site",
+  "http://localhost:3000",
+];
+const allowedOrigins = [
+  ...new Set(
+    [
+      process.env.FRONTEND_URL,
+      process.env.NEXT_PUBLIC_APP_URL,
+      ...(process.env.CORS_ALLOWED_ORIGINS || "")
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+      ...defaultFrontendOrigins,
+    ].filter(Boolean)
+  ),
+];
+
 // Middleware
-app.use(cors())
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Allow non-browser requests and configured origins.
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    credentials: true,
+  })
+)
 app.use(express.json())
 
 // Root route

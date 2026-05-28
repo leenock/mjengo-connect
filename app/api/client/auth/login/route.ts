@@ -3,7 +3,10 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(request: NextRequest) {
   const isProduction = process.env.NODE_ENV === "production";
   const body = await request.text();
-  const backendBaseUrl = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000").replace(
+  const fallback = isProduction
+    ? "https://mjengoconnect.site"
+    : "http://localhost:5000";
+  const backendBaseUrl = (process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || fallback).replace(
     /\/$/,
     ""
   );

@@ -827,6 +827,8 @@ export const rerunJob = async (jobId, clientId) => {
         status: "PENDING",
         isPaid: false,
         paidAt: null, // Clear payment timestamp for new payment cycle
+        // Start a new listing lifecycle so 7-day unpaid expiration doesn't fire immediately after admin approval.
+        timePosted: new Date(),
       },
       include: {
         postedBy: {

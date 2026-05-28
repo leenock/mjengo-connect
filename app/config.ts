@@ -7,4 +7,6 @@ export const API_URL =
   typeof process.env.NEXT_PUBLIC_API_URL !== "undefined" &&
   process.env.NEXT_PUBLIC_API_URL !== ""
     ? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "") // strip trailing slash
-    : "http://localhost:5000";
+    : process.env.NODE_ENV === "production"
+      ? "https://mjengoconnect.site"
+      : "http://localhost:5000";

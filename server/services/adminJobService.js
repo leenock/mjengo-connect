@@ -262,6 +262,11 @@ export const updateAdminJob = async (jobId, updateData) => {
       }
     });
 
+    // When admin approves/activates a job, refresh listing age for the current cycle.
+    if (filteredUpdateData.status === "ACTIVE" && existingJob.status !== "ACTIVE") {
+      filteredUpdateData.timePosted = new Date();
+    }
+
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: filteredUpdateData,
@@ -333,15 +338,18 @@ export const bulkUpdateJobStatuses = async (jobIds, status) => {
       throw new Error('Invalid status');
     }
 
+    const updateData = {
+      status,
+      ...(status === "ACTIVE" ? { timePosted: new Date() } : {}),
+    };
+
     const result = await prisma.job.updateMany({
       where: {
         id: {
           in: jobIds,
         },
       },
-      data: {
-        status,
-      },
+      data: updateData,
     });
 
     return {

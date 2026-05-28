@@ -149,9 +149,12 @@ export default function MyJobsPage() {
       const data = await response.json()
       setJobs(data.jobs || [])
       
-      // Fetch paid period info for closed paid jobs
-      const closedPaidJobs = (data.jobs || []).filter((job: Job) => job.status === "CLOSED" && job.isPaid)
-      for (const job of closedPaidJobs) {
+      // Fetch paid period info for ended paid jobs (CLOSED/EXPIRED)
+      const endedPaidJobs = (data.jobs || []).filter(
+        (job: Job) =>
+          (job.status === "CLOSED" || job.status === "EXPIRED") && job.isPaid
+      )
+      for (const job of endedPaidJobs) {
         checkJobPaidPeriod(job.id)
       }
     } catch (error) {
@@ -683,10 +686,10 @@ const getStatusBadge = (job: Job) => {
                                     Close
                                   </button>
                                 )}
-                                {/* Re-run button - for all CLOSED jobs */}
+                                {/* Re-run button - for ended jobs (CLOSED/EXPIRED) */}
                                 {/* If within paid period: sets to ACTIVE (no approval needed) */}
                                 {/* If outside paid period: sets to PENDING (requires approval and payment) */}
-                                {job.status === "CLOSED" && (
+                                {(job.status === "CLOSED" || job.status === "EXPIRED") && (
                                   <button
                                     onClick={() => handleRerunJob(job.id)}
                                     disabled={processingJobId === job.id}
@@ -714,22 +717,31 @@ const getStatusBadge = (job: Job) => {
                                   Delete
                                 </button>
                               </div>
-                              {job.isPaid && job.status !== "CLOSED" && (
+                              {job.isPaid && !["CLOSED", "EXPIRED"].includes(job.status) && (
                                 <p className="text-xs text-slate-500 italic flex items-center gap-1">
                                   <AlertCircle className="w-3 h-3" />
                                   Paid jobs cannot be edited
                                 </p>
                               )}
-                              {job.status === "CLOSED" && job.isPaid && jobPaidPeriods[job.id]?.isWithinPeriod && (
+                              {["CLOSED", "EXPIRED"].includes(job.status) &&
+                                job.isPaid &&
+                                jobPaidPeriods[job.id]?.isWithinPeriod && (
                                 <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1">
                                   <CheckCircle className="w-3 h-3" />
                                   {jobPaidPeriods[job.id]?.remainingDays} day(s) remaining. Re-run will activate immediately (no approval needed).
                                 </p>
                               )}
-                              {job.status === "CLOSED" && (!job.isPaid || !jobPaidPeriods[job.id]?.isWithinPeriod) && (
+                              {["CLOSED", "EXPIRED"].includes(job.status) &&
+                                (!job.isPaid || !jobPaidPeriods[job.id]?.isWithinPeriod) && (
                                 <p className="text-xs text-slate-500 italic flex items-center gap-1">
                                   <AlertCircle className="w-3 h-3" />
                                   Paid period expired. Re-run will require admin approval and new payment.
+                                </p>
+                              )}
+                              {job.status === "PENDING" && (
+                                <p className="text-xs text-amber-700 font-semibold flex items-center gap-1">
+                                  <AlertCircle className="w-3 h-3" />
+                                  Under review after re-run/new submission. It will appear in Payments once approved.
                                 </p>
                               )}
                             </div>

@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const backendBaseUrl = (() => {
-  const value = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const fallback =
+    process.env.NODE_ENV === "production"
+      ? "https://mjengoconnect.site"
+      : "http://localhost:5000";
+  const value = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || fallback;
   return value.replace(/\/$/, "");
 })();
 
