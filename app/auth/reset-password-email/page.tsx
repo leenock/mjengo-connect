@@ -8,7 +8,6 @@ import Header from "@/components/landingpage/Header"
 import Footer from "@/components/landingpage/Footer"
 import Toast from "@/components/ui/Toast"
 import Link from "next/link"
-import { API_URL } from "@/app/config"
 
 function ResetPasswordEmailContent() {
   const router = useRouter()
@@ -54,7 +53,7 @@ function ResetPasswordEmailContent() {
 
     setIsLoading(true)
     try {
-      const response = await fetch(`${API_URL}/api/client/auth/reset-password-email`, {
+      const response = await fetch(`/api/client/auth/reset-password-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: token.trim(), newPassword }),

@@ -8,7 +8,6 @@ import Header from "@/components/landingpage/Header"
 import Footer from "@/components/landingpage/Footer"
 import Toast from "@/components/ui/Toast"
 import Link from "next/link"
-import { API_URL } from "@/app/config"
 
 function FundiResetPasswordEmailContent() {
   const router = useRouter()
@@ -54,7 +53,7 @@ function FundiResetPasswordEmailContent() {
 
     setIsLoading(true)
     try {
-      const response = await fetch(`${API_URL}/api/fundi/reset-password-email`, {
+      const response = await fetch(`/api/fundi/reset-password-email`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: token.trim(), newPassword }),

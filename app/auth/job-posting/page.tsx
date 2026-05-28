@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation"
 import Toast from "@/components/ui/Toast"
 import ClientAuthService from "@/app/services/client_user"
 import { validateForm, hasFormErrors } from "@/app/utils/client_validation"
-import { API_URL } from "@/app/config"
 
 export default function JobPostingPage() {
   const [mounted, setMounted] = useState(false)
@@ -68,7 +67,7 @@ export default function JobPostingPage() {
     setIsLoading(true)
     setToast(null) // clear previous toast
     try {
-      const res = await fetch(`${API_URL}/api/client/auth/login`, {
+      const res = await fetch("/api/client/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -131,7 +130,7 @@ export default function JobPostingPage() {
     }
     setIsLoading(true)
     try {
-      const res = await fetch(`${API_URL}/api/client/registerClient/`, {
+      const res = await fetch("/api/client/registerClient/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -185,7 +184,7 @@ export default function JobPostingPage() {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/client/auth/forgot-password`, {
+      const response = await fetch("/api/client/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotPasswordData.email.trim() }),

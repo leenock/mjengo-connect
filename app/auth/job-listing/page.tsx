@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation"
 import Toast from "@/components/ui/Toast"
 import FundiAuthService from "@/app/services/fundi_user"
 import { validateFundiForm, hasFormErrors, type FundiFormData } from "@/app/utils/fundi_validation"
-import { API_URL } from "@/app/config"
 
 export default function JobListingPage() {
   const [mounted, setMounted] = useState(false)
@@ -84,7 +83,7 @@ export default function JobListingPage() {
       return
     }
     try {
-      const response = await fetch(`${API_URL}/api/fundi/forgot-password`, {
+      const response = await fetch("/api/fundi/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotPasswordData.email.trim() }),
@@ -108,7 +107,7 @@ export default function JobListingPage() {
     setToast(null)
 
     try {
-      const response = await fetch(`${API_URL}/api/fundi/loginFundi`, {
+      const response = await fetch("/api/fundi/loginFundi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -184,7 +183,7 @@ export default function JobListingPage() {
         password: signupData.password,
       }
 
-      const response = await fetch(`${API_URL}/api/fundi/registerFundi`, {
+      const response = await fetch("/api/fundi/registerFundi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -22,7 +22,6 @@ import {
   ChevronRight,
   Wallet,
 } from "lucide-react";
-import { API_URL } from "@/app/config";
 
 interface Job {
   id: string;
@@ -84,7 +83,7 @@ export default function PaymentsPage() {
       if (!token) {
         throw new Error("Authentication required");
       }
-      const response = await fetch(`${API_URL}/api/client/my-jobs`, {
+      const response = await fetch(`/api/client/my-jobs`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -117,7 +116,7 @@ export default function PaymentsPage() {
       if (!token) {
         return;
       }
-      const response = await fetch(`${API_URL}/api/client/wallet/balance`, {
+      const response = await fetch(`/api/client/wallet/balance`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -219,7 +218,7 @@ export default function PaymentsPage() {
       }
 
       const response = await fetch(
-        `${API_URL}/api/client/jobs/${selectedJobForPayment.id}/pay`,
+        `/api/client/jobs/${selectedJobForPayment.id}/pay`,
         {
           method: "POST",
           headers: {

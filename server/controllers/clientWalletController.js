@@ -73,9 +73,14 @@ export const initiateStkPush = async (req, res) => {
     });
   } catch (error) {
     console.error("Initiate STK Push Controller Error:", error);
-    res.status(500).json({
+    const message = error.message || "Failed to initiate STK Push";
+    const isPendingPhoneRequest = /pending for this phone number|pending request for the phone number/i.test(
+      message
+    );
+    res.status(isPendingPhoneRequest ? 429 : 500).json({
       success: false,
-      message: error.message || "Failed to initiate STK Push",
+      code: isPendingPhoneRequest ? "PENDING_STK_REQUEST" : "INTERNAL_ERROR",
+      message,
     });
   }
 };

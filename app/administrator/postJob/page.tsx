@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { API_URL } from "@/app/config";
 import type React from "react";
 import AdminSidebar from "@/components/admin/Sidebar";
 import AdminAuthService from "@/app/services/admin_auth";
@@ -272,7 +271,7 @@ export default function AdminPostJob() {
       console.log("📤 Submitting job data to server:", submissionData);
 
       const response = await fetch(
-        `${API_URL}/api/admin/jobs/jobs`,
+        `/api/admin/jobs/jobs`,
         {
           method: "POST",
           headers: {

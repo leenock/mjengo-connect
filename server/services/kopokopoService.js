@@ -200,6 +200,16 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
           `KopoKopo API returned 403 Forbidden. Callback URL may be invalid.${hint}`
         );
       }
+
+      // 429: a previous STK request is still pending for this phone number
+      if (response.status === 429) {
+        const msg = errorData.error_message || errorData.error?.error_message;
+        if (msg && /pending request for the phone number/i.test(msg)) {
+          throw new Error(
+            "KopoKopo: Another STK request is already pending for this phone number. Please wait 1-2 minutes, then retry."
+          );
+        }
+      }
       
       throw new Error(
         `KopoKopo API Error: ${response.status} - ${JSON.stringify(errorData)}`
@@ -496,10 +506,23 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
       hasResource: !!event?.resource,
     });
 
-    // Update payment log and wallet if payment succeeded
-    if (status === "Success" && event?.resource) {
-      const resource = event.resource;
-      const amountInCents = Math.round(parseFloat(resource.amount) * 100);
+    // Update payment log and wallet if payment succeeded.
+    // Some status checks return Success without event.resource populated.
+    if (status === "Success") {
+      const resource = event?.resource;
+      const parsedAmountFromResource = resource?.amount
+        ? Math.round(parseFloat(resource.amount) * 100)
+        : null;
+      const amountInCents = parsedAmountFromResource || paymentLog.amount;
+      const receipt = resource?.reference || resource?.id || paymentLog.receipt || paymentRequestId;
+
+      if (!amountInCents || amountInCents <= 0) {
+        logInfo("⚠️ Success status but missing valid amount; keeping pending", {
+          paymentLogId: paymentLog.id,
+          paymentRequestId,
+        });
+        return { updated: false, reason: "Missing payment amount" };
+      }
       
       logInfo("💵 Processing successful payment:", {
         amount: amountInCents / 100,
@@ -512,7 +535,7 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
         where: { id: paymentLog.id },
         data: {
           status: "SUCCESS",
-          receipt: resource.reference || resource.id,
+          receipt,
           amount: amountInCents,
           rawPayload: statusData,
           updatedAt: new Date(),
@@ -724,6 +747,16 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
         throw new Error(
           `KopoKopo API returned 403 Forbidden. Callback URL may be invalid.${hint}`
         );
+      }
+
+      // 429: a previous STK request is still pending for this phone number
+      if (response.status === 429) {
+        const msg = errorData.error_message || errorData.error?.error_message;
+        if (msg && /pending request for the phone number/i.test(msg)) {
+          throw new Error(
+            "KopoKopo: Another STK request is already pending for this phone number. Please wait 1-2 minutes, then retry."
+          );
+        }
       }
       
       throw new Error(
@@ -941,7 +974,11 @@ export const getKopokopoPaymentStatusForFundi = async (paymentRequestId) => {
     
     // Check if payment succeeded and update wallet if needed
     if (data.data?.attributes?.status === "Success") {
-      await checkAndUpdateFundiWalletFromPaymentStatus(paymentRequestId);
+      const updateResult = await checkAndUpdateFundiWalletFromPaymentStatus(
+        paymentRequestId,
+        data
+      );
+      logInfo("💰 Fundi wallet update result:", updateResult);
     }
 
     return data;
@@ -954,9 +991,13 @@ export const getKopokopoPaymentStatusForFundi = async (paymentRequestId) => {
 /**
  * Check payment status from KopoKopo and update fundi wallet if payment succeeded
  * @param {string} paymentRequestId - KopoKopo payment request ID
+ * @param {Object} statusData - Payment status data from KopoKopo (optional)
  * @returns {Promise<Object>} Update result
  */
-export const checkAndUpdateFundiWalletFromPaymentStatus = async (paymentRequestId) => {
+export const checkAndUpdateFundiWalletFromPaymentStatus = async (
+  paymentRequestId,
+  statusData = null
+) => {
   try {
     // Find payment log
     const paymentLog = await prisma.paymentLog.findFirst({
@@ -983,34 +1024,51 @@ export const checkAndUpdateFundiWalletFromPaymentStatus = async (paymentRequestI
       };
     }
 
-    // Get access token and fetch payment status
-    const accessToken = await getKopokopoAccessToken();
-    const response = await fetch(
-      `${KOPOKOPO_CONFIG.baseUrl}/api/v1/incoming_payments/${paymentRequestId}`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    // Get status data if not provided
+    if (!statusData) {
+      const accessToken = await getKopokopoAccessToken();
+      const response = await fetch(
+        `${KOPOKOPO_CONFIG.baseUrl}/api/v1/incoming_payments/${paymentRequestId}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
-    if (!response.ok) {
-      throw new Error(`Failed to get payment status: ${response.status}`);
+      if (!response.ok) {
+        throw new Error(`Failed to get payment status: ${response.status}`);
+      }
+
+      statusData = await response.json();
     }
 
-    const statusData = await response.json();
+    if (statusData.data?.attributes?.status === "Success") {
+      const resource = statusData.data?.attributes?.event?.resource;
+      const parsedAmountFromResource = resource?.amount
+        ? Math.round(parseFloat(resource.amount) * 100)
+        : null;
+      const amount = parsedAmountFromResource || paymentLog.amount; // Convert to cents
+      const receipt =
+        resource?.reference ||
+        resource?.id ||
+        paymentLog.receipt ||
+        paymentRequestId;
 
-    if (statusData.data?.attributes?.status === "Success" && statusData.data?.attributes?.event?.resource) {
-      const resource = statusData.data.attributes.event.resource;
-      const amount = Math.round(parseFloat(resource.amount) * 100); // Convert to cents
+      if (!amount || amount <= 0) {
+        return {
+          updated: false,
+          reason: "Missing payment amount",
+        };
+      }
 
       // Update payment log
       await prisma.paymentLog.update({
         where: { id: paymentLog.id },
         data: {
           status: "SUCCESS",
-          receipt: resource.reference || resource.id,
+          receipt,
           amount: amount,
           rawPayload: statusData,
         },

@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
 
-import { API_URL } from "@/app/config"
 import Sidebar from "@/components/job_posting/Sidebar"
 import { Menu, User, Mail, Phone, MapPin, Lock, Save, Eye, EyeOff, Camera, Building2 } from "lucide-react"
 import ClientAuthService, { type ClientUserData } from "@/app/services/client_user"
@@ -60,7 +59,7 @@ export default function EmployerProfileSettings() {
       throw new Error("No authentication token found")
     }
 
-    const response = await fetch(`${API_URL}/api/client/updateClientUser/${userId}`, {
+    const response = await fetch(`/api/client/updateClientUser/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -83,7 +82,7 @@ export default function EmployerProfileSettings() {
       throw new Error("No authentication token found")
     }
 
-    const response = await fetch(`${API_URL}/api/client/updatePassword`, {
+    const response = await fetch(`/api/client/updatePassword`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

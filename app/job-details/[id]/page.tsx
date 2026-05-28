@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 
-import { API_URL } from "@/app/config";
 import {
   MapPin,
   Clock,
@@ -174,9 +173,7 @@ export default function JobDetailsPage() {
     const fetchJob = async () => {
       try {
         setLoading(true);
-        const res = await fetch(
-          `${API_URL}/api/client/jobs/${jobId}`
-        );
+        const res = await fetch(`/api/client/jobs/${jobId}`);
         if (!res.ok) {
           throw new Error("Job not found");
         }

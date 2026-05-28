@@ -20,7 +20,6 @@ import {
   Sparkles,
 } from "lucide-react";
 import FundiAuthService from "@/app/services/fundi_user";
-import { API_URL } from "@/app/config";
 
 const FREE_PLAN_JOB_LIMIT = 3;
 const LIMITED_ACCESS_STATUSES = ["EXPIRED", "TRIAL", "CANCELLED"];
@@ -91,11 +90,11 @@ export default function JobListingsPage() {
       try {
         setStatsLoading(true);
         const [subRes, savedRes] = await Promise.all([
-          fetch(`${API_URL}/api/fundi/subscription/details`, {
+          fetch("/api/fundi/subscription/details", {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
           }),
-          fetch(`${API_URL}/api/fundi/saved-jobs/count`, {
+          fetch("/api/fundi/saved-jobs/count", {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
           }),
@@ -142,7 +141,7 @@ export default function JobListingsPage() {
     async function fetchJobs() {
       try {
         setLoading(true);
-        const res = await fetch(`${API_URL}/api/client/jobs`);
+        const res = await fetch("/api/client/jobs");
         if (!res.ok) {
           throw new Error(`Failed to fetch jobs (status ${res.status})`);
         }

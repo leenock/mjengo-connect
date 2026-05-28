@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 
-import { API_URL } from "@/app/config"
 import AdminSidebar from "@/components/admin/Sidebar"
 import AdminAuthService from "@/app/services/admin_auth"
 import {
@@ -104,7 +103,7 @@ export default function AdminSystemLogs() {
         const authHeaders = AdminAuthService.getAuthHeaders()
 
         // 1. Fetch last fundi registration
-        const fundiResponse = await fetch(`${API_URL}/api/fundi/getAllFundis`, {
+        const fundiResponse = await fetch(`/api/fundi/getAllFundis`, {
           headers: { ...authHeaders },
           cache: "no-store",
         })
@@ -114,7 +113,7 @@ export default function AdminSystemLogs() {
                          fundiData?.data ? fundiData.data[fundiData.data.length - 1] : null
 
         // 2. Fetch last client registration
-        const clientResponse = await fetch(`${API_URL}/api/client/getAllClientUsers`, {
+        const clientResponse = await fetch(`/api/client/getAllClientUsers`, {
           headers: { ...authHeaders },
           cache: "no-store",
         })
@@ -124,7 +123,7 @@ export default function AdminSystemLogs() {
                           clientData?.data ? clientData.data[clientData.data.length - 1] : null
 
         // 3. Fetch last job posted
-        const jobResponse = await fetch(`${API_URL}/api/admin/jobs/jobs`, {
+        const jobResponse = await fetch(`/api/admin/jobs/jobs`, {
           headers: { ...authHeaders },
           cache: "no-store",
         })
@@ -134,7 +133,7 @@ export default function AdminSystemLogs() {
                        jobData?.data ? jobData.data[jobData.data.length - 1] : null
 
         // 4. Fetch admin users and find last login
-        const adminResponse = await fetch(`${API_URL}/api/admin/getAllAdmins`, {
+        const adminResponse = await fetch(`/api/admin/getAllAdmins`, {
           headers: { ...authHeaders },
           cache: "no-store",
         })
@@ -161,7 +160,7 @@ export default function AdminSystemLogs() {
         )[0]
 
         // 5. Fetch last support message
-        const supportResponse = await fetch(`${API_URL}/api/admin/support/tickets`, {
+        const supportResponse = await fetch(`/api/admin/support/tickets`, {
           headers: { ...authHeaders },
           cache: "no-store",
         })

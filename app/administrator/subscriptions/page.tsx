@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { API_URL } from "@/app/config"
 import AdminSidebar from "@/components/admin/Sidebar"
 import AdminAuthService from "@/app/services/admin_auth"
 import {
@@ -58,9 +57,9 @@ export default function AdminSubscriptionsPage() {
       const headers = AdminAuthService.getAuthHeaders()
       try {
         setLoading(true)
-        let res = await fetch(`${API_URL}/api/admin/management/subscriptions/fundis`, { headers })
+        let res = await fetch(`/api/admin/management/subscriptions/fundis`, { headers })
         if (!res.ok) {
-          const fallback = await fetch(`${API_URL}/api/fundi/getAllFundis`, { headers })
+          const fallback = await fetch(`/api/fundi/getAllFundis`, { headers })
           if (!fallback.ok) throw new Error("Failed to fetch fundis")
           res = fallback
         }

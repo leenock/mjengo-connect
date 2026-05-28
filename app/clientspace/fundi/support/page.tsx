@@ -1,7 +1,6 @@
 "use client"
 import type React from "react"
 
-import { API_URL } from "@/app/config"
 import { useState, useEffect, useCallback } from "react"
 import { CheckCircle2, XCircle, Menu, Send, MessageCircle, User } from "lucide-react"
 import Sidebar from "@/components/fundi/Sidebar"
@@ -76,7 +75,7 @@ export default function FundiSupportPage() {
         throw new Error("No authentication token found")
       }
 
-      const response = await fetch(`${API_URL}/api/fundi/tickets/getFundiTickets/${currentUser.id}`, {
+      const response = await fetch(`/api/fundi/tickets/${currentUser.id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -128,7 +127,7 @@ export default function FundiSupportPage() {
     if (!token) {
       throw new Error("No authentication token found")
     }
-    const response = await fetch(`${API_URL}/api/fundi/tickets/createFundiTicket`, {
+    const response = await fetch("/api/fundi/tickets/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

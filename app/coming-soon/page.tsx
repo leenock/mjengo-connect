@@ -3,7 +3,6 @@
 import { useState } from "react"
 import Header from "@/components/landingpage/Header"
 import Footer from "@/components/landingpage/Footer"
-import { API_URL } from "@/app/config"
 import { Smartphone, Bell, Mail, CheckCircle } from "lucide-react"
 
 export default function ComingSoonPage() {
@@ -164,7 +163,7 @@ export default function ComingSoonPage() {
                 }
                 setIsSubmitting(true)
                 try {
-                  const res = await fetch(`${API_URL}/api/contact/notify`, {
+                  const res = await fetch("/api/contact/notify", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ email: value }),

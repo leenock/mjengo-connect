@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect, useCallback } from "react"
 
-import { API_URL } from "@/app/config"
 import Sidebar from "@/components/fundi/Sidebar"
 import Toast from "@/components/ui/Toast"
 import FundiAuthService, { type FundiUserData } from "@/app/services/fundi_user"
@@ -48,7 +47,7 @@ function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) 
       const token = FundiAuthService.getToken()
       if (!token) return
 
-      const response = await fetch(`${API_URL}/api/fundi/wallet/balance`, {
+      const response = await fetch("/api/fundi/wallet/balance", {
         headers: { Authorization: `Bearer ${token}` },
       })
 
@@ -87,7 +86,7 @@ function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) 
       }
 
       // Subscribe to premium (deducts 200 KES from wallet)
-      const response = await fetch(`${API_URL}/api/fundi/subscription/premium`, {
+      const response = await fetch("/api/fundi/subscription/premium", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -260,7 +259,7 @@ export default function SubscriptionPage() {
       try {
         const token = FundiAuthService.getToken()
         if (token) {
-          const response = await fetch(`${API_URL}/api/fundi/subscription/details`, {
+          const response = await fetch("/api/fundi/subscription/details", {
             headers: { Authorization: `Bearer ${token}` },
           })
           if (response.ok) {

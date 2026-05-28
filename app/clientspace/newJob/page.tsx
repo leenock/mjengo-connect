@@ -22,7 +22,6 @@ import {
   AlertCircle,
 } from "lucide-react"
 import Sidebar from "@/components/job_posting/Sidebar"
-import { API_URL } from "@/app/config"
 
 export default function PostJobPage() {
   const [currentStep, setCurrentStep] = useState(1)
@@ -250,7 +249,7 @@ export default function PostJobPage() {
 
       // Create the job posting with minimum loading time
       await withMinimumLoadingTime(async () => {
-        const response = await fetch(`${API_URL}/api/client/jobs`, {
+        const response = await fetch(`/api/client/jobs`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

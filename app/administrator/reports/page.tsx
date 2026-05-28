@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 
-import { API_URL } from "@/app/config";
 import AdminSidebar from "@/components/admin/Sidebar";
 import AdminAuthService from "@/app/services/admin_auth";
 import {
@@ -93,13 +92,13 @@ export default function AdminReports() {
         // Fetch all necessary data (only needed APIs)
         const [fundisResponse, clientsResponse, jobsResponse] =
           await Promise.all([
-            fetch(`${API_URL}/api/fundi/getAllFundis`, {
+            fetch(`/api/fundi/getAllFundis`, {
               headers: { ...authHeaders },
             }),
-            fetch(`${API_URL}/api/client/getAllClientUsers`, {
+            fetch(`/api/client/getAllClientUsers`, {
               headers: { ...authHeaders },
             }),
-            fetch(`${API_URL}/api/admin/jobs/jobs`, {
+            fetch(`/api/admin/jobs/jobs`, {
               headers: { ...authHeaders },
             }),
           ]);

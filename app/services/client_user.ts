@@ -1,5 +1,3 @@
-import { API_URL } from "@/app/config";
-
 export interface ClientUserData {
   id: string;
   email?: string; // Email address of the client user
@@ -13,11 +11,13 @@ export interface ClientUserData {
 
 class ClientAuthService {
   private static readonly TOKEN_COOKIE = "visitorToken";
+  private static readonly TOKEN_KEY = "visitorTokenValue";
   private static readonly DATA_KEY = "visitorData";
   private static readonly SESSION_EXPIRY = 7200;
 
   static setAuth(token: string, data: ClientUserData): void {
     document.cookie = `${this.TOKEN_COOKIE}=${token}; path=/; max-age=${this.SESSION_EXPIRY}; secure; samesite=strict`;
+    localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.DATA_KEY, JSON.stringify(data));
   }
 
@@ -29,11 +29,12 @@ class ClientAuthService {
 
   static clearAuth(): void {
     document.cookie = `${this.TOKEN_COOKIE}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict`;
+    localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.DATA_KEY);
   }
 
   static getToken(): string | null {
-    return this.getCookie(this.TOKEN_COOKIE);
+    return this.getCookie(this.TOKEN_COOKIE) || localStorage.getItem(this.TOKEN_KEY);
   }
 
   static getUserData(): ClientUserData | null {
@@ -47,7 +48,7 @@ class ClientAuthService {
 
   static async logout(): Promise<void> {
     try {
-      await fetch(`${API_URL}/api/client/auth/logout`, {
+      await fetch("/api/client/auth/logout", {
         method: "POST",
         headers: { Authorization: `Bearer ${this.getToken()}` },
       });

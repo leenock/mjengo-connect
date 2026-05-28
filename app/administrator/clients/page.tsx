@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 
-import { API_URL } from "@/app/config";
 import AdminSidebar from "@/components/admin/Sidebar";
 import {
   Search,
@@ -112,7 +111,7 @@ export default function AdminManageClients() {
         const userData = AdminAuthService.getUserData();
         if (!userData?.id) return;
 
-        const res = await fetch(`${API_URL}/api/admin/getAdmin/${userData.id}`, {
+        const res = await fetch(`/api/admin/getAdmin/${userData.id}`, {
           headers: { ...AdminAuthService.getAuthHeaders() },
         });
         if (res.ok) {
@@ -132,7 +131,7 @@ export default function AdminManageClients() {
     setError(null);
     try {
       const res = await fetch(
-        `${API_URL}/api/client/getAllClientUsers`,
+        `/api/client/getAllClientUsers`,
         {
           headers: { ...AdminAuthService.getAuthHeaders() },
           cache: "no-store",
@@ -231,7 +230,7 @@ export default function AdminManageClients() {
     setDeletingId(id);
     try {
       const res = await fetch(
-        `${API_URL}/api/client/deleteClientUser/${id}`,
+        `/api/client/deleteClientUser/${id}`,
         {
           method: "DELETE",
           headers: { ...AdminAuthService.getAuthHeaders() },
@@ -274,7 +273,7 @@ export default function AdminManageClients() {
     setIsSaving(true);
     try {
       const res = await fetch(
-        `${API_URL}/api/client/updateClientUser/${editClient.id}`,
+        `/api/client/updateClientUser/${editClient.id}`,
         {
           method: "PUT",
           headers: {

@@ -1,4 +1,3 @@
-import { API_URL } from "@/app/config";
 
 export interface AdminUserData {
   id: string;
@@ -14,11 +13,13 @@ export interface AdminUserData {
 
 class AdminAuthService {
   private static readonly TOKEN_COOKIE = "adminToken";
+  private static readonly TOKEN_KEY = "adminTokenValue";
   private static readonly DATA_KEY = "adminData";
   private static readonly SESSION_EXPIRY = 7200; // 2 hours
 
   static setAuth(token: string, data: AdminUserData): void {
     document.cookie = `${this.TOKEN_COOKIE}=${token}; path=/; max-age=${this.SESSION_EXPIRY}; secure; samesite=strict`;
+    localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.DATA_KEY, JSON.stringify(data));
   }
 
@@ -30,11 +31,12 @@ class AdminAuthService {
 
   static clearAuth(): void {
     document.cookie = `${this.TOKEN_COOKIE}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict`;
+    localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.DATA_KEY);
   }
 
   static getToken(): string | null {
-    return this.getCookie(this.TOKEN_COOKIE);
+    return this.getCookie(this.TOKEN_COOKIE) || localStorage.getItem(this.TOKEN_KEY);
   }
 
   static getUserData(): AdminUserData | null {
@@ -48,7 +50,7 @@ class AdminAuthService {
 
   static async logout(): Promise<void> {
     try {
-      await fetch(`${API_URL}/api/admin/auth/logout`, {
+      await fetch("/api/admin/auth/logout", {
         method: "POST",
         headers: { Authorization: `Bearer ${this.getToken()}` },
       });

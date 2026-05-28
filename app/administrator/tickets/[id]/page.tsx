@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { API_URL } from "@/app/config";
 import { use } from "react";
 import Link from "next/link";
 import AdminSidebar from "@/components/admin/Sidebar";
@@ -70,7 +69,7 @@ export default function AdminTicketDetail({
     setError(null);
     try {
       const res = await fetch(
-        `${API_URL}/api/admin/support/tickets/${id}`,
+        `/api/admin/support/tickets/${id}`,
         {
           headers: { ...AdminAuthService.getAuthHeaders() },
           cache: "no-store",
@@ -118,7 +117,7 @@ export default function AdminTicketDetail({
       console.log("📤 Sending to backend:", { status: backendStatus });
 
       const res = await fetch(
-        `${API_URL}/api/admin/support/tickets/${id}`,
+        `/api/admin/support/tickets/${id}`,
         {
           method: "PUT",
           headers: {
@@ -162,7 +161,7 @@ export default function AdminTicketDetail({
     setIsSubmittingComment(true);
     try {
       const res = await fetch(
-        `${API_URL}/api/admin/support/tickets/${id}/reply`,
+        `/api/admin/support/tickets/${id}/reply`,
         {
           method: "POST",
           headers: {

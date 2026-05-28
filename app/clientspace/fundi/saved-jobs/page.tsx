@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
 
-import { API_URL } from "@/app/config";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/fundi/Sidebar";
 import Link from "next/link";
@@ -74,7 +73,7 @@ export default function JobListingsPage() {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_URL}/api/client/jobs`);
+        const res = await fetch("/api/client/jobs");
         const data = await res.json();
 
         // Filter only paid and active jobs

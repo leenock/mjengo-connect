@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { API_URL } from "@/app/config"
 import AdminSidebar from "@/components/admin/Sidebar"
 import AdminAuthService from "@/app/services/admin_auth"
 import {
@@ -90,9 +89,9 @@ export default function AdminJobTrackingPage() {
       const headers = AdminAuthService.getAuthHeaders()
       try {
         setLoading(true)
-        let res = await fetch(`${API_URL}/api/admin/management/jobs/tracking`, { headers })
+        let res = await fetch(`/api/admin/management/jobs/tracking`, { headers })
         if (!res.ok) {
-          const fallback = await fetch(`${API_URL}/api/admin/jobs/jobs`, { headers })
+          const fallback = await fetch(`/api/admin/jobs/jobs`, { headers })
           if (!fallback.ok) throw new Error("Failed to fetch jobs")
           res = fallback
         }

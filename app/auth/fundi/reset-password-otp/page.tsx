@@ -7,7 +7,6 @@ import { Eye, EyeOff, Lock, Phone, ArrowRight, RefreshCw, Timer } from "lucide-r
 import Header from "@/components/landingpage/Header"
 import Footer from "@/components/landingpage/Footer"
 import Toast from "@/components/ui/Toast"
-import { API_URL } from "@/app/config"
 
 function FundiResetPasswordOtpContent() {
   const router = useRouter()
@@ -64,7 +63,7 @@ function FundiResetPasswordOtpContent() {
     setToast(null)
 
     try {
-      const response = await fetch(`${API_URL}/api/fundi/resend-otp`, {
+      const response = await fetch(`/api/fundi/resend-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phoneNumber: phoneNumber }),
@@ -120,7 +119,7 @@ function FundiResetPasswordOtpContent() {
 
     setIsLoading(true)
     try {
-      const response = await fetch(`${API_URL}/api/fundi/verify-otp`, {
+      const response = await fetch(`/api/fundi/verify-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

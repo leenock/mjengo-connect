@@ -15,7 +15,6 @@ import {
 } from "lucide-react"
 import Header from "@/components/landingpage/Header"
 import Footer from "@/components/landingpage/Footer"
-import { API_URL } from "@/app/config"
 
 export default function ContactUsPage() {
   const [formData, setFormData] = useState({
@@ -41,7 +40,7 @@ export default function ContactUsPage() {
     setSubmitError(null)
     setIsSubmitting(true)
     try {
-      const res = await fetch(`${API_URL}/api/contact`, {
+      const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

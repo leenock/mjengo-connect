@@ -1,7 +1,6 @@
 "use client";
 import type React from "react";
 
-import { API_URL } from "@/app/config";
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   CheckCircle2,
@@ -48,16 +47,24 @@ export default function AddFundsPage() {
   const [isOpen, setIsOpen] = useState(false);
   const [paymentToast, setPaymentToast] = useState<{ show: boolean; message: string; type: "success" | "cancelled" }>({ show: false, message: "", type: "success" });
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const isReconcilingRef = useRef(false);
+  const getAuthHeaders = () => {
+    const headers: Record<string, string> = {};
+    const token = FundiAuthService.getToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+  };
+  const isPendingStkRequestMessage = (message: string) =>
+    /pending for this phone number|pending request for the phone number/i.test(
+      message
+    );
 
   // Function to fetch wallet balance from API
   const fetchWalletBalance = useCallback(async () => {
-    const token = FundiAuthService.getToken();
-    if (!token) return;
-
     setIsRefreshingBalance(true);
     try {
-      const response = await fetch(`${API_URL}/api/fundi/wallet/balance`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await fetch("/api/fundi/wallet/balance", {
+        headers: getAuthHeaders(),
       });
       if (response.ok) {
         const data = await response.json();
@@ -74,6 +81,48 @@ export default function AddFundsPage() {
     }
   }, []);
 
+  const reconcilePendingPayments = useCallback(
+    async (requestId: string, reason: "timeout" | "poll_error") => {
+      if (isReconcilingRef.current) return;
+
+      isReconcilingRef.current = true;
+      try {
+        const response = await fetch(
+          "/api/fundi/wallet/process-pending-payments",
+          {
+            method: "POST",
+            headers: getAuthHeaders(),
+          }
+        );
+
+        if (!response.ok) {
+          console.error("Failed to auto-reconcile pending payments");
+          return;
+        }
+
+        await fetchWalletBalance();
+        setPaymentToast({
+          show: true,
+          message:
+            reason === "timeout"
+              ? "Payment confirmation is delayed. We are reconciling and your balance will update shortly."
+              : "Payment status check was interrupted. Auto-reconciliation has been triggered.",
+          type: "cancelled",
+        });
+        setTimeout(
+          () => setPaymentToast({ show: false, message: "", type: "success" }),
+          4500
+        );
+        console.info(`Auto-reconciliation triggered for request: ${requestId}`);
+      } catch (error) {
+        console.error("Auto-reconciliation error:", error);
+      } finally {
+        isReconcilingRef.current = false;
+      }
+    },
+    [fetchWalletBalance]
+  );
+
   // Poll payment status and show success toast when payment completes
   const startPaymentStatusPolling = useCallback((requestId: string) => {
     const POLL_INTERVAL_MS = 3000;
@@ -84,15 +133,13 @@ export default function AddFundsPage() {
       if (Date.now() - startTime > POLL_TIMEOUT_MS) {
         if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
         pollingIntervalRef.current = null;
+        await reconcilePendingPayments(requestId, "timeout");
         return;
       }
-      const token = FundiAuthService.getToken();
-      if (!token) return;
       try {
-        const response = await fetch(
-          `${API_URL}/api/fundi/wallet/payment-status/${requestId}`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const response = await fetch(`/api/fundi/wallet/payment-status/${requestId}`, {
+          headers: getAuthHeaders(),
+        });
         if (!response.ok) return;
         const data = await response.json();
         const status = data.data?.data?.attributes?.status ?? data.data?.attributes?.status;
@@ -121,13 +168,14 @@ export default function AddFundsPage() {
           setTimeout(() => setPaymentToast({ show: false, message: "", type: "success" }), 4000);
         }
       } catch {
-        // ignore per-poll errors
+        // Trigger reconciliation to recover from transient polling failures.
+        await reconcilePendingPayments(requestId, "poll_error");
       }
     };
 
     poll();
     pollingIntervalRef.current = setInterval(poll, POLL_INTERVAL_MS);
-  }, [fetchWalletBalance]);
+  }, [fetchWalletBalance, reconcilePendingPayments]);
 
   useEffect(() => {
     const loadPageData = async () => {
@@ -215,11 +263,6 @@ export default function AddFundsPage() {
     }
 
     try {
-      const token = FundiAuthService.getToken();
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
       const stkPushPayload = {
         paymentChannel: "M-PESA STK Push",
         amount: parsedAmount,
@@ -235,17 +278,39 @@ export default function AddFundsPage() {
         },
       };
 
-      const response = await fetch(`${API_URL}/api/fundi/wallet/add-funds/kopokopo`, {
+      const response = await fetch("/api/fundi/wallet/add-funds/kopokopo", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          ...getAuthHeaders(),
         },
         body: JSON.stringify(stkPushPayload),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
+        if (
+          response.status === 429 ||
+          errorData?.code === "PENDING_STK_REQUEST" ||
+          isPendingStkRequestMessage(errorData?.message || "")
+        ) {
+          const pendingMessage =
+            "Another STK request is already pending for this phone number. Please wait 1-2 minutes while we reconcile the previous payment.";
+          setStkPushStatus("error");
+          setStkPushError(pendingMessage);
+          setPaymentToast({
+            show: true,
+            message:
+              "Pending STK request detected. Auto-reconciliation has started.",
+            type: "cancelled",
+          });
+          setTimeout(
+            () => setPaymentToast({ show: false, message: "", type: "success" }),
+            4500
+          );
+          await reconcilePendingPayments("pending-phone-lock", "poll_error");
+          throw new Error(pendingMessage);
+        }
         throw new Error(errorData.message || "Failed to initiate STK Push");
       }
 

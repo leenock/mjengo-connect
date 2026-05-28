@@ -1,7 +1,6 @@
 "use client"
 import { useState, useEffect } from "react"
 
-import { API_URL } from "@/app/config"
 import Sidebar from "@/components/fundi/Sidebar"
 import { Menu, User, Mail, Phone, MapPin, Briefcase, Award, Lock, Save, Eye, EyeOff, Camera } from "lucide-react"
 import FundiAuthService, { type FundiUserData } from "@/app/services/fundi_user"
@@ -64,7 +63,7 @@ export default function UserProfileSettings() {
       throw new Error("No authentication token found")
     }
 
-    const response = await fetch(`${API_URL}/api/fundi/updateFundi/${userId}`, {
+    const response = await fetch(`/api/fundi/updateFundi/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -87,7 +86,7 @@ export default function UserProfileSettings() {
       throw new Error("No authentication token found")
     }
 
-    const response = await fetch(`${API_URL}/api/fundi/updateFundiPassword`, {
+    const response = await fetch("/api/fundi/updateFundiPassword", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

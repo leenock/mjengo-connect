@@ -1,5 +1,3 @@
-import { API_URL } from "@/app/config";
-
 export interface FundiUserData {
   id: string
   email?: string
@@ -22,6 +20,7 @@ export interface FundiUserData {
 
 class FundiAuthService {
   private static readonly TOKEN_COOKIE = "fundiToken";
+  private static readonly TOKEN_KEY = "fundiTokenValue";
   private static readonly DATA_KEY = "fundiData";
   private static readonly SESSION_EXPIRY = 7200;
 
@@ -33,6 +32,7 @@ class FundiAuthService {
   static setAuth(token: string, data: FundiUserData): void {
     if (!this.isClient()) return;
     document.cookie = `${this.TOKEN_COOKIE}=${token}; path=/; max-age=${this.SESSION_EXPIRY}; secure; samesite=strict`;
+    localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.DATA_KEY, JSON.stringify(data));
   }
   static saveUserData(data: Partial<FundiUserData>): void {
@@ -45,12 +45,13 @@ class FundiAuthService {
   static clearAuth(): void {
     if (!this.isClient()) return;
     document.cookie = `${this.TOKEN_COOKIE}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict`;
+    localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.DATA_KEY);
   }
 
   static getToken(): string | null {
     if (!this.isClient()) return null;
-    return this.getCookie(this.TOKEN_COOKIE);
+    return this.getCookie(this.TOKEN_COOKIE) || localStorage.getItem(this.TOKEN_KEY);
   }
 
   static getUserData(): FundiUserData | null {
@@ -66,7 +67,7 @@ class FundiAuthService {
   static async logout(): Promise<void> {
     if (!this.isClient()) return;
     try {
-      await fetch(`${API_URL}/api/fundi/logoutFundi`, {
+      await fetch("/api/fundi/logoutFundi", {
         method: "POST",
         headers: { Authorization: `Bearer ${this.getToken()}` },
       });
