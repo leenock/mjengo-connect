@@ -19,7 +19,7 @@ import {
   checkFundiEmailServiceController,
 } from "../controllers/fundiForgotPasswordController.js";
 import { validate } from "../middleware/validate.js";
-import { authLimiter, strictAuthLimiter } from "../middleware/rateLimit.js";
+import { authLimiter, strictAuthLimiter, registrationLimiter } from "../middleware/rateLimit.js";
 import {
   authenticateFundiToken,
   requireActiveSubscription,
@@ -41,6 +41,7 @@ const router = express.Router();
 // Public routes (no authentication required)
 router.post(
   "/registerFundi",
+  registrationLimiter,
   validate(registerFundiUserSchema),
   registerFundiUserController
 );

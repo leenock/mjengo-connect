@@ -257,7 +257,7 @@ export const updateFundiUserPassword = async (input) => {
 }
 
 /**
- * Deletes a fundi user by ID.
+ * Deletes a fundi user and all dependent records (wallet, payments, tickets, etc.).
  * @param {string} id - The ID of the fundi user to delete.
  * @returns {Promise<Object>} - Success message.
  * @throws {Error} If the fundi user does not exist or ID is invalid.
@@ -267,7 +267,6 @@ export const deleteFundiUser = async (id) => {
     throw new Error("A valid string ID is required")
   }
 
-  // Check if the user exists
   const existingUser = await prisma.fundi_User.findUnique({
     where: { id },
   })
@@ -276,9 +275,31 @@ export const deleteFundiUser = async (id) => {
     throw new Error("Fundi not found")
   }
 
-  // Delete the user
-  await prisma.fundi_User.delete({
-    where: { id },
+  await prisma.$transaction(async (tx) => {
+    const wallet = await tx.fundiWallet.findUnique({ where: { fundiId: id } })
+    if (wallet) {
+      await tx.fundiWalletTransaction.deleteMany({ where: { walletId: wallet.id } })
+      await tx.fundiWallet.delete({ where: { id: wallet.id } })
+    }
+
+    await tx.paymentLog.deleteMany({ where: { fundiId: id } })
+    await tx.subscription.deleteMany({ where: { fundiId: id } })
+
+    const tickets = await tx.supportTicket.findMany({
+      where: { fundiId: id },
+      select: { id: true },
+    })
+    if (tickets.length > 0) {
+      const ticketIds = tickets.map((t) => t.id)
+      await tx.supportReply.deleteMany({ where: { ticketId: { in: ticketIds } } })
+      await tx.supportTicket.deleteMany({ where: { fundiId: id } })
+    }
+
+    await tx.jobReport.deleteMany({ where: { reporterId: id } })
+    await tx.systemLog.deleteMany({ where: { fundiId: id } })
+
+    // SavedJob rows cascade via schema onDelete: Cascade
+    await tx.fundi_User.delete({ where: { id } })
   })
 
   return { message: "Fundi user deleted successfully" }

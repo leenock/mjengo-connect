@@ -16,7 +16,7 @@ import {
 
 import { adminAuthMiddleware, superAdminMiddleware } from "../middleware/adminAuth.js";
 import { authenticateToken } from "../middleware/auth.js";
-import { strictAuthLimiter } from "../middleware/rateLimit.js";
+import { strictAuthLimiter, registrationLimiter } from "../middleware/rateLimit.js";
 
 
 
@@ -24,6 +24,7 @@ const router = express.Router();
 
 router.post(
   "/registerClient",
+  registrationLimiter,
   validate(registerClientUserSchema),
   registerClientUser
 );

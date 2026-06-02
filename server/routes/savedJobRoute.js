@@ -1,5 +1,5 @@
 import express from "express"
-import { authenticateFundiToken } from "../middleware/fundiAuth.js"
+import { authenticateFundiToken, requirePremiumAccess } from "../middleware/fundiAuth.js"
 import { validate } from "../middleware/validate.js"
 import { saveJobSchema, paginationSchema, jobIdParamSchema } from "../utils/validation/savedJobValidation.js"
 import {
@@ -13,8 +13,8 @@ import {
 
 const router = express.Router()
 
-// All routes require fundi authentication
-router.use(authenticateFundiToken)
+// All routes require fundi authentication + premium or active trial
+router.use(authenticateFundiToken, requirePremiumAccess)
 
 // Save a job
 router.post("/save", validate(saveJobSchema), saveJobController)

@@ -120,7 +120,6 @@ export const createJobSchema = Joi.object({
     }),
 
   isUrgent: Joi.boolean().optional().default(false),
-  isPaid: Joi.boolean().optional().default(false),
 });
 
 export const updateJobSchema = Joi.object({
@@ -156,17 +155,14 @@ export const updateJobSchema = Joi.object({
   email: Joi.string().email().optional(),
   preferredContact: Joi.string().valid("phone", "email", "both").optional(),
   isUrgent: Joi.boolean().optional(),
-  status: Joi.string()
-    .valid("PENDING", "ACTIVE", "CLOSED", "EXPIRED")
-    .optional(),
 });
 
 export const updateJobStatusSchema = Joi.object({
   status: Joi.string()
-    .valid("PENDING", "ACTIVE", "CLOSED", "EXPIRED", "REJECTED")
+    .valid("CLOSED")
     .required()
     .messages({
-      "any.only": "Status must be one of: PENDING, ACTIVE, CLOSED, EXPIRED, REJECTED.",
+      "any.only": "Clients may only close their own jobs.",
       "any.required": "Status is required.",
     }),
 });

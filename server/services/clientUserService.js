@@ -47,10 +47,24 @@ export const registerClient = async (userData) => {
   return newUser;
 };
 
-// get all client users
+// get all client users (admin — sensitive fields excluded)
 export const getAllClients = async () => {
   try {
-    const clients = await prisma.client_User.findMany();
+    const clients = await prisma.client_User.findMany({
+      select: {
+        id: true,
+        email: true,
+        phone: true,
+        firstName: true,
+        lastName: true,
+        company: true,
+        location: true,
+        accountStatus: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
     return clients;
   } catch (error) {
     console.error("Error fetching clients:", error);

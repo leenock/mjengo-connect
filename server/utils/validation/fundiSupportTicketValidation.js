@@ -56,7 +56,4 @@ export const updateFundiSupportTicketSchema = Joi.object({
   priority: Joi.string().valid("LOW", "MEDIUM", "HIGH", "URGENT").optional().messages({
     "any.only": "Priority must be one of: LOW, MEDIUM, HIGH, URGENT",
   }),
-  status: Joi.string().valid("OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED").optional().messages({
-    "any.only": "Status must be one of: OPEN, IN_PROGRESS, RESOLVED, CLOSED",
-  }),
 })

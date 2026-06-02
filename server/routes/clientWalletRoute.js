@@ -8,7 +8,6 @@ import {
 import { processPendingPayments } from "../services/kopokopoService.js";
 import {
   getBalance,
-  depositFunds,
   withdrawFunds,
   getTransactions,
   getDetails,
@@ -63,13 +62,6 @@ router.get("/balance", authenticateToken, getBalance);
  * @access  Private (Client authenticated)
  */
 router.get("/details", authenticateToken, getDetails);
-
-/**
- * @route   POST /api/client/wallet/deposit
- * @desc    Deposit funds to wallet (manual deposit)
- * @access  Private (Client authenticated)
- */
-router.post("/deposit", authenticateToken, depositFunds);
 
 /**
  * @route   POST /api/client/wallet/withdraw

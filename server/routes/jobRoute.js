@@ -21,6 +21,7 @@ import { authenticateToken } from "../middleware/auth.js"
 import { createJobSchema, updateJobSchema, updateJobStatusSchema } from "../utils/validation/jobValidation.js"
 
 import { adminAuthMiddleware } from "../middleware/adminAuth.js";
+import { jobCreationLimiter } from "../middleware/rateLimit.js";
 
 
 const router = express.Router()
@@ -31,7 +32,7 @@ router.get("/jobs/:id", getJobByIdController) // Get job by ID (public)
 
 
 // Protected routes (require authentication)
-router.post("/jobs", authenticateToken, validate(createJobSchema), createJobController) // Create job
+router.post("/jobs", authenticateToken, jobCreationLimiter, validate(createJobSchema), createJobController) // Create job
 router.get("/my-jobs", authenticateToken, getMyJobsController) // Get my jobs
 router.get("/client/:clientId/jobs", authenticateToken, getJobsByClientController) // Get jobs by client ID
 router.put("/jobs/:id", authenticateToken, validate(updateJobSchema), updateJobController) // Update job

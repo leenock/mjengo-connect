@@ -136,7 +136,9 @@ export default function JobListingsPage() {
     async function fetchJobs() {
       try {
         setLoading(true);
-        const res = await fetch("/api/client/jobs");
+        const res = await fetch("/api/fundi/job-listings", {
+          credentials: "include",
+        });
         if (!res.ok) {
           throw new Error(`Failed to fetch jobs (status ${res.status})`);
         }

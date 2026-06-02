@@ -12,9 +12,8 @@ import { validate } from "../middleware/validate.js";
 
 import {
   authenticateFundiToken,
-  //requireActiveSubscription,
-  // requirePremiumSubscription,
 } from "../middleware/fundiAuth.js";
+import { adminAuthMiddleware } from "../middleware/adminAuth.js";
 
 import {
   createFundiSupportTicketSchema,
@@ -31,9 +30,10 @@ router.post(
   createFundiSupportTicketController
 );
 
-// Get all fundi support tickets (with optional filtering) - temporarily public (no auth)
+// Get all fundi support tickets — admin only
 router.get(
   "/getAllFundiTickets",
+  adminAuthMiddleware,
   getAllFundiSupportTicketsController
 );
 

@@ -5,6 +5,7 @@ import {
   getKopokopoPaymentStatusForFundi,
 } from "../services/kopokopoService.js";
 import { paymentLog as payLog } from "../utils/paymentLogger.js";
+import { assertFundiPaymentOwnership } from "../utils/paymentOwnership.js";
 
 /**
  * Initiate KopoKopo STK Push payment for Fundi wallet
@@ -130,6 +131,8 @@ export const getPaymentStatus = async (req, res) => {
       });
     }
 
+    await assertFundiPaymentOwnership(paymentRequestId, fundiId);
+
     // Get status from KopoKopo API (this will also update wallet if payment succeeded)
     const status = await getKopokopoPaymentStatusForFundi(paymentRequestId);
 
@@ -142,6 +145,9 @@ export const getPaymentStatus = async (req, res) => {
       wallet: walletData, // Include updated wallet balance
     });
   } catch (error) {
+    if (error.code === "PAYMENT_NOT_FOUND") {
+      return res.status(404).json({ success: false, message: "Payment not found" });
+    }
     payLog.error("Get payment status controller failed", error, { role: "fundi" });
     res.status(500).json({
       success: false,

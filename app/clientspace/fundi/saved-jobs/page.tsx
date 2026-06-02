@@ -73,7 +73,9 @@ export default function JobListingsPage() {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const res = await fetch("/api/client/jobs");
+        const res = await fetch("/api/fundi/job-listings", {
+          credentials: "include",
+        });
         const data = await res.json();
 
         // Filter only paid and active jobs

@@ -7,7 +7,6 @@ import {
 } from "../controllers/fundiWalletController.js";
 import {
   getBalance,
-  depositFunds,
   withdrawFunds,
   getTransactions,
   getDetails,
@@ -63,13 +62,6 @@ router.get("/balance", authenticateFundiToken, getBalance);
  * @access  Private (Fundi authenticated)
  */
 router.get("/details", authenticateFundiToken, getDetails);
-
-/**
- * @route   POST /api/fundi/wallet/deposit
- * @desc    Deposit funds to wallet (manual deposit)
- * @access  Private (Fundi authenticated)
- */
-router.post("/deposit", authenticateFundiToken, depositFunds);
 
 /**
  * @route   POST /api/fundi/wallet/withdraw

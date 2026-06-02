@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client"
+import { JOB_POSTING_FEE_KES } from "../constants/jobFees.js"
 
 const prisma = new PrismaClient()
 
@@ -28,7 +29,7 @@ export const createJob = async (jobData, postedById) => {
         email: jobData.email,
         preferredContact: jobData.preferredContact,
         isUrgent: jobData.isUrgent || false,
-        isPaid: jobData.isPaid || false,
+        isPaid: false,
         postedById: postedById,
         status: "PENDING",
       },
@@ -72,15 +73,14 @@ export const getAllJobs = async (filters = {}, pagination = {}) => {
     if (filters.status) {
       where.status = filters.status
     } else {
-      // By default, exclude CLOSED and EXPIRED jobs from active listings
-      where.status = { notIn: ["CLOSED", "EXPIRED"] }
-      // Exclude paid jobs whose 7-day paid period has expired (so they never show on public listing)
+      // Public listings: admin-approved jobs only
+      where.status = "ACTIVE"
+      // Exclude paid jobs whose 7-day paid period has expired
       const sevenDaysAgo = new Date()
       sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
       where.AND = [
         {
           OR: [
-            { status: { not: "ACTIVE" } },
             { isPaid: false },
             { isPaid: true, paidAt: { gt: sevenDaysAgo } },
           ],
@@ -372,6 +372,11 @@ export const updateJobStatus = async (jobId, clientId, status) => {
       throw new Error("Unauthorized: You can only update your own jobs")
     }
 
+    const allowedClientStatuses = ["CLOSED"]
+    if (!allowedClientStatuses.includes(status)) {
+      throw new Error("Unauthorized: Only admins can change job approval status")
+    }
+
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: { status },
@@ -399,10 +404,11 @@ export const updateJobStatus = async (jobId, clientId, status) => {
  * Pay for a job posting (deduct from wallet and mark job as paid)
  * @param {String} jobId - Job ID
  * @param {String} clientId - Client user ID (for authorization)
- * @param {Number} amount - Payment amount (default: 300 KES)
+ * @param {Number} amount - Ignored; fee is fixed server-side
  * @returns {Object} Updated job and payment details
  */
-export const payForJob = async (jobId, clientId, amount = 300) => {
+export const payForJob = async (jobId, clientId, _amount) => {
+  const amount = JOB_POSTING_FEE_KES
   try {
     // Check if job exists and belongs to the client
     const existingJob = await prisma.job.findUnique({

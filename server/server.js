@@ -24,6 +24,7 @@ import adminJobRoutes from './routes/adminJobRoutes.js'; // Import admin job rou
 import clientWalletRoute from './routes/clientWalletRoute.js'; // Import client wallet routes
 import fundiWalletRoute from './routes/fundiWalletRoute.js'; // Import fundi wallet routes
 import subscriptionRoute from './routes/subscriptionRoute.js'; // Import subscription routes
+import fundiJobListingRoute from './routes/fundiJobListingRoute.js'; // Premium fundi job board
 import contactRoute from './routes/contactRoute.js';
 
 // Load environment variables
@@ -103,6 +104,9 @@ app.use("/api/fundi/admin", fundi_authRoute)
 
 // saved Job Routes
 app.use("/api/fundi/saved-jobs", savedJobRoutes)
+
+// Premium fundi job listings (trial or paid premium)
+app.use("/api/fundi/job-listings", fundiJobListingRoute)
 
 // Admin Management Routes
 app.use("/api/admin", adminRoute)

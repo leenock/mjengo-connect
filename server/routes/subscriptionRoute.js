@@ -5,6 +5,7 @@ import {
   downgradeExpiredSubscriptionsController,
 } from "../controllers/subscriptionController.js";
 import { authenticateFundiToken } from "../middleware/fundiAuth.js";
+import { cronOrAdminAuth } from "../middleware/cronAuth.js";
 
 const router = express.Router();
 
@@ -27,6 +28,6 @@ router.get("/details", authenticateFundiToken, getSubscriptionDetailsController)
  * @desc    Downgrade expired premium subscriptions to free plan (for cron job)
  * @access  Private (Admin or system)
  */
-router.post("/downgrade-expired", downgradeExpiredSubscriptionsController);
+router.post("/downgrade-expired", cronOrAdminAuth, downgradeExpiredSubscriptionsController);
 
 export default router;

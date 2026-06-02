@@ -8,6 +8,6 @@ const router = Router();
 router.post("/:id/reply", adminAuthMiddleware, createReply);
 
 // GET /api/admin/support/tickets/:id/replies
-router.get("/:id/replies", getReplies);
+router.get("/:id/replies", adminAuthMiddleware, getReplies);
 
 export default router;

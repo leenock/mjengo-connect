@@ -14,6 +14,7 @@ import {
   rerunJob,
   isJobWithinPaidPeriod,
 } from "../services/jobService.js";
+import { JOB_POSTING_FEE_KES } from "../constants/jobFees.js";
 
 /**
  * Create a new job posting
@@ -221,16 +222,13 @@ export const updateJobStatusController = async (req, res) => {
 export const payForJobController = async (req, res) => {
   try {
     const { id } = req.params;
-    const { amount } = req.body; // Optional, defaults to 300
     const clientId = req.user?.id;
 
     if (!clientId) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    const paymentAmount = amount || 300; // Default to 300 KES
-
-    const result = await payForJob(id, clientId, paymentAmount);
+    const result = await payForJob(id, clientId, JOB_POSTING_FEE_KES);
 
     res.status(200).json({
       message: "Job payment processed successfully",
