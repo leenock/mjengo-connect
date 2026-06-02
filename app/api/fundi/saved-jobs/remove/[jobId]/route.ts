@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import { forwardToBackend } from "@/app/api/_lib/backend";
 
-interface Params {
-  params: { jobId: string };
-}
+type RouteContext = {
+  params: Promise<{ jobId?: string }>;
+};
 
-export async function DELETE(request: NextRequest, { params }: Params) {
-  return forwardToBackend(request, `/api/fundi/saved-jobs/remove/${params.jobId}`, {
+export async function DELETE(request: NextRequest, context: RouteContext) {
+  const { jobId = "" } = await context.params;
+  return forwardToBackend(request, `/api/fundi/saved-jobs/remove/${jobId}`, {
     method: "DELETE",
   });
 }

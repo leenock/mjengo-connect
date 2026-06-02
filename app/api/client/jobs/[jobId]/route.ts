@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { forwardToBackend } from "@/app/api/_lib/backend";
 
-interface Params {
-  params: { jobId: string };
-}
+type RouteContext = {
+  params: Promise<{ jobId?: string }>;
+};
 
-export async function GET(request: NextRequest, { params }: Params) {
-  return forwardToBackend(request, `/api/client/jobs/${params.jobId}`);
+export async function GET(request: NextRequest, context: RouteContext) {
+  const { jobId = "" } = await context.params;
+  return forwardToBackend(request, `/api/client/jobs/${jobId}`);
 }
