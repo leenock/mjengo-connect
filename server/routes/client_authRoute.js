@@ -13,12 +13,13 @@ import {
   checkEmailServiceController,
 } from '../controllers/passwordResetEmailController.js';
 import { authLimiter, strictAuthLimiter } from "../middleware/rateLimit.js";
+import { optionalAuthenticateToken } from "../middleware/optionalAuth.js";
 
 const router = express.Router();
 
 // POST /api/client/auth/login
 router.post('/login', authLimiter, loginController);
-router.post('/logout', logoutController);
+router.post('/logout', optionalAuthenticateToken, logoutController);
 
 // OTP Password Reset Routes
 router.post('/send-otp', strictAuthLimiter, sendOTPController);

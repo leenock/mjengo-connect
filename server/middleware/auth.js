@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import { PrismaClient } from "@prisma/client"
+import { serverLog } from "../utils/appLogger.js"
 
 const prisma = new PrismaClient()
 
@@ -49,7 +50,7 @@ export const authenticateToken = async (req, res, next) => {
     req.user = user
     next()
   } catch (error) {
-    console.error("Auth Middleware Error:", error)
+    serverLog.error("Auth", "Client authentication failed", error)
 
     if (error.name === "JsonWebTokenError") {
       return res.status(403).json({ message: "Invalid token" })

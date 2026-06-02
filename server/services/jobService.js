@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client"
 import { JOB_POSTING_FEE_KES } from "../constants/jobFees.js"
+import { MAX_OPEN_JOBS_PER_CLIENT } from "../constants/jobQuotas.js"
 
 const prisma = new PrismaClient()
 
@@ -11,6 +12,19 @@ const prisma = new PrismaClient()
  */
 export const createJob = async (jobData, postedById) => {
   try {
+    const openJobCount = await prisma.job.count({
+      where: {
+        postedById,
+        status: { in: ["PENDING", "ACTIVE"] },
+      },
+    })
+
+    if (openJobCount >= MAX_OPEN_JOBS_PER_CLIENT) {
+      throw new Error(
+        `You can have at most ${MAX_OPEN_JOBS_PER_CLIENT} pending or active jobs. Close or complete existing jobs before posting another.`
+      )
+    }
+
     const job = await prisma.job.create({
       data: {
         title: jobData.title,

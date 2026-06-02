@@ -1,4 +1,5 @@
 import twilio from 'twilio';
+import { serverLog, maskPhone } from '../utils/appLogger.js';
 
 /**
  * Twilio Service for sending SMS messages
@@ -24,8 +25,9 @@ const validateTwilioConfig = () => {
   const { accountSid, authToken, phoneNumber } = TWILIO_CONFIG;
   
   if (!accountSid || !authToken || !phoneNumber) {
-    console.error('Twilio configuration error: Missing required environment variables');
-    console.error('Required: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_PHONE_NUMBER');
+    serverLog.error('Twilio', 'Missing required environment variables', null, {
+      required: ['TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_PHONE_NUMBER'],
+    });
     return false;
   }
   
@@ -98,15 +100,18 @@ export const sendSMS = async (to, message) => {
   try {
     const formattedNumber = formatPhoneNumber(to);
     
-    console.log(`[Twilio] Sending SMS to: ${formattedNumber}`);
-    
+    serverLog.debug('Twilio', 'Sending SMS', { to: maskPhone(formattedNumber) });
+
     const response = await client.messages.create({
       body: message,
       from: TWILIO_CONFIG.phoneNumber,
       to: formattedNumber,
     });
-    
-    console.log(`[Twilio] SMS sent successfully. SID: ${response.sid}`);
+
+    serverLog.info('Twilio', 'SMS sent', {
+      to: maskPhone(formattedNumber),
+      sid: response.sid,
+    });
     
     return {
       success: true,
@@ -115,7 +120,9 @@ export const sendSMS = async (to, message) => {
       to: formattedNumber,
     };
   } catch (error) {
-    console.error('[Twilio] Error sending SMS:', error.message);
+    serverLog.error('[Twilio]', 'Error sending SMS', error, {
+      to: maskPhone(to),
+    });
     
     // Provide more specific error messages
     if (error.code === 21211) {

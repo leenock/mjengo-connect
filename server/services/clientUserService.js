@@ -148,6 +148,52 @@ export const updateClientUser = async (id, userData) => {
 
   return updatedUser;
 };
+
+/** Admin update — allows accountStatus and syncs isActive. */
+export const adminUpdateClientUser = async (id, userData) => {
+  if (!id || typeof id !== "string") {
+    throw new Error("A valid string ID is required");
+  }
+
+  const existingUser = await prisma.client_User.findUnique({
+    where: { id },
+  });
+
+  if (!existingUser) {
+    throw new Error("Client not found");
+  }
+
+  const data = { ...userData };
+  if (data.password !== undefined) delete data.password;
+  if (data.passwordResetToken !== undefined) delete data.passwordResetToken;
+  if (data.passwordResetTokenExpiresAt !== undefined) delete data.passwordResetTokenExpiresAt;
+  if (data.otp !== undefined) delete data.otp;
+  if (data.otpExpiresAt !== undefined) delete data.otpExpiresAt;
+
+  if (data.accountStatus !== undefined) {
+    data.isActive = data.accountStatus === "ACTIVE";
+  }
+
+  const updatedUser = await prisma.client_User.update({
+    where: { id },
+    data,
+    select: {
+      id: true,
+      email: true,
+      phone: true,
+      firstName: true,
+      lastName: true,
+      company: true,
+      location: true,
+      isActive: true,
+      accountStatus: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return updatedUser;
+};
 // update client user password
 
 /**
@@ -200,7 +246,7 @@ export const updateClientUserPassword = async (input) => {
   return updatedUser;
 };
 /**
- * Deletes a client user by ID.
+ * Deletes a client user and all dependent records (wallet, payments, jobs, tickets, etc.).
  * @param {string} id - The ID of the client user to delete.
  * @returns {Promise<Object>} - Success message.
  * @throws {Error} If the client user does not exist or ID is invalid.
@@ -210,7 +256,6 @@ export const deleteClientUser = async (id) => {
     throw new Error("A valid string ID is required");
   }
 
-  // Check if the user exists
   const existingUser = await prisma.client_User.findUnique({
     where: { id },
   });
@@ -219,9 +264,53 @@ export const deleteClientUser = async (id) => {
     throw new Error("Client not found");
   }
 
-  // Delete the user
-  await prisma.client_User.delete({
-    where: { id },
+  await prisma.$transaction(async (tx) => {
+    const jobs = await tx.job.findMany({
+      where: { postedById: id },
+      select: { id: true },
+    });
+    const jobIds = jobs.map((j) => j.id);
+
+    if (jobIds.length > 0) {
+      await tx.jobReport.deleteMany({ where: { jobId: { in: jobIds } } });
+    }
+
+    const paymentLogs = await tx.clientPaymentLog.findMany({
+      where: { clientId: id },
+      select: { id: true },
+    });
+    const paymentLogIds = paymentLogs.map((p) => p.id);
+
+    if (paymentLogIds.length > 0) {
+      await tx.clientWalletTransaction.deleteMany({
+        where: { paymentLogId: { in: paymentLogIds } },
+      });
+      await tx.clientPaymentLog.deleteMany({ where: { clientId: id } });
+    }
+
+    if (jobIds.length > 0) {
+      await tx.job.deleteMany({ where: { postedById: id } });
+    }
+
+    const wallet = await tx.clientWallet.findUnique({ where: { clientId: id } });
+    if (wallet) {
+      await tx.clientWalletTransaction.deleteMany({ where: { walletId: wallet.id } });
+      await tx.clientWallet.delete({ where: { id: wallet.id } });
+    }
+
+    const tickets = await tx.supportTicket.findMany({
+      where: { clientId: id },
+      select: { id: true },
+    });
+    if (tickets.length > 0) {
+      const ticketIds = tickets.map((t) => t.id);
+      await tx.supportReply.deleteMany({ where: { ticketId: { in: ticketIds } } });
+      await tx.supportTicket.deleteMany({ where: { clientId: id } });
+    }
+
+    await tx.systemLog.deleteMany({ where: { clientId: id } });
+
+    await tx.client_User.delete({ where: { id } });
   });
 
   return { message: "Client user deleted successfully" };
@@ -283,7 +372,13 @@ export const loginClientUser = async ({ emailOrPhone, password }) => {
   return { token, user };
 };
 
-// Logout client user
-export const logoutClientUser = async () => {
+// Logout client user — invalidate existing JWTs
+export const logoutClientUser = async (userId) => {
+  if (userId) {
+    await prisma.client_User.update({
+      where: { id: userId },
+      data: { tokenVersion: { increment: 1 } },
+    });
+  }
   return { message: "User logged out successfully" };
 };

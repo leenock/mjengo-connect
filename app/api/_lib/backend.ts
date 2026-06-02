@@ -18,7 +18,7 @@ function isAdminScopedNonAdminPath(backendPath: string) {
   const adminClientPrefixes = [
     "/api/client/getAllClientUsers",
     "/api/client/deleteClientUser/",
-    "/api/client/updateClientUser/",
+    "/api/client/updateClientUserAdmin/",
   ];
   const adminFundiPrefixes = [
     "/api/fundi/getAllFundis",
@@ -40,7 +40,9 @@ function resolveAuthHeader(request: NextRequest, backendPath: string) {
   const visitorToken = request.cookies.get("visitorToken")?.value;
   let token: string | undefined;
 
-  if (adminToken && (backendPath.startsWith("/api/admin/") || isAdminScopedNonAdminPath(backendPath))) {
+  if (visitorToken && /^\/api\/client\/updateClientUser\/[^/]+$/.test(backendPath)) {
+    token = visitorToken;
+  } else if (adminToken && (backendPath.startsWith("/api/admin/") || isAdminScopedNonAdminPath(backendPath))) {
     token = adminToken;
   }
   else if (backendPath.startsWith("/api/admin/")) token = adminToken;

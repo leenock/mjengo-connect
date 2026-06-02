@@ -67,6 +67,13 @@ interface MessageCounts {
   resolved: number
 }
 
+interface ModerationCounts {
+  open: number
+  pending: number
+  underReview: number
+  total: number
+}
+
 // Updated interfaces for sidebar with string types for flexibility
 interface SidebarJob {
   status: string;
@@ -160,6 +167,12 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     pending: 0,
     resolved: 0
   })
+  const [moderationCounts, setModerationCounts] = useState<ModerationCounts>({
+    open: 0,
+    pending: 0,
+    underReview: 0,
+    total: 0,
+  })
   
   // Loading states
   const [loadingJobs, setLoadingJobs] = useState(true)
@@ -167,6 +180,7 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   const [loadingFundis, setLoadingFundis] = useState(true)
   const [loadingUsers, setLoadingUsers] = useState(true)
   const [loadingMessages, setLoadingMessages] = useState(true)
+  const [loadingModeration, setLoadingModeration] = useState(true)
 
   // Fetch user data
   useEffect(() => {
@@ -403,6 +417,32 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     fetchMessageCounts()
   }, [])
 
+  useEffect(() => {
+    const fetchModerationCounts = async () => {
+      try {
+        setLoadingModeration(true)
+        const response = await adminFetch("/api/admin/moderation/counts")
+
+        if (response.ok) {
+          const data = await response.json()
+          const counts = data?.counts ?? data
+          setModerationCounts({
+            open: Number(counts.open) || 0,
+            pending: Number(counts.pending) || 0,
+            underReview: Number(counts.underReview) || 0,
+            total: Number(counts.total) || 0,
+          })
+        }
+      } catch (error) {
+        console.error("Failed to fetch moderation counts:", error)
+      } finally {
+        setLoadingModeration(false)
+      }
+    }
+
+    fetchModerationCounts()
+  }, [])
+
   const navigationItems = [
     {
       name: "Dashboard",
@@ -479,8 +519,12 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
       name: "Moderation",
       href: "/administrator/moderation",
       icon: AlertTriangle,
-      badge: "5",
-      description: "Content review",
+      badge: loadingModeration
+        ? "..."
+        : moderationCounts.open > 0
+          ? moderationCounts.open.toString()
+          : "",
+      description: `Open reports: ${moderationCounts.open}, Total: ${moderationCounts.total}`,
     },
     {
       name: "System Logs",

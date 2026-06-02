@@ -3,11 +3,13 @@ import {
   getAllClients,
   getClientById,
   updateClientUser,
+  adminUpdateClientUser,
   updateClientUserPassword,
   deleteClientUser,
   loginClientUser,
   logoutClientUser,
 } from "../services/clientUserService.js";
+import { serverLog } from "../utils/appLogger.js";
 
 // Client User Controller
 /**
@@ -83,6 +85,28 @@ export const updateClientUserController = async (req, res) => {
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Update Client User Error:", error);
+    res.status(400).json({ message: error.message || "Internal server error" });
+  }
+};
+
+export const adminUpdateClientUserController = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const {
+      password,
+      passwordResetToken,
+      passwordResetTokenExpiresAt,
+      otp,
+      otpExpiresAt,
+      ...safeBody
+    } = req.body || {};
+    const updatedUser = await adminUpdateClientUser(id, safeBody);
+    res.status(200).json({
+      message: "Client updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Admin Update Client User Error:", error);
     res.status(400).json({ message: error.message || "Internal server error" });
   }
 };
@@ -184,12 +208,12 @@ export const loginController = async (req, res) => {
 };
 
 // logout controller
-export const logoutController = async (_req, res) => {
+export const logoutController = async (req, res) => {
   try {
-    await logoutClientUser(); // Assuming this function handles session invalidation
+    await logoutClientUser(req.user?.id);
     res.status(200).json({ message: "Logout successful" });
   } catch (error) {
-    console.error("Logout Error:", error);
+    serverLog.error("Client Logout", "Logout failed", error);
     res.status(500).json({ message: error.message || "Internal server error" });
   }
 };

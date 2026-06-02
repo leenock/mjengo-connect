@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import type React from "react";
 import AdminSidebar from "@/components/admin/Sidebar";
-import AdminAuthService from "@/app/services/admin_auth";
 
 import {
   ArrowLeft,
@@ -170,6 +169,10 @@ export default function AdminPostJob() {
       errors.push("• Please enter a valid email address");
     }
 
+    if (!jobDetails.clientId.trim()) {
+      errors.push("• Client user ID is required (assign the job to a client account)");
+    }
+
     return errors;
   };
 
@@ -264,124 +267,53 @@ export default function AdminPostJob() {
         preferredContact: jobDetails.preferredContact,
         isUrgent: jobDetails.isUrgent,
         isPaid: jobDetails.isPaid,
-        clientUserId: jobDetails.clientId.trim() || null, // Use clientUserId to match Postman
+        clientUserId: jobDetails.clientId.trim(),
         // Remove status field as it might be auto-set by the backend
       };
 
       console.log("📤 Submitting job data to server:", submissionData);
 
-      const response = await fetch(
-        `/api/admin/jobs/jobs`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...AdminAuthService.getAuthHeaders(),
-          },
-          body: JSON.stringify(submissionData),
-        }
-      );
+      const response = await fetch(`/api/admin/jobs/jobs`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(submissionData),
+      });
 
       console.log("📥 Server response status:", response.status);
 
-      if (!response.ok) {
-        let errorData: {
-          message?: string;
-          details?: unknown;
-          errors?: Record<string, string> | Array<unknown>;
-          validationErrors?: Array<{ field: string; message: string }>;
-        };
-
+      const responseText = await response.text();
+      let result: {
+        success?: boolean;
+        message?: string;
+        errors?: Array<{ field: string; message: string }>;
+      } = {};
+      if (responseText) {
         try {
-          errorData = await response.json();
-          console.error("🚨 Server error response:", errorData);
-        } catch (parseError) {
-          console.error("🚨 Failed to parse error response:", parseError);
-          throw new Error(
-            `Server returned ${response.status}: ${response.statusText}`
-          );
+          result = JSON.parse(responseText);
+        } catch {
+          result = { message: responseText };
         }
+      }
 
-        // Handle different types of validation errors
-        let errorMessage = "Failed to create job";
+      if (!response.ok) {
+        const errorData = result;
+        console.error("🚨 Server error response:", errorData);
 
-        if (errorData.message) {
-          errorMessage = errorData.message;
-        }
+        let errorMessage = errorData.message || "Failed to create job";
 
-        // Check for detailed validation errors - handle array of objects
-        if (errorData.details) {
-          console.error("🔍 Validation details:", errorData.details);
-
-          if (Array.isArray(errorData.details)) {
-            errorMessage += `\nValidation issues:\n${errorData.details
-              .map((detail: unknown) => {
-                if (typeof detail === "object" && detail !== null) {
-                  const detailObj = detail as {
-                    field?: string;
-                    message?: string;
-                    path?: string;
-                  };
-                  return `• ${
-                    detailObj.field || detailObj.path || "Unknown field"
-                  }: ${detailObj.message || "Invalid value"}`;
-                }
-                return `• ${String(detail)}`;
-              })
-              .join("\n")}`;
-          }
-        }
-
-        // Check for field-specific errors - handle both object and array formats
-        if (errorData.errors) {
-          console.error("🔍 Field errors:", errorData.errors);
-
-          if (Array.isArray(errorData.errors)) {
-            // Handle array of error objects
-            const fieldErrors = errorData.errors
-              .map((error: unknown, index: number) => {
-                if (typeof error === "object" && error !== null) {
-                  const errorObj = error as {
-                    field?: string;
-                    message?: string;
-                  };
-                  return `• ${errorObj.field || `Field ${index}`}: ${
-                    errorObj.message || "Invalid value"
-                  }`;
-                }
-                return `• Error ${index}: ${String(error)}`;
-              })
-              .join("\n");
-            errorMessage += `\nField errors:\n${fieldErrors}`;
-          } else if (typeof errorData.errors === "object") {
-            // Handle object with field names as keys
-            const fieldErrors = Object.entries(
-              errorData.errors as Record<string, string>
-            )
-              .map(([field, error]) => `• ${field}: ${error}`)
-              .join("\n");
-            errorMessage += `\nField errors:\n${fieldErrors}`;
-          }
-        }
-
-        // Check for validationErrors array (common pattern)
-        if (
-          errorData.validationErrors &&
-          Array.isArray(errorData.validationErrors)
-        ) {
-          const validationErrors = errorData.validationErrors
-            .map(
-              (error: { field: string; message: string }) =>
-                `• ${error.field}: ${error.message}`
-            )
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          const fieldErrors = errorData.errors
+            .map((error) => `• ${error.field}: ${error.message}`)
             .join("\n");
-          errorMessage += `\nValidation errors:\n${validationErrors}`;
+          errorMessage += `\nField errors:\n${fieldErrors}`;
         }
 
         throw new Error(errorMessage);
       }
 
-      const result = await response.json();
       console.log("✅ Job created successfully:", result);
 
       // Show success notification (like reference code)

@@ -357,6 +357,12 @@ export const loginFundiUser = async ({ emailOrPhone, password }) => {
  * Logout fundi user
  * @returns {Promise<Object>} Success message
  */
-export const logoutFundiUser = async () => {
+export const logoutFundiUser = async (fundiId) => {
+  if (fundiId) {
+    await prisma.fundi_User.update({
+      where: { id: fundiId },
+      data: { tokenVersion: { increment: 1 } },
+    })
+  }
   return { message: "User logged out successfully" }
 }

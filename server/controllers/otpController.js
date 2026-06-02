@@ -4,6 +4,7 @@ import {
   resendOTP,
 } from "../services/otpService.js";
 import { isTwilioConfigured } from "../services/twilioService.js";
+import { serverLog } from "../utils/appLogger.js";
 
 /**
  * Controller to send OTP for password reset
@@ -21,7 +22,7 @@ export const sendOTPController = async (req, res) => {
 
   // Check if Twilio is configured
   if (!isTwilioConfigured()) {
-    console.error("[OTP Controller] Twilio is not properly configured");
+    serverLog.error("OTP Controller", "Twilio is not properly configured");
     return res.status(500).json({
       success: false,
       message: "SMS service is not available. Please contact support.",
@@ -37,7 +38,7 @@ export const sendOTPController = async (req, res) => {
       expiresIn: result.expiresIn,
     });
   } catch (error) {
-    console.error("[OTP Controller] Send OTP Error:", error.message);
+    serverLog.error("OTP Controller", "Send OTP failed", error);
 
     // Determine appropriate status code
     let statusCode = 400;
@@ -93,7 +94,7 @@ export const verifyOTPController = async (req, res) => {
       message: result.message,
     });
   } catch (error) {
-    console.error("[OTP Controller] Verify OTP Error:", error.message);
+    serverLog.error("OTP Controller", "Verify OTP failed", error);
 
     // Determine appropriate status code
     let statusCode = 400;
@@ -128,7 +129,7 @@ export const resendOTPController = async (req, res) => {
 
   // Check if Twilio is configured
   if (!isTwilioConfigured()) {
-    console.error("[OTP Controller] Twilio is not properly configured");
+    serverLog.error("OTP Controller", "Twilio is not properly configured");
     return res.status(500).json({
       success: false,
       message: "SMS service is not available. Please contact support.",
@@ -144,7 +145,7 @@ export const resendOTPController = async (req, res) => {
       expiresIn: result.expiresIn,
     });
   } catch (error) {
-    console.error("[OTP Controller] Resend OTP Error:", error.message);
+    serverLog.error("OTP Controller", "Resend OTP failed", error);
 
     // Determine appropriate status code
     let statusCode = 400;

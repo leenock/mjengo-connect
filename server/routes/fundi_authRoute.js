@@ -25,6 +25,7 @@ import {
   requireActiveSubscription,
   requirePremiumSubscription,
 } from "../middleware/fundiAuth.js";
+import { optionalAuthenticateFundiToken } from "../middleware/optionalAuth.js";
 import {
   registerFundiUserSchema,
   updateFundiUserSchema,
@@ -92,7 +93,7 @@ router.delete(
   adminAuthMiddleware,superAdminMiddleware,
   deleteFundiUserController
 );
-router.post("/logoutFundi", authenticateFundiToken, logoutFundiController);
+router.post("/logoutFundi", optionalAuthenticateFundiToken, logoutFundiController);
 
 // Premium feature routes (require active subscription)
 router.get(

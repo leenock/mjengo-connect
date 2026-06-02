@@ -252,36 +252,39 @@ export default function PostJobPage() {
           body: JSON.stringify(jobDetails),
         })
 
+        const responseText = await response.text()
+        let payload: { message?: string } = {}
+        if (responseText) {
+          try {
+            payload = JSON.parse(responseText)
+          } catch {
+            payload = { message: responseText }
+          }
+        }
+
         if (!response.ok) {
-          const errorData = await response.json()
+          let errorMessage = payload.message || "Failed to create job posting"
 
-          // Parse specific error messages from the server
-          let errorMessage = "Failed to create job posting"
-
-          if (errorData.message) {
-            if (errorData.message.includes("title")) {
-              errorMessage = "Job title is invalid or too short (minimum 5 characters)"
-            } else if (errorData.message.includes("description")) {
-              errorMessage = "Job description is too short (minimum 20 characters)"
-            } else if (errorData.message.includes("requirements")) {
-              errorMessage = "Requirements section is too short (minimum 10 characters)"
-            } else if (errorData.message.includes("phone")) {
-              errorMessage = "Phone number format is invalid"
-            } else if (errorData.message.includes("email")) {
-              errorMessage = "Email address format is invalid"
-            } else if (errorData.message.includes("category")) {
-              errorMessage = "Please select a valid job category"
-            } else if (errorData.message.includes("location")) {
-              errorMessage = "Location is required and must be at least 2 characters"
-            } else {
-              errorMessage = errorData.message
-            }
+          if (errorMessage.includes("title")) {
+            errorMessage = "Job title is invalid or too short (minimum 5 characters)"
+          } else if (errorMessage.includes("description")) {
+            errorMessage = "Job description is too short (minimum 20 characters)"
+          } else if (errorMessage.includes("requirements")) {
+            errorMessage = "Requirements section is too short (minimum 10 characters)"
+          } else if (errorMessage.includes("phone")) {
+            errorMessage = "Phone number format is invalid"
+          } else if (errorMessage.includes("email")) {
+            errorMessage = "Email address format is invalid"
+          } else if (errorMessage.includes("category")) {
+            errorMessage = "Please select a valid job category"
+          } else if (errorMessage.includes("location")) {
+            errorMessage = "Location is required and must be at least 2 characters"
           }
 
           throw new Error(errorMessage)
         }
 
-        return response.json()
+        return payload
       }, 3000) // 3 seconds minimum loading time
 
       // Update loading message for final processing

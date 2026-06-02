@@ -66,6 +66,10 @@ export const updateClientUserSchema = Joi.object({
   }),
 }).min(1);
 
+export const adminUpdateClientUserSchema = updateClientUserSchema.keys({
+  accountStatus: Joi.string().valid("ACTIVE", "SUSPENDED", "PENDING").optional(),
+});
+
 export const changeClientPasswordSchema = Joi.object({
   currentPassword: Joi.string().required().messages({
     'string.empty': 'Current password cannot be empty.',

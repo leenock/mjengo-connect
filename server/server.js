@@ -21,6 +21,7 @@ import ticketsFundiRoute from "./routes/ticketsFundiRoute.js" // Added fundi tic
 import ticketSupportRoute from "./routes/ticketSupportRoute.js" // Added ticket support route import
 
 import adminJobRoutes from './routes/adminJobRoutes.js'; // Import admin job routes
+import moderationRoute from "./routes/moderationRoute.js";
 import clientWalletRoute from './routes/clientWalletRoute.js'; // Import client wallet routes
 import fundiWalletRoute from './routes/fundiWalletRoute.js'; // Import fundi wallet routes
 import subscriptionRoute from './routes/subscriptionRoute.js'; // Import subscription routes
@@ -110,6 +111,9 @@ app.use("/api/fundi/job-listings", fundiJobListingRoute)
 
 // Admin Management Routes
 app.use("/api/admin", adminRoute)
+
+// Content moderation counts (job reports queue)
+app.use("/api/admin/moderation", moderationRoute)
 
 // Admin Authentication Routes
 app.use("/api/admin/auth", adminAuthRoute)

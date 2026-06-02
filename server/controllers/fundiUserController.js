@@ -8,6 +8,7 @@ import {
   loginFundiUser,
   logoutFundiUser,
 } from "../services/fundiUserService.js"
+import { serverLog } from "../utils/appLogger.js"
 
 // Fundi User Controller
 /**
@@ -201,12 +202,12 @@ export const loginFundiController = async (req, res) => {
 /**
  * Logout controller for fundi users
  */
-export const logoutFundiController = async (_req, res) => {
+export const logoutFundiController = async (req, res) => {
   try {
-    await logoutFundiUser()
+    await logoutFundiUser(req.user?.id)
     res.status(200).json({ message: "Logout successful" })
   } catch (error) {
-    console.error("Fundi Logout Error:", error)
+    serverLog.error("Fundi Logout", "Logout failed", error);
     res.status(500).json({ message: error.message || "Internal server error" })
   }
 }

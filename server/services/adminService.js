@@ -294,7 +294,13 @@ export const loginAdmin = async ({ emailOrPhone, password }) => {
 /**
  * Logout admin user
  */
-export const logoutAdmin = async () => {
+export const logoutAdmin = async (adminId) => {
+  if (adminId) {
+    await prisma.admin.update({
+      where: { id: adminId },
+      data: { tokenVersion: { increment: 1 } },
+    })
+  }
   return { message: "Admin logged out successfully" }
 }
 

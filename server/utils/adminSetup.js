@@ -1,7 +1,9 @@
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcrypt"
+import { serverLog, maskEmail } from "./appLogger.js"
 
 const prisma = new PrismaClient()
+const isDev = process.env.NODE_ENV !== "production"
 
 /**
  * Creates the initial Super Admin user
@@ -9,23 +11,21 @@ const prisma = new PrismaClient()
  */
 export const createSuperAdmin = async () => {
   try {
-    // Check if any Super Admin exists
     const existingSuperAdmin = await prisma.admin.findFirst({
       where: { role: "SUPER_ADMIN" },
     })
 
     if (existingSuperAdmin) {
-      console.log("Super Admin already exists. Skipping creation.")
+      serverLog.info("AdminSetup", "Super Admin already exists — skipping creation")
       return existingSuperAdmin
     }
 
-    // Create Super Admin with default credentials
     const superAdminData = {
       fullName: "Super Administrator",
       email: "superadmin@mjengo.com",
       phone: "+254700000000",
       role: "SUPER_ADMIN",
-      password: "SuperAdmin@123", // This should be changed after first login
+      password: "SuperAdmin@123",
       status: "ACTIVE",
     }
 
@@ -38,14 +38,22 @@ export const createSuperAdmin = async () => {
       },
     })
 
-    console.log("Super Admin created successfully!")
-    console.log("Email:", superAdminData.email)
-    console.log("Password:", superAdminData.password)
-    console.log("⚠️  IMPORTANT: Change the default password after first login!")
+    serverLog.info("AdminSetup", "Super Admin created", {
+      email: maskEmail(superAdminData.email),
+      adminId: superAdmin.id,
+    })
+
+    if (isDev) {
+      serverLog.warn(
+        "AdminSetup",
+        "Default super-admin password is set — change it after first login",
+        { email: maskEmail(superAdminData.email) }
+      )
+    }
 
     return superAdmin
   } catch (error) {
-    console.error("Error creating Super Admin:", error)
+    serverLog.error("AdminSetup", "Error creating Super Admin", error)
     throw error
   }
 }
@@ -55,13 +63,11 @@ export const createSuperAdmin = async () => {
  */
 export const setupAdminSystem = async () => {
   try {
-    console.log("🚀 Setting up Admin System...")
-
+    serverLog.info("AdminSetup", "Setting up admin system")
     await createSuperAdmin()
-
-    console.log("✅ Admin System setup completed!")
+    serverLog.info("AdminSetup", "Admin system setup completed")
   } catch (error) {
-    console.error("❌ Admin System setup failed:", error)
+    serverLog.error("AdminSetup", "Admin system setup failed", error)
     throw error
   }
 }
@@ -69,10 +75,10 @@ export const setupAdminSystem = async () => {
 // Run setup directly
 setupAdminSystem()
   .then(() => {
-    console.log("Setup completed successfully!")
+    serverLog.info("AdminSetup", "Setup script finished")
     process.exit(0)
   })
   .catch((error) => {
-    console.error("Setup failed:", error)
+    serverLog.error("AdminSetup", "Setup script failed", error)
     process.exit(1)
   })

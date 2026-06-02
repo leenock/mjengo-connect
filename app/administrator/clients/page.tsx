@@ -93,6 +93,7 @@ export default function AdminManageClients() {
     accountStatus: "ACTIVE",
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ id: string; name: string } | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -130,13 +131,10 @@ export default function AdminManageClients() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `/api/client/getAllClientUsers`,
-        {
-          headers: { ...AdminAuthService.getAuthHeaders() },
-          cache: "no-store",
-        }
-      );
+      const res = await fetch(`/api/client/getAllClientUsers`, {
+        credentials: "include",
+        cache: "no-store",
+      });
 
       if (!res.ok) {
         const errorText = await res.text();
@@ -229,13 +227,10 @@ export default function AdminManageClients() {
   const deleteClient = async (id: string) => {
     setDeletingId(id);
     try {
-      const res = await fetch(
-        `/api/client/deleteClientUser/${id}`,
-        {
-          method: "DELETE",
-          headers: { ...AdminAuthService.getAuthHeaders() },
-        }
-      );
+      const res = await fetch(`/api/client/deleteClientUser/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || "Failed to delete client");
@@ -256,6 +251,7 @@ export default function AdminManageClients() {
   const openViewModal = (client: Client) => setViewClient(client);
 
   const openEditModal = (client: Client) => {
+    setSaveError(null);
     setEditClient(client);
     setEditFormData({
       firstName: client.firstName || "",
@@ -271,18 +267,14 @@ export default function AdminManageClients() {
   const saveClient = async () => {
     if (!editClient) return;
     setIsSaving(true);
+    setSaveError(null);
     try {
-      const res = await fetch(
-        `/api/client/updateClientUser/${editClient.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            ...AdminAuthService.getAuthHeaders(),
-          },
-          body: JSON.stringify(editFormData),
-        }
-      );
+      const res = await fetch(`/api/client/updateClientUserAdmin/${editClient.id}`, {
+        method: "PUT",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editFormData),
+      });
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.message || "Failed to update client");
@@ -291,8 +283,7 @@ export default function AdminManageClients() {
       setEditClient(null);
       showSuccessNotification("Client updated successfully!");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update client");
-      setIsProcessing(false);
+      setSaveError(err instanceof Error ? err.message : "Failed to update client");
     } finally {
       setIsSaving(false);
     }
@@ -893,6 +884,11 @@ export default function AdminManageClients() {
               </button>
             </div>
             <div className="p-6 space-y-6">
+              {saveError && (
+                <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {saveError}
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">First Name</label>

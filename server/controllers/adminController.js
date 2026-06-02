@@ -9,6 +9,7 @@ import {
   logoutAdmin,
   updateAdminRole,
 } from "../services/adminService.js"
+import { serverLog } from "../utils/appLogger.js"
 
 // Admin Controller
 /**
@@ -151,12 +152,12 @@ export const adminLoginController = async (req, res) => {
 /**
  * Admin logout controller
  */
-export const adminLogoutController = async (_req, res) => {
+export const adminLogoutController = async (req, res) => {
   try {
-    await logoutAdmin()
+    await logoutAdmin(req.admin?.id)
     res.status(200).json({ message: "Logout successful" })
   } catch (error) {
-    console.error("Admin Logout Error:", error)
+    serverLog.error("Admin Logout", "Logout failed", error);
     res.status(500).json({ message: error.message || "Internal server error" })
   }
 }

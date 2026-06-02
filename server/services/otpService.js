@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sendOTPSMS } from "./twilioService.js";
 import { validatePasswordStrength } from "../utils/security/passwordPolicy.js";
+import { serverLog, maskPhone } from "../utils/appLogger.js";
 
 const prisma = new PrismaClient();
 
@@ -105,7 +106,9 @@ export const sendPasswordResetOTP = async (phoneNumber) => {
   if (!user) {
     // For security, don't reveal if the phone number exists
     // But still return success to prevent enumeration attacks
-    console.log(`[OTP] Phone number not found in database: ${phoneNumber}`);
+    serverLog.debug("OTP", "Reset requested for unregistered phone", {
+      phone: maskPhone(phoneNumber),
+    });
     return {
       success: true,
       message: "If this phone number is registered, you will receive an OTP shortly.",
@@ -135,14 +138,23 @@ export const sendPasswordResetOTP = async (phoneNumber) => {
     },
   });
   
-  console.log(`[OTP] Generated OTP for user ${user.id}, expires at ${otpExpiresAt}`);
-  
+  serverLog.debug("OTP", "OTP generated for password reset", {
+    userId: user.id,
+    phone: maskPhone(phoneNumber),
+  });
+
   // Send OTP via SMS
   try {
     await sendOTPSMS(phoneNumber, otp);
-    console.log(`[OTP] SMS sent successfully to ${phoneNumber}`);
+    serverLog.info("OTP", "Password reset SMS dispatched", {
+      userId: user.id,
+      phone: maskPhone(phoneNumber),
+    });
   } catch (smsError) {
-    console.error(`[OTP] Failed to send SMS:`, smsError.message);
+    serverLog.error("OTP", "Failed to send SMS", smsError, {
+      userId: user.id,
+      phone: maskPhone(phoneNumber),
+    });
     
     // Clear the OTP since we couldn't send it
     await prisma.client_User.update({
@@ -226,7 +238,7 @@ export const verifyOTPAndResetPassword = async (phoneNumber, otp, newPassword) =
     },
   });
   
-  console.log(`[OTP] Password reset successful for user ${user.id}`);
+  serverLog.info("OTP", "Password reset completed", { userId: user.id });
   
   return {
     success: true,

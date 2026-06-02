@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken"
 import { PrismaClient } from "@prisma/client"
+import { serverLog } from "../utils/appLogger.js"
 
 const prisma = new PrismaClient()
 
@@ -62,7 +63,7 @@ export const authenticateFundiToken = async (req, res, next) => {
     req.user = user
     next()
   } catch (error) {
-    console.error("Fundi Auth Middleware Error:", error)
+    serverLog.error("Fundi Auth", "Authentication failed", error)
 
     if (error.name === "JsonWebTokenError") {
       return res.status(403).json({ message: "Invalid token" })

@@ -9,6 +9,7 @@ import {
 } from "../services/fundiPasswordResetEmailService.js";
 import { isEmailConfigured } from "../services/emailService.js";
 import { isTwilioConfigured } from "../services/twilioService.js";
+import { serverLog } from "../utils/appLogger.js";
 
 const FRONTEND_URL =
   process.env.FRONTEND_URL ||
@@ -29,7 +30,7 @@ export async function sendFundiOtpController(req, res) {
     const result = await sendFundiPasswordResetOTP(phoneNumber.trim());
     return res.status(200).json({ success: true, message: result.message, expiresIn: result.expiresIn });
   } catch (err) {
-    console.error("[Fundi OTP Controller] Send OTP Error:", err);
+    serverLog.error("Fundi OTP Controller", "Send OTP failed", err);
     return res.status(500).json({ success: false, message: err.message || "Failed to send OTP." });
   }
 }
@@ -43,7 +44,7 @@ export async function verifyFundiOtpController(req, res) {
     const result = await verifyFundiOTPAndResetPassword(phoneNumber.trim(), otp.trim(), newPassword);
     return res.status(200).json({ success: true, message: result.message });
   } catch (err) {
-    console.error("[Fundi OTP Controller] Verify OTP Error:", err);
+    serverLog.error("Fundi OTP Controller", "Verify OTP failed", err);
     return res.status(400).json({ success: false, message: err.message || "Password reset failed." });
   }
 }
@@ -60,7 +61,7 @@ export async function resendFundiOtpController(req, res) {
     const result = await resendFundiOTP(phoneNumber.trim());
     return res.status(200).json({ success: true, message: result.message });
   } catch (err) {
-    console.error("[Fundi OTP Controller] Resend OTP Error:", err);
+    serverLog.error("Fundi OTP Controller", "Resend OTP failed", err);
     return res.status(500).json({ success: false, message: err.message || "Failed to resend OTP." });
   }
 }
@@ -77,7 +78,7 @@ export async function fundiForgotPasswordController(req, res) {
     const result = await requestFundiPasswordReset(email.trim(), FRONTEND_URL);
     return res.status(200).json({ success: true, message: result.message });
   } catch (err) {
-    console.error("[Fundi Forgot Password] Error:", err);
+    serverLog.error("Fundi Forgot Password", "Request failed", err);
     return res.status(500).json({ success: false, message: err.message || "Failed to send reset email." });
   }
 }
@@ -97,7 +98,7 @@ export async function fundiResetPasswordEmailController(req, res) {
     }
     return res.status(200).json({ success: true, message: result.message });
   } catch (err) {
-    console.error("[Fundi Reset Password Email] Error:", err);
+    serverLog.error("Fundi Reset Password Email", "Reset failed", err);
     return res.status(500).json({ success: false, message: err.message || "Failed to reset password." });
   }
 }

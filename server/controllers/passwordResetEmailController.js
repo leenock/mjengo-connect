@@ -3,6 +3,7 @@ import {
   resetPasswordWithToken,
 } from "../services/passwordResetEmailService.js";
 import { isEmailConfigured } from "../services/emailService.js";
+import { serverLog } from "../utils/appLogger.js";
 
 const FRONTEND_URL =
   process.env.FRONTEND_URL ||
@@ -38,7 +39,7 @@ export async function forgotPasswordController(req, res) {
       message: result.message,
     });
   } catch (err) {
-    console.error("Forgot password (email) error:", err);
+    serverLog.error("Password Reset Email", "Forgot password failed", err);
     return res.status(500).json({
       success: false,
       message: err.message || "Failed to send reset email.",
@@ -78,7 +79,7 @@ export async function resetPasswordEmailController(req, res) {
       message: result.message,
     });
   } catch (err) {
-    console.error("Reset password (email) error:", err);
+    serverLog.error("Password Reset Email", "Reset password failed", err);
     return res.status(500).json({
       success: false,
       message: err.message || "Failed to reset password.",
