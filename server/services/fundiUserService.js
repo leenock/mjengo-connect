@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import { validatePasswordStrength } from "../utils/security/passwordPolicy.js"
 
 const prisma = new PrismaClient()
 
@@ -15,6 +16,10 @@ const prisma = new PrismaClient()
  * @throws {Error} If the email or phone number is already in use.
  */
 export const registerFundi = async (userData) => {
+  const passwordCheck = validatePasswordStrength(userData?.password)
+  if (!passwordCheck.valid) {
+    throw new Error(passwordCheck.message)
+  }
   const { email, phone, password } = userData
 
   // Build the OR condition dynamically based on provided fields
@@ -167,11 +172,8 @@ export const updateFundiUser = async (id, userData) => {
     throw new Error("Fundi not found")
   }
 
-  // If password is present, hash it
-  if (userData.password) {
-    const saltRounds = 10
-    userData.password = await bcrypt.hash(userData.password, saltRounds)
-  }
+  // Defensive: never allow updating password or other sensitive fields via this generic updater.
+  if (userData.password !== undefined) delete userData.password
 
   // Handle optional email update
   if (userData.email !== undefined) {
@@ -209,29 +211,40 @@ export const updateFundiUser = async (id, userData) => {
  * @param {string} newPassword - New plain text password.
  * @returns {Promise<Object>} - Updated user details.
  */
-export const updateFundiUserPassword = async (identifier, newPassword) => {
-  if (!identifier || typeof identifier !== "string") {
-    throw new Error("A valid email or phone number is required.")
+export const updateFundiUserPassword = async (input) => {
+  const { userId, currentPassword, newPassword: nextPassword } = input || {}
+  if (!userId || typeof userId !== "string") {
+    throw new Error("A valid userId is required.")
+  }
+  if (!currentPassword || !nextPassword) {
+    throw new Error("currentPassword and newPassword are required.")
+  }
+  const passwordCheck = validatePasswordStrength(nextPassword)
+  if (!passwordCheck.valid) {
+    throw new Error(passwordCheck.message)
   }
 
-  // Find the user by email or phone
-  const user = await prisma.fundi_User.findFirst({
-    where: {
-      OR: [{ email: identifier }, { phone: identifier }],
-    },
+  const user = await prisma.fundi_User.findUnique({
+    where: { id: userId },
+    select: { id: true, password: true, email: true, phone: true, updatedAt: true },
   })
 
   if (!user) {
     throw new Error("Fundi not found.")
   }
 
+  const ok = await bcrypt.compare(currentPassword, user.password)
+  if (!ok) {
+    throw new Error("Invalid current password.")
+  }
+
   // Hash the password
-  const hashedPassword = await bcrypt.hash(newPassword, 10)
+  const hashedPassword = await bcrypt.hash(nextPassword, 10)
 
   // Update password
   const updatedUser = await prisma.fundi_User.update({
     where: { id: user.id },
-    data: { password: hashedPassword },
+    data: { password: hashedPassword, tokenVersion: { increment: 1 } },
     select: {
       id: true,
       email: true,
@@ -310,6 +323,7 @@ export const loginFundiUser = async ({ emailOrPhone, password }) => {
       id: user.id,
       email: user.email,
       userType: "FUNDI",
+      tv: user.tokenVersion,
     },
     process.env.JWT_SECRET,
     { expiresIn: "24h" },

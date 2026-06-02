@@ -124,13 +124,13 @@ export default function JobListingPage() {
         throw new Error(data.message || "Login failed")
       }
 
-      const { token, user } = data
-      if (!token || !user) {
-        throw new Error("Invalid server response. Missing token or user data.")
+      const { user } = data
+      if (!user) {
+        throw new Error("Invalid server response. Missing user data.")
       }
 
-      // Store token and user data
-      FundiAuthService.setAuth(token, user)
+      // Store user data only; auth cookie is set by BFF route.
+      FundiAuthService.setAuth(user)
 
       // Show success toast
       setToast({

@@ -78,10 +78,10 @@ export const verifyOTPController = async (req, res) => {
   }
 
   // Validate password length
-  if (newPassword.length < 6) {
+  if (newPassword.length < 10) {
     return res.status(400).json({
       success: false,
-      message: "Password must be at least 6 characters long",
+      message: "Password must be at least 10 characters long",
     });
   }
 

@@ -212,12 +212,6 @@ export default function PostJobPage() {
     })
 
     try {
-      const token = ClientAuthService.getToken()
-
-      if (!token) {
-        throw new Error("Authentication required. Please log in again.")
-      }
-
       // Helper function to add minimum loading time
       const withMinimumLoadingTime = (asyncOperation: () => Promise<unknown>, minimumTime = 5000) => {
         const startTime = Date.now()
@@ -253,8 +247,8 @@ export default function PostJobPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify(jobDetails),
         })
 

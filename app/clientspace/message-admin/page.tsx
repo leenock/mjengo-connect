@@ -76,17 +76,12 @@ export default function MessageAdminPage() {
     setTicketsError(null)
 
     try {
-      const token = ClientAuthService.getToken()
-      if (!token) {
-        throw new Error("No authentication token found")
-      }
-
       const response = await fetch(`/api/support/getClientTickets/${currentUser.id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
       })
 
       if (!response.ok) {
@@ -158,16 +153,12 @@ export default function MessageAdminPage() {
     subject: string
     clientId: string
   }) => {
-    const token = ClientAuthService.getToken()
-    if (!token) {
-      throw new Error("No authentication token found")
-    }
     const response = await fetch(`/api/support/createTicket`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify(ticketData),
     })
     if (!response.ok) {

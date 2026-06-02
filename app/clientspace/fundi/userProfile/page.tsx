@@ -26,6 +26,7 @@ export default function UserProfileSettings() {
     primary_skill: "",
     experience_level: "",
     biography: "",
+    currentPassword: "",
     password: "",
     confirmPassword: "",
   })
@@ -44,6 +45,7 @@ export default function UserProfileSettings() {
         primary_skill: userData.primary_skill || "",
         experience_level: userData.experience_level || "",
         biography: userData.biography || "",
+        currentPassword: "",
         password: "",
         confirmPassword: "",
       })
@@ -58,17 +60,12 @@ export default function UserProfileSettings() {
   }
 
   const updateProfileData = async (userId: string, data: Partial<FundiUserData>) => {
-    const token = FundiAuthService.getToken()
-    if (!token) {
-      throw new Error("No authentication token found")
-    }
-
     const response = await fetch(`/api/fundi/updateFundi/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify(data),
     })
 
@@ -80,18 +77,13 @@ export default function UserProfileSettings() {
     return response.json()
   }
 
-  const updatePassword = async (passwordData: { identifier: string; newPassword: string }) => {
-    const token = FundiAuthService.getToken()
-    if (!token) {
-      throw new Error("No authentication token found")
-    }
-
+  const updatePassword = async (passwordData: { currentPassword: string; newPassword: string }) => {
     const response = await fetch("/api/fundi/updateFundiPassword", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify(passwordData),
     })
 
@@ -179,11 +171,8 @@ export default function UserProfileSettings() {
 
       // Update password if provided
       if (profileData.password && profileData.password.trim() !== "") {
-        const identifier =
-          profileData.email || profileData.phone || currentUser.email || currentUser.phone || currentUser.id
-
-        if (!identifier) {
-          throw new Error("No identifier found for password update")
+        if (!profileData.currentPassword.trim()) {
+          throw new Error("Current password is required to set a new password.")
         }
 
         // Update loading message for password change
@@ -195,7 +184,7 @@ export default function UserProfileSettings() {
         await withMinimumLoadingTime(
           () =>
             updatePassword({
-              identifier: identifier,
+              currentPassword: profileData.currentPassword,
               newPassword: profileData.password,
             }),
           2000,
@@ -216,6 +205,7 @@ export default function UserProfileSettings() {
       // Clear password fields after successful update
       setProfileData((prev) => ({
         ...prev,
+        currentPassword: "",
         password: "",
         confirmPassword: "",
       }))
@@ -459,6 +449,23 @@ export default function UserProfileSettings() {
                   </div>
 
                   <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                        Current Password
+                      </label>
+                      <div className="relative group">
+                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-red-500 transition-colors" />
+                        <input
+                          type="password"
+                          value={profileData.currentPassword}
+                          onChange={(e) => handleInputChange("currentPassword", e.target.value)}
+                          disabled={isLoading}
+                          className="w-full pl-12 pr-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          placeholder="Enter current password"
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
                         New Password

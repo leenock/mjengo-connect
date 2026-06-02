@@ -58,6 +58,10 @@ export const getAllFundiUsers = async (req, res) => {
 export const getFundiUserById = async (req, res) => {
   const { id } = req.params
   try {
+    // Allow admins to view any fundi; fundis can only view themselves.
+    if (!req.admin && req.user?.id && req.user.id !== id) {
+      return res.status(403).json({ message: "Forbidden" })
+    }
     const fundi = await getFundiById(id)
     res.status(200).json({
       message: "Fundi retrieved successfully",
@@ -75,7 +79,14 @@ export const getFundiUserById = async (req, res) => {
 export const updateFundiUserController = async (req, res) => {
   const { id } = req.params
   try {
-    const updatedUser = await updateFundiUser(id, req.body)
+    // Allow admins to update any fundi; fundis can only update themselves.
+    if (!req.admin && req.user?.id !== id) {
+      return res.status(403).json({ message: "Forbidden" })
+    }
+    // Strip privileged fields from self-update (admins may set these via admin schema).
+    const { accountStatus, subscriptionPlan, subscriptionStatus, password, ...rest } = req.body || {}
+    const safeBody = req.admin ? { ...rest, accountStatus, subscriptionPlan, subscriptionStatus } : rest
+    const updatedUser = await updateFundiUser(id, safeBody)
     res.status(200).json({
       message: "Fundi user updated successfully",
       user: updatedUser,
@@ -90,14 +101,18 @@ export const updateFundiUserController = async (req, res) => {
  * Update fundi user password
  */
 export const updateFundiPasswordController = async (req, res) => {
-  const { identifier, newPassword } = req.body
+  const userId = req.user?.id
+  const { currentPassword, newPassword } = req.body || {}
 
-  if (!identifier || !newPassword) {
-    return res.status(400).json({ message: "Identifier and newPassword are required." })
+  if (!userId) {
+    return res.status(401).json({ message: "Authentication required" })
+  }
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: "currentPassword and newPassword are required." })
   }
 
   try {
-    const updatedUser = await updateFundiUserPassword(identifier, newPassword)
+    const updatedUser = await updateFundiUserPassword({ userId, currentPassword, newPassword })
     res.status(200).json({
       message: "Password updated successfully.",
       user: updatedUser,
@@ -161,7 +176,7 @@ export const loginFundiController = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      token,
+      accessToken: token,
       user: userSafe,
     });
   } catch (error) {

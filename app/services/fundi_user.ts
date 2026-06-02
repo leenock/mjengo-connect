@@ -19,20 +19,15 @@ export interface FundiUserData {
 }
 
 class FundiAuthService {
-  private static readonly TOKEN_COOKIE = "fundiToken";
-  private static readonly TOKEN_KEY = "fundiTokenValue";
   private static readonly DATA_KEY = "fundiData";
-  private static readonly SESSION_EXPIRY = 7200;
 
   /** True when running in the browser (not during SSR). */
   private static isClient(): boolean {
     return typeof window !== "undefined";
   }
 
-  static setAuth(token: string, data: FundiUserData): void {
+  static setAuth(data: FundiUserData): void {
     if (!this.isClient()) return;
-    document.cookie = `${this.TOKEN_COOKIE}=${token}; path=/; max-age=${this.SESSION_EXPIRY}; secure; samesite=strict`;
-    localStorage.setItem(this.TOKEN_KEY, token);
     localStorage.setItem(this.DATA_KEY, JSON.stringify(data));
   }
   static saveUserData(data: Partial<FundiUserData>): void {
@@ -44,14 +39,12 @@ class FundiAuthService {
 
   static clearAuth(): void {
     if (!this.isClient()) return;
-    document.cookie = `${this.TOKEN_COOKIE}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict`;
-    localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.DATA_KEY);
   }
 
+  // Backward-compatible no-op for older pages still checking token.
   static getToken(): string | null {
-    if (!this.isClient()) return null;
-    return this.getCookie(this.TOKEN_COOKIE) || localStorage.getItem(this.TOKEN_KEY);
+    return null;
   }
 
   static getUserData(): FundiUserData | null {
@@ -61,7 +54,7 @@ class FundiAuthService {
   }
 
   static isAuthenticated(): boolean {
-    return !!this.getToken();
+    return !!this.getUserData();
   }
 
   static async logout(): Promise<void> {
@@ -69,7 +62,6 @@ class FundiAuthService {
     try {
       await fetch("/api/fundi/logoutFundi", {
         method: "POST",
-        headers: { Authorization: `Bearer ${this.getToken()}` },
       });
     } catch (err) {
       console.error("Fundi logout error:", err);
@@ -79,11 +71,5 @@ class FundiAuthService {
     }
   }
 
-  private static getCookie(name: string): string | null {
-    if (!this.isClient()) return null;
-    const cookies = document.cookie.split(";");
-    const match = cookies.find((c) => c.trim().startsWith(`${name}=`));
-    return match ? match.split("=")[1] : null;
-  }
 }
 export default FundiAuthService;

@@ -15,7 +15,10 @@ export const authenticateFundiToken = async (req, res, next) => {
       return res.status(401).json({ message: "Access token required" })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key")
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ message: "Server misconfiguration: JWT_SECRET is required" })
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
     // Get fundi user from database to ensure they still exist and are active
     const user = await prisma.fundi_User.findUnique({
@@ -31,6 +34,7 @@ export const authenticateFundiToken = async (req, res, next) => {
         subscriptionPlan: true,
         subscriptionStatus: true,
         trialEndsAt: true,
+        tokenVersion: true,
       },
     })
 
@@ -40,6 +44,9 @@ export const authenticateFundiToken = async (req, res, next) => {
 
     if (user.accountStatus !== "ACTIVE") {
       return res.status(401).json({ message: "Account is not active" })
+    }
+    if ((decoded.tv ?? 0) !== user.tokenVersion) {
+      return res.status(401).json({ message: "Session invalidated. Please login again." })
     }
 
     // Check if trial has expired and update status

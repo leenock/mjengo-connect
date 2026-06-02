@@ -14,7 +14,10 @@ import {
  */
 export const createSupportTicketController = async (req, res) => {
   try {
-    const newTicket = await createSupportTicket(req.body)
+    const newTicket = await createSupportTicket({
+      ...req.body,
+      clientId: req.user?.id,
+    })
     res.status(201).json({
       message: "Support ticket created successfully",
       ticket: newTicket,
@@ -71,6 +74,9 @@ export const getSupportTicketByIdController = async (req, res) => {
   const { id } = req.params
   try {
     const ticket = await getSupportTicketById(id)
+    if (ticket.clientId !== req.user?.id) {
+      return res.status(403).json({ message: "Forbidden" })
+    }
     res.status(200).json({
       message: "Support ticket retrieved successfully",
       ticket,
@@ -89,6 +95,10 @@ export const getSupportTicketByIdController = async (req, res) => {
 export const updateSupportTicketController = async (req, res) => {
   const { id } = req.params
   try {
+    const existing = await getSupportTicketById(id)
+    if (existing.clientId !== req.user?.id) {
+      return res.status(403).json({ message: "Forbidden" })
+    }
     const updatedTicket = await updateSupportTicket(id, req.body)
     res.status(200).json({
       message: "Support ticket updated successfully",
@@ -108,6 +118,10 @@ export const updateSupportTicketController = async (req, res) => {
 export const deleteSupportTicketController = async (req, res) => {
   const { id } = req.params
   try {
+    const existing = await getSupportTicketById(id)
+    if (existing.clientId !== req.user?.id) {
+      return res.status(403).json({ message: "Forbidden" })
+    }
     const result = await deleteSupportTicket(id)
     res.status(200).json(result)
   } catch (error) {
@@ -124,6 +138,9 @@ export const deleteSupportTicketController = async (req, res) => {
 export const getSupportTicketsByClientUserController = async (req, res) => {
   const { clientUserId } = req.params
   try {
+    if (clientUserId !== req.user?.id) {
+      return res.status(403).json({ message: "Forbidden" })
+    }
     const tickets = await getSupportTicketsByClientUser(clientUserId)
     res.status(200).json({
       message: "Client support tickets retrieved successfully",

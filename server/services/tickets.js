@@ -10,6 +10,9 @@ const prisma = new PrismaClient()
  */
 export const createSupportTicket = async (ticketData) => {
   const { clientId, category, priority, message, subject } = ticketData // Changed clientUserId to clientId
+  if (!clientId) {
+    throw new Error("Authenticated client is required.")
+  }
 
   // Verify that the client user exists
   const clientUser = await prisma.client_User.findUnique({

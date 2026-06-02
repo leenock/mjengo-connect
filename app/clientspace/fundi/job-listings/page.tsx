@@ -80,22 +80,17 @@ export default function JobListingsPage() {
 
   // Fetch subscription details & saved jobs count (for stats)
   useEffect(() => {
-    const token = FundiAuthService.getToken();
-    if (!token) {
-      setStatsLoading(false);
-      return;
-    }
     const controller = new AbortController();
     (async () => {
       try {
         setStatsLoading(true);
         const [subRes, savedRes] = await Promise.all([
           fetch("/api/fundi/subscription/details", {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
             signal: controller.signal,
           }),
           fetch("/api/fundi/saved-jobs/count", {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
             signal: controller.signal,
           }),
         ]);

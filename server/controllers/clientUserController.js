@@ -49,6 +49,10 @@ export const getAllClientUsers = async (req, res) => {
 export const getClientuserById = async (req, res) => {
   const { id } = req.params;
   try {
+    // Only allow the authenticated user to view their own record.
+    if (req.user?.id !== id) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     const client = await getClientById(id); // ✅ pass as string
     res.status(200).json(client);
   } catch (error) {
@@ -60,34 +64,51 @@ export const getClientuserById = async (req, res) => {
 export const updateClientUserController = async (req, res) => {
   const { id } = req.params;
   try {
-    const updatedUser = await updateClientUser(id, req.body);
+    // Only allow the authenticated user to update their own record.
+    if (req.user?.id !== id) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    // Prevent privilege/account-state updates through this endpoint.
+    const {
+      password,
+      isActive,
+      accountStatus,
+      passwordResetToken,
+      passwordResetTokenExpiresAt,
+      otp,
+      otpExpiresAt,
+      ...safeBody
+    } = req.body || {};
+    const updatedUser = await updateClientUser(id, safeBody);
     res.status(200).json(updatedUser);
   } catch (error) {
     console.error("Update Client User Error:", error);
     res.status(400).json({ message: error.message || "Internal server error" });
   }
 };
-// update client user password
-export const updatePasswordController = async (req, res) => {
-  const { identifier, newPassword } = req.body;
 
-  if (!identifier || !newPassword) {
-    return res
-      .status(400)
-      .json({ message: "Identifier and newPassword are required." });
+// change client user password (authenticated, requires current password)
+export const changeMyPasswordController = async (req, res) => {
+  const userId = req.user?.id;
+  const { currentPassword, newPassword } = req.body || {};
+
+  if (!userId) {
+    return res.status(401).json({ message: "Authentication required" });
+  }
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ message: "currentPassword and newPassword are required." });
   }
 
   try {
-    const updatedUser = await updateClientUserPassword(identifier, newPassword);
-    res.status(200).json({
+    const updatedUser = await updateClientUserPassword({ userId, currentPassword, newPassword });
+    return res.status(200).json({
       message: "Password updated successfully.",
       user: updatedUser,
     });
   } catch (error) {
-    console.error("Password Update Error:", error);
-    res
-      .status(400)
-      .json({ message: error.message || "Password update failed." });
+    console.error("Password Change Error:", error);
+    const status = error.message?.toLowerCase().includes("invalid") ? 401 : 400;
+    return res.status(status).json({ message: error.message || "Password update failed." });
   }
 };
 /**
@@ -136,7 +157,7 @@ export const loginController = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      token,
+      accessToken: token,
       user: userSafe,
     });
   } catch (error) {

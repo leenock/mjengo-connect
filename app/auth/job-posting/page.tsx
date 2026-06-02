@@ -83,13 +83,13 @@ export default function JobPostingPage() {
       if (!res.ok) {
         throw new Error(data.message || "Login failed")
       }
-      const { token, user } = data
-      if (!token || !user) {
-        console.error("Missing token or user in response:", data)
-        throw new Error("Invalid server response. Missing token or user data.")
+      const { user } = data
+      if (!user) {
+        console.error("Missing user in response:", data)
+        throw new Error("Invalid server response. Missing user data.")
       }
-      // Store token and user data
-      ClientAuthService.setAuth(token, user)
+      // Store user data only; auth cookie is set by BFF route.
+      ClientAuthService.setAuth(user)
       // Show success toast
       setToast({
         message: "Login successful! Redirecting...",
@@ -114,8 +114,8 @@ export default function JobPostingPage() {
   const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setError(null)
-    if (signupData.password.length < 6) {
-      setError("Password must be at least 6 characters long.")
+    if (signupData.password.length < 10) {
+      setError("Password must be at least 10 characters long.")
       return
     }
     if (signupData.password !== signupData.confirmPassword) {

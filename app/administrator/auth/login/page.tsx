@@ -30,6 +30,8 @@ export default function LoginPage() {
     }
 
     setLoading(true)
+    const authStartedAt = Date.now()
+    const MIN_AUTH_DISPLAY_MS = 1500
 
     try {
       const response = await fetch("/api/admin/auth/login", {
@@ -48,19 +50,21 @@ export default function LoginPage() {
         throw new Error(data.message || "Login failed")
       }
 
-      const token = data.token || data.accessToken
       const admin = data.admin || data.user || data.data
 
-      if (!token || !admin) {
+      if (!admin) {
         throw new Error("Authentication failed. Invalid response from server.")
       }
 
-      AdminAuthService.setAuth(token, admin)
+      AdminAuthService.setAuth(admin)
 
-      // Add a 6-second delay before redirecting
-      setTimeout(() => {
-        router.push("/administrator/dashboard")
-      }, 6000) // 6000 milliseconds = 6 seconds
+      const elapsed = Date.now() - authStartedAt
+      const remaining = Math.max(0, MIN_AUTH_DISPLAY_MS - elapsed)
+      if (remaining > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remaining))
+      }
+
+      router.push("/administrator/dashboard")
     } catch (error) {
       const message = error instanceof Error ? error.message : "An unexpected error occurred during login."
       console.error("Admin login error:", error)

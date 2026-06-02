@@ -28,9 +28,7 @@ export const createSupportTicketSchema = Joi.object({
     "any.required": "Priority is required",
   }),
 
-  clientId: Joi.string().required().messages({
-    "any.required": "Client ID is required",
-  }),
+  clientId: Joi.string().optional(),
 })
 
 // Support ticket update validation schema

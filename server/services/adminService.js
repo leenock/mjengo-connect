@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client"
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
+import { validatePasswordStrength } from "../utils/security/passwordPolicy.js"
 
 const prisma = new PrismaClient()
 
@@ -16,6 +17,10 @@ const prisma = new PrismaClient()
  */
 export const createAdmin = async (adminData) => {
   const { email, phone, password } = adminData
+  const passwordCheck = validatePasswordStrength(password)
+  if (!passwordCheck.valid) {
+    throw new Error(passwordCheck.message)
+  }
 
   // Check if admin with email or phone already exists
   const existingAdmin = await prisma.admin.findFirst({
@@ -172,6 +177,10 @@ export const updateAdminPassword = async (identifier, newPassword) => {
   if (!admin) {
     throw new Error("Admin not found.")
   }
+  const passwordCheck = validatePasswordStrength(newPassword)
+  if (!passwordCheck.valid) {
+    throw new Error(passwordCheck.message)
+  }
 
   // Hash the password
   const hashedPassword = await bcrypt.hash(newPassword, 10)
@@ -179,7 +188,7 @@ export const updateAdminPassword = async (identifier, newPassword) => {
   // Update password
   const updatedAdmin = await prisma.admin.update({
     where: { id: admin.id },
-    data: { password: hashedPassword },
+    data: { password: hashedPassword, tokenVersion: { increment: 1 } },
     select: {
       id: true,
       fullName: true,
@@ -273,6 +282,7 @@ export const loginAdmin = async ({ emailOrPhone, password }) => {
       id: admin.id,
       email: admin.email,
       role: admin.role,
+      tv: admin.tokenVersion,
     },
     process.env.JWT_SECRET,
     { expiresIn: "8h" },

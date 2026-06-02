@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { sendPasswordResetEmail } from "./emailService.js";
+import { validatePasswordStrength } from "../utils/security/passwordPolicy.js";
 
 const prisma = new PrismaClient();
 
@@ -105,8 +106,9 @@ export async function findUserByValidResetToken(rawToken) {
  * @returns {Promise<{ success: boolean; message: string }>}
  */
 export async function resetPasswordWithToken(rawToken, newPassword) {
-  if (!newPassword || newPassword.length < 6) {
-    return { success: false, message: "Password must be at least 6 characters." };
+  const passwordCheck = validatePasswordStrength(newPassword);
+  if (!passwordCheck.valid) {
+    return { success: false, message: passwordCheck.message };
   }
 
   const user = await findUserByValidResetToken(rawToken);
@@ -121,6 +123,7 @@ export async function resetPasswordWithToken(rawToken, newPassword) {
       password: hashedPassword,
       passwordResetToken: null,
       passwordResetTokenExpiresAt: null,
+      tokenVersion: { increment: 1 },
     },
   });
 

@@ -115,7 +115,9 @@ export const calculateTotalPaid = async (fundiId) => {
       where: {
         fundiId: fundiId,
         plan: "PREMIUM",
-        status: "ACTIVE",
+        status: {
+          in: ["ACTIVE", "EXPIRED", "CANCELLED"],
+        },
       },
     });
 
@@ -209,7 +211,7 @@ export const getSubscriptionDetails = async (fundiId) => {
       fundi = updated;
     }
 
-    const totalPaid = await calculateTotalPaid(fundiId);
+    let totalPaid = await calculateTotalPaid(fundiId);
     const walletData = await getWalletBalance(fundiId);
 
     // Get current active subscription
@@ -217,10 +219,19 @@ export const getSubscriptionDetails = async (fundiId) => {
     const activeSubscription = fundi.subscriptions.find(
       (sub) => sub.status === "ACTIVE" && sub.endDate > now
     );
+    const latestPremiumSubscription = fundi.subscriptions.find((sub) => sub.plan === "PREMIUM");
 
-    // When FREE (after cron or on-the-fly downgrade), no next billing. When PREMIUM, return planEndDate so UI can show date or "Expired"
+    // When FREE (after cron or on-the-fly downgrade), no next billing.
+    // When PREMIUM, prefer user.planEndDate, then active subscription end date, then latest premium end date.
     const nextBillingDate =
-      fundi.subscriptionPlan === "PREMIUM" && fundi.planEndDate ? fundi.planEndDate : null;
+      fundi.subscriptionPlan === "PREMIUM"
+        ? fundi.planEndDate || activeSubscription?.endDate || latestPremiumSubscription?.endDate || null
+        : null;
+
+    // Backfill for legacy records where user is premium but subscription rows are missing/incomplete.
+    if (totalPaid === 0 && fundi.subscriptionPlan === "PREMIUM" && fundi.subscriptionStatus === "ACTIVE") {
+      totalPaid = 200;
+    }
 
     return {
       currentPlan: fundi.subscriptionPlan,

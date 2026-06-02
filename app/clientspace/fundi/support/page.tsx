@@ -70,17 +70,12 @@ export default function FundiSupportPage() {
     setTicketsError(null)
 
     try {
-      const token = FundiAuthService.getToken()
-      if (!token) {
-        throw new Error("No authentication token found")
-      }
-
       const response = await fetch(`/api/fundi/tickets/${currentUser.id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
       })
 
       if (!response.ok) {
@@ -123,16 +118,12 @@ export default function FundiSupportPage() {
     subject: string
     fundiId: string
   }) => {
-    const token = FundiAuthService.getToken()
-    if (!token) {
-      throw new Error("No authentication token found")
-    }
     const response = await fetch("/api/fundi/tickets/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify(ticketData),
     })
     if (!response.ok) {

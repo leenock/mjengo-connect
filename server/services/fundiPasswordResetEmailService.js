@@ -6,6 +6,7 @@ import { PrismaClient } from "@prisma/client";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { sendPasswordResetEmail } from "./emailService.js";
+import { validatePasswordStrength } from "../utils/security/passwordPolicy.js";
 
 const prisma = new PrismaClient();
 
@@ -72,8 +73,9 @@ export async function findFundiByValidResetToken(rawToken) {
 }
 
 export async function resetFundiPasswordWithToken(rawToken, newPassword) {
-  if (!newPassword || newPassword.length < 6) {
-    return { success: false, message: "Password must be at least 6 characters." };
+  const passwordCheck = validatePasswordStrength(newPassword);
+  if (!passwordCheck.valid) {
+    return { success: false, message: passwordCheck.message };
   }
   const user = await findFundiByValidResetToken(rawToken);
   if (!user) {
@@ -86,6 +88,7 @@ export async function resetFundiPasswordWithToken(rawToken, newPassword) {
       password: hashedPassword,
       passwordResetToken: null,
       passwordResetTokenExpiresAt: null,
+      tokenVersion: { increment: 1 },
     },
   });
   return { success: true, message: "Password has been reset. You can now log in." };

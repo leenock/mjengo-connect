@@ -4,6 +4,11 @@ import {
   depositToWallet as depositToFundiWallet, 
   getWalletBalance as getFundiWalletBalance 
 } from "./fundiAddFunds.js";
+import {
+  paymentLog as payLog,
+  maskPhone,
+  sanitizeStkPayload,
+} from "../utils/paymentLogger.js";
 
 const prisma = new PrismaClient();
 const DEFAULT_PUBLIC_API_BASE =
@@ -32,10 +37,6 @@ const KOPOKOPO_CONFIG = {
   grantType: "client_credentials"
 };
 
-// Verbose logs only in development (set KOPOKOPO_VERBOSE=true to enable in production)
-const KOPOKOPO_VERBOSE = process.env.KOPOKOPO_VERBOSE === "true" || process.env.NODE_ENV !== "production";
-const logInfo = (...args) => { if (KOPOKOPO_VERBOSE) console.log(...args); };
-
 /**
  * Get OAuth access token from KopoKopo
  * @returns {Promise<string>} Access token
@@ -58,10 +59,7 @@ export const getKopokopoAccessToken = async () => {
 
     const responseText = await response.text();
     
-    // Log token response only in development
-    if (process.env.NODE_ENV !== "production") {
-      logInfo("🔑 KopoKopo Access Token obtained");
-    }
+    payLog.debug("Access token obtained");
 
     if (!response.ok) {
       let errorData = {};
@@ -81,7 +79,7 @@ export const getKopokopoAccessToken = async () => {
     }
     return data.access_token;
   } catch (error) {
-    console.error("KopoKopo Access Token Error:", error);
+    payLog.error("Access token failed", error);
     throw new Error(`Failed to authenticate with KopoKopo: ${error.message}`);
   }
 };
@@ -151,12 +149,11 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
       },
     };
 
-    // Log request details (can be removed in production or made conditional)
-    if (process.env.NODE_ENV !== "production") {
-      logInfo("📤 Initiating KopoKopo STK Push...");
-      logInfo("   Amount: KES", paymentData.amount);
-      logInfo("   Phone:", paymentData.phoneNumber);
-    }
+    payLog.debug("Initiating STK Push", {
+      role: "client",
+      amountKes: paymentData.amount,
+      phone: maskPhone(paymentData.phoneNumber),
+    });
 
     // Make API request to KopoKopo
     const response = await fetch(`${KOPOKOPO_CONFIG.baseUrl}/api/v1/incoming_payments`, {
@@ -172,10 +169,7 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
     // Get response text first to see what we're dealing with
     const responseText = await response.text();
     
-    // Log response details only in development
-    if (process.env.NODE_ENV !== "production") {
-      logInfo("📥 KopoKopo API Response Status:", response.status);
-    }
+    payLog.debug("KopoKopo API response", { role: "client", status: response.status });
 
     if (!response.ok) {
       let errorData = {};
@@ -185,11 +179,12 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
         errorData = { message: responseText || "Unknown error" };
       }
       
-      console.error("KopoKopo API Error Details:", {
+      payLog.error("STK API request failed", null, {
+        role: "client",
         status: response.status,
         statusText: response.statusText,
         error: errorData,
-        requestPayload: stkPushPayload,
+        requestPayload: sanitizeStkPayload(stkPushPayload),
       });
       
       // 403: use KopoKopo's error_message when present (e.g. app not approved)
@@ -233,7 +228,7 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
         responseData = JSON.parse(responseText);
       }
     } catch (e) {
-      console.warn("Could not parse response body as JSON:", e);
+      payLog.debug("Could not parse STK response body as JSON", { error: e.message });
     }
 
     // Extract payment request ID from URL
@@ -245,18 +240,11 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
       throw new Error("Payment request ID not found in response");
     }
 
-    logInfo("✅ KopoKopo STK Push initiated successfully!");
-    logInfo("   Payment Request ID:", paymentRequestId);
-    logInfo("   Payment Request URL:", paymentRequestUrl);
-    
-    // Note about sandbox behavior
-    if (KOPOKOPO_CONFIG.baseUrl.includes("sandbox")) {
-      logInfo("   ⚠️  SANDBOX MODE: No actual STK push will be sent to phone.");
-      logInfo("   Payment will be simulated via webhook callback.");
-      logInfo("   Check webhook endpoint for payment status updates.");
-    } else {
-      logInfo("   📱 PRODUCTION MODE: STK push should appear on phone shortly.");
-    }
+    payLog.debug("STK Push initiated", {
+      role: "client",
+      kopokopoId: paymentRequestId,
+      sandbox: KOPOKOPO_CONFIG.baseUrl.includes("sandbox"),
+    });
 
     // Save payment log to database
     const paymentLog = await prisma.clientPaymentLog.create({
@@ -276,7 +264,12 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
       },
     });
 
-    logInfo("✅ Payment log saved to database. ID:", paymentLog.id);
+    payLog.info("STK initiated", {
+      role: "client",
+      paymentLogId: paymentLog.id,
+      kopokopoId: paymentRequestId,
+      amountKes: paymentData.amount,
+    });
 
     return {
       success: true,
@@ -286,7 +279,7 @@ export const initiateKopokopoStkPush = async (paymentData, clientId) => {
       message: "STK Push initiated successfully. Please check your phone.",
     };
   } catch (error) {
-    console.error("KopoKopo STK Push Error:", error);
+    payLog.error("STK Push failed", error, { role: "client" });
     throw new Error(`Failed to initiate STK Push: ${error.message}`);
   }
 };
@@ -314,7 +307,10 @@ export const processKopokopoWebhook = async (webhookData) => {
     });
 
     if (!paymentLog) {
-      console.error(`Payment log not found for KopoKopo request ID: ${paymentRequestId}`);
+      payLog.warn("Payment log not found for webhook", {
+        role: "client",
+        kopokopoId: paymentRequestId,
+      });
       return {
         success: false,
         message: "Payment log not found",
@@ -345,6 +341,13 @@ export const processKopokopoWebhook = async (webhookData) => {
       data: updateData,
     });
 
+    payLog.info("Webhook processed", {
+      role: "client",
+      paymentLogId: paymentLog.id,
+      kopokopoId: paymentRequestId,
+      status: updateData.status,
+    });
+
     return {
       success: true,
       paymentLogId: paymentLog.id,
@@ -352,7 +355,7 @@ export const processKopokopoWebhook = async (webhookData) => {
       message: `Payment ${updateData.status.toLowerCase()}`,
     };
   } catch (error) {
-    console.error("KopoKopo Webhook Processing Error:", error);
+    payLog.error("Webhook processing failed", error, { role: "client" });
     throw new Error(`Failed to process webhook: ${error.message}`);
   }
 };
@@ -381,7 +384,10 @@ const updateClientWallet = async (clientId, amount, paymentLogId) => {
 
     return result.wallet;
   } catch (error) {
-    console.error("Wallet Update Error:", error);
+    payLog.error("Wallet update failed", error, {
+      role: "client",
+      paymentLogId,
+    });
     throw new Error(`Failed to update wallet: ${error.message}`);
   }
 };
@@ -396,7 +402,7 @@ export const getClientWalletBalance = async (clientId) => {
     // Use the clientAddFunds service
     return await getWalletBalance(clientId);
   } catch (error) {
-    console.error("Get Wallet Balance Error:", error);
+    payLog.error("Get wallet balance failed", error, { role: "client" });
     throw new Error(`Failed to get wallet balance: ${error.message}`);
   }
 };
@@ -429,25 +435,28 @@ export const getKopokopoPaymentStatus = async (paymentRequestId) => {
 
     const data = await response.json();
     
-    logInfo("📊 Payment Status Check:", {
-      paymentRequestId,
+    payLog.debug("Payment status check", {
+      role: "client",
+      kopokopoId: paymentRequestId,
       status: data.data?.attributes?.status,
-      hasEvent: !!data.data?.attributes?.event,
-      hasResource: !!data.data?.attributes?.event?.resource,
     });
     
     // Check if payment succeeded and update wallet if needed
     if (data.data?.attributes?.status === "Success") {
-      logInfo("✅ Payment status is Success, updating wallet...");
+      payLog.debug("Payment succeeded, updating wallet", { role: "client", kopokopoId: paymentRequestId });
       const updateResult = await checkAndUpdateWalletFromPaymentStatus(paymentRequestId, data);
-      logInfo("💰 Wallet update result:", updateResult);
+      payLog.debug("Wallet update result", { role: "client", ...updateResult });
     } else {
-      logInfo(`⏳ Payment status: ${data.data?.attributes?.status || "Unknown"}`);
+      payLog.debug("Payment still pending", {
+        role: "client",
+        kopokopoId: paymentRequestId,
+        status: data.data?.attributes?.status || "Unknown",
+      });
     }
     
     return data;
   } catch (error) {
-    console.error("Get Payment Status Error:", error);
+    payLog.error("Get payment status failed", error, { role: "client" });
     throw new Error(`Failed to get payment status: ${error.message}`);
   }
 };
@@ -472,13 +481,13 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
     });
 
     if (!paymentLog) {
-      logInfo(`Payment log not found for request ID: ${paymentRequestId}`);
+      payLog.debug(`Payment log not found for request ID: ${paymentRequestId}`);
       return { updated: false, reason: "Payment log not found" };
     }
 
     // If payment log is already SUCCESS, skip
     if (paymentLog.status === "SUCCESS") {
-      logInfo(`Payment log ${paymentLog.id} already processed`);
+      payLog.debug("Payment log already processed", { paymentLogId: paymentLog.id });
       return { updated: false, reason: "Already processed" };
     }
 
@@ -505,7 +514,7 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
     const { attributes } = statusData.data || {};
     const { status, event } = attributes || {};
 
-    logInfo("🔍 Checking payment status for wallet update:", {
+    payLog.debug("🔍 Checking payment status for wallet update:", {
       paymentLogId: paymentLog.id,
       currentStatus: paymentLog.status,
       kopokopoStatus: status,
@@ -524,14 +533,14 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
       const receipt = resource?.reference || resource?.id || paymentLog.receipt || paymentRequestId;
 
       if (!amountInCents || amountInCents <= 0) {
-        logInfo("⚠️ Success status but missing valid amount; keeping pending", {
+        payLog.debug("⚠️ Success status but missing valid amount; keeping pending", {
           paymentLogId: paymentLog.id,
           paymentRequestId,
         });
         return { updated: false, reason: "Missing payment amount" };
       }
       
-      logInfo("💵 Processing successful payment:", {
+      payLog.debug("💵 Processing successful payment:", {
         amount: amountInCents / 100,
         clientId: paymentLog.clientId,
         paymentLogId: paymentLog.id,
@@ -552,8 +561,13 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
       // Update wallet balance
       await updateClientWallet(paymentLog.clientId, amountInCents, paymentLog.id);
 
-      logInfo(`✅ Wallet updated for client ${paymentLog.clientId}: +${amountInCents / 100} KES`);
-      
+      payLog.info("Wallet updated", {
+        role: "client",
+        paymentLogId: paymentLog.id,
+        kopokopoId: paymentRequestId,
+        amountKes: amountInCents / 100,
+      });
+
       return {
         updated: true,
         amount: amountInCents / 100,
@@ -575,7 +589,7 @@ const checkAndUpdateWalletFromPaymentStatus = async (paymentRequestId, statusDat
 
     return { updated: false, reason: "Payment still pending" };
   } catch (error) {
-    console.error("Check and Update Wallet Error:", error);
+    payLog.error("Check and update wallet failed", error, { role: "client" });
     throw new Error(`Failed to check and update wallet: ${error.message}`);
   }
 };
@@ -605,7 +619,7 @@ export const processPendingPayments = async (clientId = null) => {
       take: 50, // Process up to 50 at a time
     });
 
-    logInfo(`Found ${pendingPayments.length} pending payments to check`);
+    payLog.debug(`Found ${pendingPayments.length} pending payments to check`);
 
     const results = {
       checked: 0,
@@ -629,15 +643,18 @@ export const processPendingPayments = async (clientId = null) => {
           results.stillPending++;
         }
       } catch (error) {
-        console.error(`Error processing payment ${payment.id}:`, error);
+        payLog.error("Pending payment processing failed", error, {
+          role: "client",
+          paymentLogId: payment.id,
+        });
         results.failed++;
       }
     }
 
-    logInfo("Pending payments processing results:", results);
+    payLog.debug("Pending payments processing results:", results);
     return results;
   } catch (error) {
-    console.error("Process Pending Payments Error:", error);
+    payLog.error("Process pending payments failed", error, { role: "client" });
     throw new Error(`Failed to process pending payments: ${error.message}`);
   }
 };
@@ -698,12 +715,11 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
       },
     };
 
-    // Log request details (can be removed in production or made conditional)
-    if (process.env.NODE_ENV !== "production") {
-      logInfo("📤 Initiating KopoKopo STK Push for Fundi...");
-      logInfo("   Amount: KES", paymentData.amount);
-      logInfo("   Phone:", paymentData.phoneNumber);
-    }
+    payLog.debug("Initiating STK Push", {
+      role: "fundi",
+      amountKes: paymentData.amount,
+      phone: maskPhone(paymentData.phoneNumber),
+    });
 
     // Make STK Push request
     const response = await fetch(
@@ -722,10 +738,7 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
     // Get response text first to see what we're dealing with
     const responseText = await response.text();
     
-    // Log response details only in development
-    if (process.env.NODE_ENV !== "production") {
-      logInfo("📥 KopoKopo API Response Status (Fundi):", response.status);
-    }
+    payLog.debug("KopoKopo API response", { role: "fundi", status: response.status });
 
     if (!response.ok) {
       let errorData = {};
@@ -735,11 +748,12 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
         errorData = { message: responseText || "Unknown error" };
       }
       
-      console.error("KopoKopo API Error Details (Fundi):", {
+      payLog.error("STK API request failed", null, {
+        role: "fundi",
         status: response.status,
         statusText: response.statusText,
         error: errorData,
-        requestPayload: stkPushPayload,
+        requestPayload: sanitizeStkPayload(stkPushPayload),
       });
       
       if (response.status === 403) {
@@ -782,7 +796,7 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
         responseData = JSON.parse(responseText);
       }
     } catch (e) {
-      console.warn("Could not parse response body as JSON (Fundi):", e);
+      payLog.debug("Could not parse STK response body as JSON", { role: "fundi", error: e.message });
       // This is normal - KopoKopo may return empty body with just Location header
     }
 
@@ -795,18 +809,11 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
       throw new Error("Payment request ID not found in response");
     }
 
-    logInfo("✅ KopoKopo STK Push initiated successfully for Fundi!");
-    logInfo("   Payment Request ID:", paymentRequestId);
-    logInfo("   Payment Request URL:", paymentRequestUrl);
-    
-    // Note about sandbox behavior
-    if (KOPOKOPO_CONFIG.baseUrl.includes("sandbox")) {
-      logInfo("   ⚠️  SANDBOX MODE: No actual STK push will be sent to phone.");
-      logInfo("   Payment will be simulated via webhook callback.");
-      logInfo("   Check webhook endpoint for payment status updates.");
-    } else {
-      logInfo("   📱 PRODUCTION MODE: STK push should appear on phone shortly.");
-    }
+    payLog.debug("STK Push initiated", {
+      role: "fundi",
+      kopokopoId: paymentRequestId,
+      sandbox: KOPOKOPO_CONFIG.baseUrl.includes("sandbox"),
+    });
 
     // Save payment log to database (PaymentLog for fundi)
     const paymentLog = await prisma.paymentLog.create({
@@ -826,7 +833,12 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
       },
     });
 
-    logInfo("✅ Fundi payment log saved to database. ID:", paymentLog.id);
+    payLog.info("STK initiated", {
+      role: "fundi",
+      paymentLogId: paymentLog.id,
+      kopokopoId: paymentRequestId,
+      amountKes: paymentData.amount,
+    });
 
     return {
       success: true,
@@ -836,7 +848,7 @@ export const initiateKopokopoStkPushForFundi = async (paymentData, fundiId) => {
       message: "STK Push initiated successfully. Please check your phone.",
     };
   } catch (error) {
-    console.error("KopoKopo STK Push Error (Fundi):", error);
+    payLog.error("STK Push failed", error, { role: "fundi" });
     throw new Error(`Failed to initiate STK Push: ${error.message}`);
   }
 };
@@ -864,7 +876,10 @@ export const processKopokopoWebhookForFundi = async (webhookData) => {
     });
 
     if (!paymentLog) {
-      console.error(`Fundi payment log not found for KopoKopo request ID: ${paymentRequestId}`);
+      payLog.warn("Payment log not found for webhook", {
+        role: "fundi",
+        kopokopoId: paymentRequestId,
+      });
       return {
         success: false,
         message: "Payment log not found",
@@ -897,6 +912,13 @@ export const processKopokopoWebhookForFundi = async (webhookData) => {
       data: updateData,
     });
 
+    payLog.info("Webhook processed", {
+      role: "fundi",
+      paymentLogId: paymentLog.id,
+      kopokopoId: paymentRequestId,
+      status: updateData.status,
+    });
+
     return {
       success: true,
       paymentLogId: paymentLog.id,
@@ -904,7 +926,7 @@ export const processKopokopoWebhookForFundi = async (webhookData) => {
       message: `Payment ${updateData.status.toLowerCase()}`,
     };
   } catch (error) {
-    console.error("KopoKopo Webhook Processing Error (Fundi):", error);
+    payLog.error("Webhook processing failed", error, { role: "fundi" });
     throw new Error(`Failed to process webhook: ${error.message}`);
   }
 };
@@ -933,7 +955,7 @@ const updateFundiWallet = async (fundiId, amount, paymentLogId) => {
 
     return result.wallet;
   } catch (error) {
-    console.error("Fundi Wallet Update Error:", error);
+    payLog.error("Fundi wallet update failed", error, { role: "fundi", paymentLogId });
     throw new Error(`Failed to update fundi wallet: ${error.message}`);
   }
 };
@@ -947,7 +969,7 @@ export const getFundiWalletBalanceFromService = async (fundiId) => {
   try {
     return await getFundiWalletBalance(fundiId);
   } catch (error) {
-    console.error("Get Fundi Wallet Balance Error:", error);
+    payLog.error("Get fundi wallet balance failed", error, { role: "fundi" });
     throw new Error(`Failed to get fundi wallet balance: ${error.message}`);
   }
 };
@@ -986,12 +1008,12 @@ export const getKopokopoPaymentStatusForFundi = async (paymentRequestId) => {
         paymentRequestId,
         data
       );
-      logInfo("💰 Fundi wallet update result:", updateResult);
+      payLog.debug("Fundi wallet update result", updateResult);
     }
 
     return data;
   } catch (error) {
-    console.error("Get Payment Status Error (Fundi):", error);
+    payLog.error("Get payment status failed", error, { role: "fundi" });
     throw new Error(`Failed to get payment status: ${error.message}`);
   }
 };
@@ -1087,6 +1109,13 @@ export const checkAndUpdateFundiWalletFromPaymentStatus = async (
         await updateFundiWallet(paymentLog.fundiId, amount, paymentLog.id);
       }
 
+      payLog.info("Wallet updated", {
+        role: "fundi",
+        paymentLogId: paymentLog.id,
+        kopokopoId: paymentRequestId,
+        amountKes: amount / 100,
+      });
+
       return {
         updated: true,
         paymentLogId: paymentLog.id,
@@ -1111,7 +1140,7 @@ export const checkAndUpdateFundiWalletFromPaymentStatus = async (
       reason: "Payment still pending",
     };
   } catch (error) {
-    console.error("Check and Update Fundi Wallet Error:", error);
+    payLog.error("Check and update fundi wallet failed", error, { role: "fundi" });
     throw new Error(`Failed to check and update wallet: ${error.message}`);
   }
 };
@@ -1139,7 +1168,7 @@ export const processPendingFundiPayments = async (fundiId = null) => {
       take: 50, // Process up to 50 at a time
     });
 
-    logInfo(`Found ${pendingPayments.length} pending fundi payments to check`);
+    payLog.debug(`Found ${pendingPayments.length} pending fundi payments to check`);
 
     const results = {
       checked: 0,
@@ -1163,15 +1192,18 @@ export const processPendingFundiPayments = async (fundiId = null) => {
           results.stillPending++;
         }
       } catch (error) {
-        console.error(`Error processing fundi payment ${payment.id}:`, error);
+        payLog.error("Pending fundi payment processing failed", error, {
+          role: "fundi",
+          paymentLogId: payment.id,
+        });
         results.failed++;
       }
     }
 
-    logInfo("Pending fundi payments processing results:", results);
+    payLog.debug("Pending fundi payments processing results:", results);
     return results;
   } catch (error) {
-    console.error("Process Pending Fundi Payments Error:", error);
+    payLog.error("Process pending fundi payments failed", error, { role: "fundi" });
     throw new Error(`Failed to process pending fundi payments: ${error.message}`);
   }
 };

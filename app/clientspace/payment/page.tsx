@@ -69,6 +69,8 @@ export default function PaymentsPage() {
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [isLoadingBalance, setIsLoadingBalance] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [paidJobTitle, setPaidJobTitle] = useState<string | null>(null);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,15 +81,9 @@ export default function PaymentsPage() {
   const fetchMyJobs = useCallback(async () => {
     try {
       setIsLoading(true);
-      const token = ClientAuthService.getToken();
-      if (!token) {
-        throw new Error("Authentication required");
-      }
       const response = await fetch(`/api/client/my-jobs`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       if (!response.ok) {
         throw new Error("Failed to fetch jobs");
@@ -112,15 +108,9 @@ export default function PaymentsPage() {
   const fetchWalletBalance = useCallback(async () => {
     try {
       setIsLoadingBalance(true);
-      const token = ClientAuthService.getToken();
-      if (!token) {
-        return;
-      }
       const response = await fetch(`/api/client/wallet/balance`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       });
       if (!response.ok) {
         throw new Error("Failed to fetch wallet balance");
@@ -212,19 +202,14 @@ export default function PaymentsPage() {
     });
 
     try {
-      const token = ClientAuthService.getToken();
-      if (!token) {
-        throw new Error("Authentication required");
-      }
-
       const response = await fetch(
         `/api/client/jobs/${selectedJobForPayment.id}/pay`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({
             amount: paymentAmount,
           }),
@@ -237,20 +222,16 @@ export default function PaymentsPage() {
         throw new Error(data.message || "Payment failed");
       }
 
-      setToast({
-        message: `Payment successful! ${selectedJobForPayment.title} is now published.`,
-        type: "success",
-      });
+      const paidTitle = selectedJobForPayment.title;
+      setShowPaymentModal(false);
+      setSelectedJobForPayment(null);
+      setToast(null);
 
-      // Refresh jobs and wallet balance
       await fetchMyJobs();
       await fetchWalletBalance();
 
-      // Close modal after a short delay
-      setTimeout(() => {
-        setShowPaymentModal(false);
-        setSelectedJobForPayment(null);
-      }, 1500);
+      setPaidJobTitle(paidTitle);
+      setShowSuccessModal(true);
     } catch (error: unknown) {
       console.error("Payment error:", error);
       setToast({
@@ -449,6 +430,33 @@ export default function PaymentsPage() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-2xl p-8 bg-white/95 backdrop-blur-xl shadow-2xl border border-white/30 text-center animate-in fade-in zoom-in duration-300">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-teal-100">
+              <CheckCircle className="h-9 w-9 text-emerald-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Payment Successful!</h2>
+            <p className="text-slate-600 mb-1">
+              <span className="font-semibold text-slate-800">{paidJobTitle}</span> is now published.
+            </p>
+            <p className="text-sm text-slate-500 mb-6">
+              KSh 300 was deducted from your wallet. Your job is live on job listings.
+            </p>
+            <button
+              onClick={() => {
+                setShowSuccessModal(false);
+                setPaidJobTitle(null);
+              }}
+              className="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold h-12 px-6 shadow-md hover:from-emerald-700 hover:to-teal-800 transition-all"
+            >
+              Done
+            </button>
           </div>
         </div>
       )}

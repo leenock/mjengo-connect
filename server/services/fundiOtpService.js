@@ -5,6 +5,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sendOTPSMS } from "./twilioService.js";
+import { validatePasswordStrength } from "../utils/security/passwordPolicy.js";
 
 const prisma = new PrismaClient();
 
@@ -76,7 +77,8 @@ export const sendFundiPasswordResetOTP = async (phoneNumber) => {
 
 export const verifyFundiOTPAndResetPassword = async (phoneNumber, otp, newPassword) => {
   if (!phoneNumber || !otp || !newPassword) throw new Error("Phone number, OTP, and new password are required");
-  if (newPassword.length < 6) throw new Error("Password must be at least 6 characters long");
+  const passwordCheck = validatePasswordStrength(newPassword);
+  if (!passwordCheck.valid) throw new Error(passwordCheck.message);
   const user = await findFundiByPhone(phoneNumber);
   if (!user) throw new Error("User not found. Please check your phone number.");
   if (!user.otp || !user.otpExpiresAt) throw new Error("No OTP request found. Please request a new OTP.");
@@ -92,7 +94,7 @@ export const verifyFundiOTPAndResetPassword = async (phoneNumber, otp, newPasswo
   const hashedPassword = await bcrypt.hash(newPassword, 10);
   await prisma.fundi_User.update({
     where: { id: user.id },
-    data: { password: hashedPassword, otp: null, otpExpiresAt: null },
+    data: { password: hashedPassword, otp: null, otpExpiresAt: null, tokenVersion: { increment: 1 } },
   });
   return { success: true, message: "Password reset successfully. You can now login with your new password." };
 };

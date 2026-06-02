@@ -25,8 +25,6 @@ import {
   Award,
   Users,
 } from "lucide-react";
-import FundiAuthService from "@/app/services/fundi_user";
-
 interface Job {
   id: string;
   title: string;
@@ -78,19 +76,12 @@ export default function JobDetailsPage() {
     }
 
     async function checkSavedStatus() {
-        const token = FundiAuthService.getToken();
-        if (!token) {
-            // User is not logged in, so the job can't be saved
-            setIsSaved(false);
-            return;
-        }
-
         try {
             const res = await fetch(`/api/fundi/saved-jobs/check/${jobId}`, {
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`,
                 },
+                credentials: "include",
             });
             const data = await res.json();
             if (res.ok) {
@@ -112,12 +103,6 @@ export default function JobDetailsPage() {
   }, [jobId]);
 
   const handleSave = async () => {
-    const token = FundiAuthService.getToken();
-    if (!token) {
-      alert("You must be logged in to save jobs.");
-      return;
-    }
-
     setIsSaving(true);
     try {
       if (isSaved) {
@@ -126,8 +111,8 @@ export default function JobDetailsPage() {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
           },
+          credentials: "include",
         });
         if (res.ok) {
           setIsSaved(false);
@@ -141,8 +126,8 @@ export default function JobDetailsPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
           },
+          credentials: "include",
           body: JSON.stringify({ jobId }),
         });
         if (res.ok) {

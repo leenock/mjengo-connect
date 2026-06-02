@@ -4,6 +4,7 @@ import {
   getFundiWalletBalanceFromService,
   getKopokopoPaymentStatusForFundi,
 } from "../services/kopokopoService.js";
+import { paymentLog as payLog } from "../utils/paymentLogger.js";
 
 /**
  * Initiate KopoKopo STK Push payment for Fundi wallet
@@ -49,7 +50,7 @@ export const initiateStkPush = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error("Initiate STK Push Controller Error (Fundi):", error);
+    payLog.error("STK Push controller failed", error, { role: "fundi" });
     const message = error.message || "Failed to initiate STK Push";
     const isPendingPhoneRequest = /pending for this phone number|pending request for the phone number/i.test(
       message
@@ -71,13 +72,9 @@ export const handleKopokopoWebhook = async (req, res) => {
     const webhookData = req.body;
 
     // Process webhook asynchronously (don't block response)
-    processKopokopoWebhookForFundi(webhookData)
-      .then((result) => {
-        console.log("Fundi webhook processed successfully:", result);
-      })
-      .catch((error) => {
-        console.error("Fundi webhook processing error:", error);
-      });
+    processKopokopoWebhookForFundi(webhookData).catch((error) => {
+      payLog.error("Webhook processing failed", error, { role: "fundi" });
+    });
 
     // Respond immediately to KopoKopo
     res.status(200).json({
@@ -85,7 +82,7 @@ export const handleKopokopoWebhook = async (req, res) => {
       message: "Webhook received",
     });
   } catch (error) {
-    console.error("Webhook Handler Error (Fundi):", error);
+    payLog.error("Webhook handler failed", error, { role: "fundi" });
     // Still respond 200 to prevent KopoKopo from retrying
     res.status(200).json({
       success: false,
@@ -109,7 +106,7 @@ export const getWalletBalance = async (req, res) => {
       data: walletData,
     });
   } catch (error) {
-    console.error("Get Wallet Balance Controller Error (Fundi):", error);
+    payLog.error("Get wallet balance controller failed", error, { role: "fundi" });
     res.status(500).json({
       success: false,
       message: error.message || "Failed to get wallet balance",
@@ -145,7 +142,7 @@ export const getPaymentStatus = async (req, res) => {
       wallet: walletData, // Include updated wallet balance
     });
   } catch (error) {
-    console.error("Get Payment Status Controller Error (Fundi):", error);
+    payLog.error("Get payment status controller failed", error, { role: "fundi" });
     res.status(500).json({
       success: false,
       message: error.message || "Failed to get payment status",

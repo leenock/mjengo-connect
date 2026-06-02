@@ -44,11 +44,8 @@ function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) 
   const fetchWalletBalance = useCallback(async () => {
     setIsLoadingBalance(true)
     try {
-      const token = FundiAuthService.getToken()
-      if (!token) return
-
       const response = await fetch("/api/fundi/wallet/balance", {
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       })
 
       if (response.ok) {
@@ -73,11 +70,6 @@ function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) 
     setError("")
 
     try {
-      const token = FundiAuthService.getToken()
-      if (!token) {
-        throw new Error("Authentication required")
-      }
-
       // Check wallet balance
       if (walletBalance < 200) {
         setError(`Insufficient balance. You need KSh 200 but have KSh ${walletBalance.toFixed(2)}. Please add funds to your wallet.`)
@@ -90,8 +82,8 @@ function PaymentModal({ isOpen, onClose, onPaymentSuccess }: PaymentModalProps) 
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
       })
 
       if (!response.ok) {
@@ -257,27 +249,24 @@ export default function SubscriptionPage() {
 
       // Fetch subscription details from API
       try {
-        const token = FundiAuthService.getToken()
-        if (token) {
-          const response = await fetch("/api/fundi/subscription/details", {
-            headers: { Authorization: `Bearer ${token}` },
-          })
-          if (response.ok) {
-            const data = await response.json()
-            if (data.success && data.data) {
-              setSubscriptionDetails(data.data)
-              // Update local user data with latest subscription info
-              if (userData) {
-                const updatedUser: FundiUserData = {
-                  ...userData,
-                  subscriptionPlan: data.data.currentPlan,
-                  subscriptionStatus: data.data.subscriptionStatus,
-                  planStartDate: data.data.planStartDate,
-                  planEndDate: data.data.planEndDate,
-                }
-                FundiAuthService.saveUserData(updatedUser)
-                setCurrentUser(updatedUser)
+        const response = await fetch("/api/fundi/subscription/details", {
+          credentials: "include",
+        })
+        if (response.ok) {
+          const data = await response.json()
+          if (data.success && data.data) {
+            setSubscriptionDetails(data.data)
+            // Update local user data with latest subscription info
+            if (userData) {
+              const updatedUser: FundiUserData = {
+                ...userData,
+                subscriptionPlan: data.data.currentPlan,
+                subscriptionStatus: data.data.subscriptionStatus,
+                planStartDate: data.data.planStartDate,
+                planEndDate: data.data.planEndDate,
               }
+              FundiAuthService.saveUserData(updatedUser)
+              setCurrentUser(updatedUser)
             }
           }
         }

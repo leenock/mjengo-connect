@@ -19,8 +19,11 @@ export async function POST(request: NextRequest) {
   });
 
   const payload = await response.json().catch(() => ({}));
-  const nextResponse = NextResponse.json(payload, { status: response.status });
-  const token = payload?.token;
+  const token = payload?.accessToken || payload?.token;
+  const safePayload = { ...(payload || {}) };
+  delete safePayload.accessToken;
+  delete safePayload.token;
+  const nextResponse = NextResponse.json(safePayload, { status: response.status });
   if (token && typeof token === "string") {
     nextResponse.cookies.set("visitorToken", token, {
       httpOnly: true,

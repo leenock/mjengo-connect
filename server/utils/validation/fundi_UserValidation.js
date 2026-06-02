@@ -40,8 +40,8 @@ export const registerFundiUserSchema = Joi.object({
     "string.min": "Biography must be at least 10 characters.",
     "string.max": "Biography must be at most 500 characters.",
   }),
-  password: Joi.string().min(6).max(100).required().messages({
-    "string.min": "Password must be at least 6 characters.",
+  password: Joi.string().min(10).max(100).required().messages({
+    "string.min": "Password must be at least 10 characters.",
     "string.max": "Password must be at most 100 characters.",
     "string.empty": "Password cannot be empty.",
     "any.required": "Password is required.",
@@ -87,13 +87,15 @@ export const updateFundiUserSchema = Joi.object({
     "string.min": "Biography must be at least 10 characters.",
     "string.max": "Biography must be at most 500 characters.",
   }),
+}).min(1)
 
-  // ✅ ADD THESE FIELDS:
+// Admin-only updates (privileged fields)
+export const adminUpdateFundiUserSchema = updateFundiUserSchema.keys({
   accountStatus: Joi.string()
-    .valid("ACTIVE", "SUSPENDED", "PENDING")
+    .valid("ACTIVE", "SUSPENDED", "PENDING", "UNDER_REVIEW")
     .optional()
     .messages({
-      "any.only": "Account status must be one of: ACTIVE, SUSPENDED, PENDING",
+      "any.only": "Account status must be one of: ACTIVE, SUSPENDED, PENDING, UNDER_REVIEW",
     }),
 
   subscriptionPlan: Joi.string()
@@ -109,6 +111,19 @@ export const updateFundiUserSchema = Joi.object({
     .messages({
       "any.only": "Subscription status must be one of: TRIAL, ACTIVE, EXPIRED, CANCELLED",
     }),
+})
+
+export const changeFundiPasswordSchema = Joi.object({
+  currentPassword: Joi.string().required().messages({
+    "string.empty": "Current password cannot be empty.",
+    "any.required": "Current password is required.",
+  }),
+  newPassword: Joi.string().min(10).max(100).required().messages({
+    "string.min": "Password must be at least 10 characters.",
+    "string.max": "Password must be at most 100 characters.",
+    "string.empty": "Password cannot be empty.",
+    "any.required": "New password is required.",
+  }),
 })
 export const loginFundiUserSchema = Joi.object({
   emailOrPhone: Joi.string().required().messages({

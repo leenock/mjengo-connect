@@ -27,8 +27,8 @@ export const registerClientUserSchema = Joi.object({
   'string.min': 'Company name must be at least 2 characters.',
   'string.max': 'Company name must be at most 100 characters.',
 }),
-  password: Joi.string().min(6).max(100).required().messages({
-    'string.min': 'Password must be at least 6 characters.',
+  password: Joi.string().min(10).max(100).required().messages({
+    'string.min': 'Password must be at least 10 characters.',
     'string.max': 'Password must be at most 100 characters.',
     'string.empty': 'Password cannot be empty.',
     'any.required': 'Password is required.'
@@ -39,4 +39,42 @@ export const registerClientUserSchema = Joi.object({
     'string.empty': 'Location cannot be empty.',
     'any.required': 'Location is required.'
   })
+});
+
+export const updateClientUserSchema = Joi.object({
+  email: Joi.string().email().optional().messages({
+    'string.email': 'Email must be a valid email address.',
+  }),
+  phone: Joi.string().pattern(/^\d{10,15}$/).optional().messages({
+    'string.pattern.base': 'Phone must be a valid number between 10 to 15 digits.',
+  }),
+  firstName: Joi.string().min(2).max(30).optional().allow('').messages({
+    'string.min': 'First name must be at least 2 characters.',
+    'string.max': 'First name must be at most 30 characters.',
+  }),
+  lastName: Joi.string().min(2).max(30).optional().allow('').messages({
+    'string.min': 'Last name must be at least 2 characters.',
+    'string.max': 'Last name must be at most 30 characters.',
+  }),
+  company: Joi.string().min(2).max(100).optional().allow('').messages({
+    'string.min': 'Company name must be at least 2 characters.',
+    'string.max': 'Company name must be at most 100 characters.',
+  }),
+  location: Joi.string().min(2).max(100).optional().allow('').messages({
+    'string.min': 'Location must be at least 2 characters.',
+    'string.max': 'Location must be at most 100 characters.',
+  }),
+}).min(1);
+
+export const changeClientPasswordSchema = Joi.object({
+  currentPassword: Joi.string().required().messages({
+    'string.empty': 'Current password cannot be empty.',
+    'any.required': 'Current password is required.',
+  }),
+  newPassword: Joi.string().min(10).max(100).required().messages({
+    'string.min': 'Password must be at least 10 characters.',
+    'string.max': 'Password must be at most 100 characters.',
+    'string.empty': 'Password cannot be empty.',
+    'any.required': 'New password is required.',
+  }),
 });

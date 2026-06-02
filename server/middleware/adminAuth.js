@@ -25,6 +25,7 @@ export const adminAuthMiddleware = async (req, res, next) => {
         email: true,
         role: true,
         status: true,
+        tokenVersion: true,
       },
     })
 
@@ -34,6 +35,9 @@ export const adminAuthMiddleware = async (req, res, next) => {
 
     if (admin.status !== "ACTIVE") {
       return res.status(401).json({ message: "Admin account is inactive." })
+    }
+    if ((decoded.tv ?? 0) !== admin.tokenVersion) {
+      return res.status(401).json({ message: "Session invalidated. Please login again." })
     }
 
     req.admin = admin

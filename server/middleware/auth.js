@@ -15,7 +15,10 @@ export const authenticateToken = async (req, res, next) => {
       return res.status(401).json({ message: "Access token required" })
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key")
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ message: "Server misconfiguration: JWT_SECRET is required" })
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
 
     // Get user from database to ensure they still exist and are active
     const user = await prisma.client_User.findUnique({
@@ -28,6 +31,7 @@ export const authenticateToken = async (req, res, next) => {
         company: true,
         location: true,
         isActive: true,
+        tokenVersion: true,
       },
     })
 
@@ -37,6 +41,9 @@ export const authenticateToken = async (req, res, next) => {
 
     if (!user.isActive) {
       return res.status(401).json({ message: "Account is inactive" })
+    }
+    if ((decoded.tv ?? 0) !== user.tokenVersion) {
+      return res.status(401).json({ message: "Session invalidated. Please login again." })
     }
 
     req.user = user

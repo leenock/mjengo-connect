@@ -48,12 +48,6 @@ export default function AddFundsPage() {
   const [paymentToast, setPaymentToast] = useState<{ show: boolean; message: string; type: "success" | "cancelled" }>({ show: false, message: "", type: "success" });
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isReconcilingRef = useRef(false);
-  const getAuthHeaders = () => {
-    const headers: Record<string, string> = {};
-    const token = FundiAuthService.getToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
-    return headers;
-  };
   const isPendingStkRequestMessage = (message: string) =>
     /pending for this phone number|pending request for the phone number/i.test(
       message
@@ -64,7 +58,7 @@ export default function AddFundsPage() {
     setIsRefreshingBalance(true);
     try {
       const response = await fetch("/api/fundi/wallet/balance", {
-        headers: getAuthHeaders(),
+        credentials: "include",
       });
       if (response.ok) {
         const data = await response.json();
@@ -91,7 +85,7 @@ export default function AddFundsPage() {
           "/api/fundi/wallet/process-pending-payments",
           {
             method: "POST",
-            headers: getAuthHeaders(),
+            credentials: "include",
           }
         );
 
@@ -138,7 +132,7 @@ export default function AddFundsPage() {
       }
       try {
         const response = await fetch(`/api/fundi/wallet/payment-status/${requestId}`, {
-          headers: getAuthHeaders(),
+          credentials: "include",
         });
         if (!response.ok) return;
         const data = await response.json();
@@ -282,8 +276,8 @@ export default function AddFundsPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...getAuthHeaders(),
         },
+        credentials: "include",
         body: JSON.stringify(stkPushPayload),
       });
 

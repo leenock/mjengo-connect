@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { validatePasswordStrength } from "../utils/security/passwordPolicy.js";
 
 const prisma = new PrismaClient();
 
@@ -16,6 +17,10 @@ const prisma = new PrismaClient();
  */
 export const registerClient = async (userData) => {
   const { email, phone, password } = userData;
+  const passwordCheck = validatePasswordStrength(password);
+  if (!passwordCheck.valid) {
+    throw new Error(passwordCheck.message);
+  }
 
   const existingUser = await prisma.client_User.findFirst({
     where: {
@@ -65,6 +70,19 @@ export const getClientById = async (id) => {
 
   const client = await prisma.client_User.findUnique({
     where: { id },
+    select: {
+      id: true,
+      email: true,
+      phone: true,
+      firstName: true,
+      lastName: true,
+      company: true,
+      location: true,
+      isActive: true,
+      accountStatus: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
 
   if (!client) {
@@ -87,20 +105,31 @@ export const updateClientUser = async (id, userData) => {
     throw new Error("Client not found");
   }
 
-  // If password is present, hash it
-  if (userData.password) {
-    const saltRounds = 10;
-    userData.password = await bcrypt.hash(userData.password, saltRounds);
-  }
-
-  // Automatically sync isActive with accountStatus
-  if (userData.accountStatus !== undefined) {
-    userData.isActive = userData.accountStatus === "ACTIVE";
-  }
+  // Defensive: do not allow updating sensitive fields via this generic updater.
+  if (userData.password !== undefined) delete userData.password;
+  if (userData.isActive !== undefined) delete userData.isActive;
+  if (userData.accountStatus !== undefined) delete userData.accountStatus;
+  if (userData.passwordResetToken !== undefined) delete userData.passwordResetToken;
+  if (userData.passwordResetTokenExpiresAt !== undefined) delete userData.passwordResetTokenExpiresAt;
+  if (userData.otp !== undefined) delete userData.otp;
+  if (userData.otpExpiresAt !== undefined) delete userData.otpExpiresAt;
 
   const updatedUser = await prisma.client_User.update({
     where: { id },
     data: userData,
+    select: {
+      id: true,
+      email: true,
+      phone: true,
+      firstName: true,
+      lastName: true,
+      company: true,
+      location: true,
+      isActive: true,
+      accountStatus: true,
+      createdAt: true,
+      updatedAt: true,
+    },
   });
 
   return updatedUser;
@@ -108,25 +137,35 @@ export const updateClientUser = async (id, userData) => {
 // update client user password
 
 /**
- * Updates a client user's password using email or phone.
- * @param {string} identifier - Email or phone number.
- * @param {string} newPassword - New plain text password.
+ * Changes the authenticated client's password (requires current password).
+ * @param {{ userId: string, currentPassword: string, newPassword: string }} input
  * @returns {Promise<Object>} - Updated user details.
  */
-export const updateClientUserPassword = async (identifier, newPassword) => {
-  if (!identifier || typeof identifier !== "string") {
-    throw new Error("A valid email or phone number is required.");
+export const updateClientUserPassword = async (input) => {
+  const { userId, currentPassword, newPassword } = input || {};
+  if (!userId || typeof userId !== "string") {
+    throw new Error("A valid userId is required.");
+  }
+  if (!currentPassword || !newPassword) {
+    throw new Error("currentPassword and newPassword are required.");
+  }
+  const passwordCheck = validatePasswordStrength(newPassword);
+  if (!passwordCheck.valid) {
+    throw new Error(passwordCheck.message);
   }
 
-  // Find the user by email or phone
-  const user = await prisma.client_User.findFirst({
-    where: {
-      OR: [{ email: identifier }, { phone: identifier }],
-    },
+  const user = await prisma.client_User.findUnique({
+    where: { id: userId },
+    select: { id: true, password: true, email: true, phone: true, updatedAt: true },
   });
 
   if (!user) {
     throw new Error("Client not found.");
+  }
+
+  const ok = await bcrypt.compare(currentPassword, user.password);
+  if (!ok) {
+    throw new Error("Invalid current password.");
   }
 
   // Hash the password
@@ -135,7 +174,7 @@ export const updateClientUserPassword = async (identifier, newPassword) => {
   // Update password
   const updatedUser = await prisma.client_User.update({
     where: { id: user.id },
-    data: { password: hashedPassword },
+    data: { password: hashedPassword, tokenVersion: { increment: 1 } },
     select: {
       id: true,
       email: true,
@@ -219,7 +258,9 @@ export const loginClientUser = async ({ emailOrPhone, password }) => {
   const token = jwt.sign(
     { 
       id: user.id,
-      email: user.email 
+      email: user.email,
+      role: "CLIENT",
+      tv: user.tokenVersion,
     },
     process.env.JWT_SECRET,
     { expiresIn: "1h" }

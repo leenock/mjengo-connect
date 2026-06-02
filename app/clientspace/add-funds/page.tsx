@@ -1,7 +1,7 @@
 "use client";
 import type React from "react";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   CheckCircle2,
   XCircle,
@@ -49,19 +49,19 @@ export default function AddFundsPage() {
   const [paymentToast, setPaymentToast] = useState<{ show: boolean; message: string; type: "success" | "cancelled" }>({ show: false, message: "", type: "success" });
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isReconcilingRef = useRef(false);
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const headers: Record<string, string> = {};
     const token = ClientAuthService.getToken();
     if (token) headers.Authorization = `Bearer ${token}`;
     return headers;
-  };
+  }, []);
   const isPendingStkRequestMessage = (message: string) =>
     /pending for this phone number|pending request for the phone number/i.test(
       message
     );
 
   // Function to fetch wallet balance from API
-  const fetchWalletBalance = async () => {
+  const fetchWalletBalance = useCallback(async () => {
     setIsRefreshingBalance(true);
     try {
       const response = await fetch(`/api/client/wallet/balance`, {
@@ -80,7 +80,7 @@ export default function AddFundsPage() {
     } finally {
       setIsRefreshingBalance(false);
     }
-  };
+  }, [getAuthHeaders]);
 
   const reconcilePendingPayments = async (
     requestId: string,
@@ -206,7 +206,7 @@ export default function AddFundsPage() {
     return () => {
       if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
     };
-  }, []);
+  }, [fetchWalletBalance]);
 
   const handleAddFunds = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

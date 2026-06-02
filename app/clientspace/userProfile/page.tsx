@@ -54,17 +54,12 @@ export default function EmployerProfileSettings() {
   }
 
   const updateProfileData = async (userId: string, data: Partial<ClientUserData>) => {
-    const token = ClientAuthService.getToken()
-    if (!token) {
-      throw new Error("No authentication token found")
-    }
-
     const response = await fetch(`/api/client/updateClientUser/${userId}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify(data),
     })
 
@@ -77,17 +72,12 @@ export default function EmployerProfileSettings() {
   }
 
   const updatePassword = async (passwordData: { identifier: string; newPassword: string }) => {
-    const token = ClientAuthService.getToken()
-    if (!token) {
-      throw new Error("No authentication token found")
-    }
-
     const response = await fetch(`/api/client/updatePassword`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
       },
+      credentials: "include",
       body: JSON.stringify(passwordData),
     })
 

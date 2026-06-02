@@ -20,7 +20,7 @@ import { validate } from "../middleware/validate.js"
 import { authenticateToken } from "../middleware/auth.js"
 import { createJobSchema, updateJobSchema, updateJobStatusSchema } from "../utils/validation/jobValidation.js"
 
-//import { adminAuthMiddleware } from "../middleware/adminAuth.js";
+import { adminAuthMiddleware } from "../middleware/adminAuth.js";
 
 
 const router = express.Router()
@@ -38,8 +38,8 @@ router.put("/jobs/:id", authenticateToken, validate(updateJobSchema), updateJobC
 router.delete("/jobs/:id", authenticateToken, deleteJobController) // Delete job
 router.patch("/jobs/:id/status", authenticateToken, validate(updateJobStatusSchema), updateJobStatusController) // Update job status
 router.post("/jobs/:id/pay", authenticateToken, payForJobController) // Pay for job
-router.post("/jobs/expire-paid", expirePaidJobsController) // Expire paid jobs after 7 days (can be called by cron or manually)
-router.post("/jobs/expire-unpaid-active", expireUnpaidActiveJobsController) // Expire unpaid active jobs after 7 days (can be called by cron or manually)
+router.post("/jobs/expire-paid", adminAuthMiddleware, expirePaidJobsController) // Expire paid jobs after 7 days (admin/cron)
+router.post("/jobs/expire-unpaid-active", adminAuthMiddleware, expireUnpaidActiveJobsController) // Expire unpaid active jobs after 7 days (admin/cron)
 router.post("/jobs/:id/close", authenticateToken, closeJobController) // Close job manually
 router.post("/jobs/:id/reactivate", authenticateToken, reactivateJobController) // Reactivate closed job (if within paid period)
 router.post("/jobs/:id/rerun", authenticateToken, rerunJobController) // Re-run closed job (set to PENDING)

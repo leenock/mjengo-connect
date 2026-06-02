@@ -14,6 +14,8 @@ import {
 } from "../controllers/fundiAddFundsController.js";
 import { authenticateFundiToken } from "../middleware/fundiAuth.js";
 import { validate } from "../middleware/validate.js";
+import { webhookLimiter } from "../middleware/rateLimit.js";
+import { verifyKopoKopoWebhookSignature } from "../middleware/webhookSignature.js";
 import {
   initiateKopokopoStkPushSchema,
   kopokopoWebhookSchema,
@@ -42,6 +44,8 @@ router.post(
  */
 router.post(
   "/kopokopo/webhook",
+  webhookLimiter,
+  verifyKopoKopoWebhookSignature,
   validate(kopokopoWebhookSchema),
   handleKopokopoWebhook
 );

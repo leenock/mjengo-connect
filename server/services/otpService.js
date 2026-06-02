@@ -2,6 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import { sendOTPSMS } from "./twilioService.js";
+import { validatePasswordStrength } from "../utils/security/passwordPolicy.js";
 
 const prisma = new PrismaClient();
 
@@ -174,8 +175,9 @@ export const verifyOTPAndResetPassword = async (phoneNumber, otp, newPassword) =
     throw new Error("Phone number, OTP, and new password are required");
   }
   
-  if (newPassword.length < 6) {
-    throw new Error("Password must be at least 6 characters long");
+  const passwordCheck = validatePasswordStrength(newPassword);
+  if (!passwordCheck.valid) {
+    throw new Error(passwordCheck.message);
   }
   
   // Find the user by phone number
@@ -220,6 +222,7 @@ export const verifyOTPAndResetPassword = async (phoneNumber, otp, newPassword) =
       password: hashedPassword,
       otp: null,
       otpExpiresAt: null,
+      tokenVersion: { increment: 1 },
     },
   });
   

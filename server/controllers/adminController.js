@@ -139,7 +139,7 @@ export const adminLoginController = async (req, res) => {
 
     res.status(200).json({
       message: "Login successful",
-      token,
+      accessToken: token,
       admin: adminSafe,
     })
   } catch (error) {

@@ -105,14 +105,9 @@ export default function MyJobsPage() {
 
   const checkJobPaidPeriod = useCallback(async (jobId: string) => {
     try {
-      const token = ClientAuthService.getToken()
-      if (!token) return
-
       const response = await fetch(`/api/client/jobs/${jobId}/paid-period`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
 
       if (response.ok) {
@@ -133,15 +128,9 @@ export default function MyJobsPage() {
   const fetchMyJobs = useCallback(async () => {
     try {
       setIsLoading(true)
-      const token = ClientAuthService.getToken()
-      if (!token) {
-        throw new Error("Authentication required")
-      }
       const response = await fetch(`/api/client/my-jobs?limit=100`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
       if (!response.ok) {
         throw new Error("Failed to fetch jobs")
@@ -191,15 +180,9 @@ export default function MyJobsPage() {
         message: "Closing job...",
         type: "loading",
       })
-      const token = ClientAuthService.getToken()
-      if (!token) {
-        throw new Error("Authentication required")
-      }
       const response = await fetch(`/api/client/jobs/${jobId}/close`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
       if (!response.ok) {
         const errorData = await response.json()
@@ -228,15 +211,9 @@ export default function MyJobsPage() {
         message: "Re-running job...",
         type: "loading",
       })
-      const token = ClientAuthService.getToken()
-      if (!token) {
-        throw new Error("Authentication required")
-      }
       const response = await fetch(`/api/client/jobs/${jobId}/rerun`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
       if (!response.ok) {
         const errorData = await response.json()
@@ -265,15 +242,9 @@ export default function MyJobsPage() {
         message: "Deleting job...",
         type: "loading",
       })
-      const token = ClientAuthService.getToken()
-      if (!token) {
-        throw new Error("Authentication required")
-      }
       const response = await fetch(`/api/client/jobs/${jobId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
       if (!response.ok) {
         throw new Error("Failed to delete job")

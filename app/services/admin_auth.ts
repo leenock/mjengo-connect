@@ -12,14 +12,9 @@ export interface AdminUserData {
 }
 
 class AdminAuthService {
-  private static readonly TOKEN_COOKIE = "adminToken";
-  private static readonly TOKEN_KEY = "adminTokenValue";
   private static readonly DATA_KEY = "adminData";
-  private static readonly SESSION_EXPIRY = 7200; // 2 hours
 
-  static setAuth(token: string, data: AdminUserData): void {
-    document.cookie = `${this.TOKEN_COOKIE}=${token}; path=/; max-age=${this.SESSION_EXPIRY}; secure; samesite=strict`;
-    localStorage.setItem(this.TOKEN_KEY, token);
+  static setAuth(data: AdminUserData): void {
     localStorage.setItem(this.DATA_KEY, JSON.stringify(data));
   }
 
@@ -30,13 +25,12 @@ class AdminAuthService {
   }
 
   static clearAuth(): void {
-    document.cookie = `${this.TOKEN_COOKIE}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; secure; samesite=strict`;
-    localStorage.removeItem(this.TOKEN_KEY);
     localStorage.removeItem(this.DATA_KEY);
   }
 
+  // Backward-compatible no-op for older pages still checking token.
   static getToken(): string | null {
-    return this.getCookie(this.TOKEN_COOKIE) || localStorage.getItem(this.TOKEN_KEY);
+    return null;
   }
 
   static getUserData(): AdminUserData | null {
@@ -45,14 +39,13 @@ class AdminAuthService {
   }
 
   static isAuthenticated(): boolean {
-    return !!this.getToken();
+    return !!this.getUserData();
   }
 
   static async logout(): Promise<void> {
     try {
       await fetch("/api/admin/auth/logout", {
         method: "POST",
-        headers: { Authorization: `Bearer ${this.getToken()}` },
       });
     } catch (err) {
       console.error("Admin logout error:", err);
@@ -80,14 +73,7 @@ class AdminAuthService {
   }
 
   static getAuthHeaders(): Record<string, string> {
-    const token = this.getToken();
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-
-  private static getCookie(name: string): string | null {
-    const cookies = document.cookie.split(";");
-    const match = cookies.find((c) => c.trim().startsWith(`${name}=`));
-    return match ? match.split("=")[1] : null;
+    return {};
   }
 }
 

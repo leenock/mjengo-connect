@@ -19,6 +19,7 @@ import {
   checkFundiEmailServiceController,
 } from "../controllers/fundiForgotPasswordController.js";
 import { validate } from "../middleware/validate.js";
+import { authLimiter, strictAuthLimiter } from "../middleware/rateLimit.js";
 import {
   authenticateFundiToken,
   requireActiveSubscription,
@@ -27,7 +28,9 @@ import {
 import {
   registerFundiUserSchema,
   updateFundiUserSchema,
+  adminUpdateFundiUserSchema,
   loginFundiUserSchema,
+  changeFundiPasswordSchema,
 } from "../utils/validation/fundi_UserValidation.js";
 
 import { adminAuthMiddleware, superAdminMiddleware } from "../middleware/adminAuth.js";
@@ -44,22 +47,23 @@ router.post(
 
 router.post(
   "/loginFundi",
+  authLimiter,
   validate(loginFundiUserSchema),
   loginFundiController
 );
 
 // Fundi forgot password (OTP + Email)
-router.post("/send-otp", sendFundiOtpController);
-router.post("/verify-otp", verifyFundiOtpController);
-router.post("/resend-otp", resendFundiOtpController);
-router.post("/forgot-password", fundiForgotPasswordController);
-router.post("/reset-password-email", fundiResetPasswordEmailController);
+router.post("/send-otp", strictAuthLimiter, sendFundiOtpController);
+router.post("/verify-otp", strictAuthLimiter, verifyFundiOtpController);
+router.post("/resend-otp", strictAuthLimiter, resendFundiOtpController);
+router.post("/forgot-password", strictAuthLimiter, fundiForgotPasswordController);
+router.post("/reset-password-email", strictAuthLimiter, fundiResetPasswordEmailController);
 router.get("/check-sms-service", checkFundiSmsServiceController);
 router.get("/check-email-service", checkFundiEmailServiceController);
 
 // Protected routes (authentication required)
 router.get("/getAllFundis", adminAuthMiddleware, getAllFundiUsers);
-router.get("/getFundi/:id", getFundiUserById);
+router.get("/getFundi/:id", authenticateFundiToken, getFundiUserById);
 router.put(
   "/updateFundi/:id",
   authenticateFundiToken,
@@ -70,12 +74,14 @@ router.put(
 router.put(
   "/updateFundiAdmin/:id",
   adminAuthMiddleware,
-  validate(updateFundiUserSchema),
+  validate(adminUpdateFundiUserSchema),
   updateFundiUserController
 );
 router.post(
   "/updateFundiPassword",
+  strictAuthLimiter,
   authenticateFundiToken,
+  validate(changeFundiPasswordSchema),
   updateFundiPasswordController
 );
 
