@@ -1,7 +1,6 @@
 "use client"
 import Link from "next/link"
 
-import { API_URL } from "@/app/config"
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import AdminAuthService from "@/app/services/admin_auth"
@@ -99,6 +98,26 @@ interface SidebarMessage {
   read?: boolean;
 }
 
+/** Same-origin BFF routes with admin httpOnly cookie (not direct :5000 API). */
+function adminFetch(path: string) {
+  return fetch(path, {
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+  });
+}
+
+function extractList<T>(data: unknown, keys: string[]): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === "object") {
+    const record = data as Record<string, unknown>;
+    for (const key of keys) {
+      if (Array.isArray(record[key])) return record[key] as T[];
+    }
+  }
+  return [];
+}
+
 export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
   const pathname = usePathname()
   const [loggingOut, setLoggingOut] = useState(false)
@@ -164,28 +183,11 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchJobCounts = async () => {
       try {
         setLoadingJobs(true)
-        const response = await fetch(`${API_URL}/api/admin/jobs/jobs`, {
-          headers: { 
-            "Content-Type": "application/json",
-            ...AdminAuthService.getAuthHeaders() 
-          },
-          cache: "no-store",
-        })
+        const response = await adminFetch("/api/admin/jobs/jobs?limit=500&page=1")
 
         if (response.ok) {
           const data = await response.json()
-          console.log('Jobs API Response:', data);
-          
-          let jobsList: SidebarJob[] = []
-          if (Array.isArray(data)) {
-            jobsList = data
-          } else if (data && Array.isArray(data.jobs)) {
-            jobsList = data.jobs
-          } else if (data && Array.isArray(data.data)) {
-            jobsList = data.data
-          } else if (data && typeof data === 'object') {
-            jobsList = [data]
-          }
+          const jobsList = extractList<SidebarJob>(data, ["data", "jobs"])
 
           // Convert all statuses to uppercase for consistent comparison
           const counts: JobCounts = {
@@ -226,28 +228,11 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchClientCounts = async () => {
       try {
         setLoadingClients(true)
-        const response = await fetch(`${API_URL}/api/client/getAllClientUsers`, {
-          headers: { 
-            "Content-Type": "application/json",
-            ...AdminAuthService.getAuthHeaders() 
-          },
-          cache: "no-store",
-        })
+        const response = await adminFetch("/api/client/getAllClientUsers")
 
         if (response.ok) {
           const data = await response.json()
-          console.log('Clients API Response:', data);
-          
-          let clientsList: SidebarClient[] = []
-          if (Array.isArray(data)) {
-            clientsList = data
-          } else if (data && Array.isArray(data.clients)) {
-            clientsList = data.clients
-          } else if (data && Array.isArray(data.data)) {
-            clientsList = data.data
-          } else if (data && typeof data === 'object') {
-            clientsList = [data]
-          }
+          const clientsList = extractList<SidebarClient>(data, ["clients", "data"])
 
           // Handle client account status: ACTIVE, SUSPENDED, PENDING
           const counts: ClientCounts = {
@@ -285,28 +270,11 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchFundiCounts = async () => {
       try {
         setLoadingFundis(true)
-        const response = await fetch(`${API_URL}/api/fundi/getAllFundis`, {
-          headers: { 
-            "Content-Type": "application/json",
-            ...AdminAuthService.getAuthHeaders() 
-          },
-          cache: "no-store",
-        })
+        const response = await adminFetch("/api/fundi/getAllFundis")
 
         if (response.ok) {
           const data = await response.json()
-          console.log('Fundis API Response:', data);
-          
-          let fundisList: SidebarFundi[] = []
-          if (Array.isArray(data)) {
-            fundisList = data
-          } else if (data && Array.isArray(data.fundis)) {
-            fundisList = data.fundis
-          } else if (data && Array.isArray(data.data)) {
-            fundisList = data.data
-          } else if (data && typeof data === 'object') {
-            fundisList = [data]
-          }
+          const fundisList = extractList<SidebarFundi>(data, ["fundis", "data"])
 
           // Handle fundi account status: ACTIVE, SUSPENDED, PENDING
           const counts: FundiCounts = {
@@ -344,36 +312,17 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchUserCounts = async () => {
       try {
         setLoadingUsers(true)
-        const response = await fetch(`${API_URL}/api/admin/getAllAdmins`, {
-          headers: { 
-            "Content-Type": "application/json",
-            ...AdminAuthService.getAuthHeaders() 
-          },
-          cache: "no-store",
-        })
+        const response = await adminFetch("/api/admin/getAllAdmins")
 
         if (response.ok) {
           const data = await response.json()
-          console.log('Users API Response:', data);
-          
-          let usersList: SidebarUser[] = []
-          if (Array.isArray(data)) {
-            usersList = data
-          } else if (data && Array.isArray(data.users)) {
-            usersList = data.users
-          } else if (data && Array.isArray(data.data)) {
-            usersList = data.data
-          } else if (data && Array.isArray(data.admins)) {
-            usersList = data.admins
-          } else if (data && typeof data === 'object') {
-            usersList = [data]
-          }
+          const usersList = extractList<SidebarUser>(data, ["admins", "users", "data"])
 
           const counts: UserCounts = {
             total: usersList.length,
             active: usersList.filter((user: SidebarUser) => {
-              const status = user.accountStatus || user.status || '';
-              return status.toUpperCase() === 'ACTIVE';
+              const status = user.status || user.accountStatus || "";
+              return status.toUpperCase() === "ACTIVE";
             }).length,
             admins: usersList.filter((user: SidebarUser) => 
               user.role.toUpperCase() === 'ADMIN' 
@@ -408,42 +357,36 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
     const fetchMessageCounts = async () => {
       try {
         setLoadingMessages(true)
-        const response = await fetch(`${API_URL}/api/admin/support/tickets`, {
-          headers: { 
-            "Content-Type": "application/json",
-            ...AdminAuthService.getAuthHeaders() 
-          },
-          cache: "no-store",
-        })
+        const response = await adminFetch(
+          "/api/admin/support/tickets?limit=500&page=1"
+        )
 
         if (response.ok) {
           const data = await response.json()
-          console.log('Messages API Response:', data);
-          
-          let messagesList: SidebarMessage[] = []
-          if (Array.isArray(data)) {
-            messagesList = data
-          } else if (data && Array.isArray(data.tickets)) {
-            messagesList = data.tickets
-          } else if (data && Array.isArray(data.messages)) {
-            messagesList = data.messages
-          } else if (data && Array.isArray(data.data)) {
-            messagesList = data.data
-          } else if (data && typeof data === 'object') {
-            messagesList = [data]
-          }
+          const messagesList = extractList<SidebarMessage>(data, [
+            "tickets",
+            "messages",
+            "data",
+          ])
+          const totalFromApi =
+            data && typeof data === "object" && "totalCount" in data
+              ? Number((data as { totalCount?: number }).totalCount)
+              : NaN
 
           const counts: MessageCounts = {
-            total: messagesList.length,
-            unread: messagesList.filter((message: SidebarMessage) => 
-              message.isRead === false || message.read === false
+            total: Number.isFinite(totalFromApi) ? totalFromApi : messagesList.length,
+            unread: messagesList.filter(
+              (message: SidebarMessage) =>
+                message.isRead === false || message.read === false
             ).length,
-            pending: messagesList.filter((message: SidebarMessage) => 
-              message.status.toUpperCase() === 'PENDING' || message.status.toUpperCase() === 'OPEN'
-            ).length,
-            resolved: messagesList.filter((message: SidebarMessage) => 
-              message.status.toUpperCase() === 'RESOLVED' || message.status.toUpperCase() === 'CLOSED'
-            ).length
+            pending: messagesList.filter((message: SidebarMessage) => {
+              const s = message.status?.toUpperCase() || "";
+              return s === "PENDING" || s === "OPEN" || s === "IN_PROGRESS";
+            }).length,
+            resolved: messagesList.filter((message: SidebarMessage) => {
+              const s = message.status?.toUpperCase() || "";
+              return s === "RESOLVED" || s === "CLOSED";
+            }).length,
           }
 
           setMessageCounts(counts)
@@ -523,8 +466,14 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
       name: "Messages",
       href: "/administrator/tickets",
       icon: MessageSquare,
-      badge: loadingMessages ? "..." : (messageCounts.unread > 0 ? messageCounts.unread.toString() : ""),
-      description: `Pending: ${messageCounts.pending}, Total: ${messageCounts.total}`,
+      badge: loadingMessages
+        ? "..."
+        : messageCounts.pending > 0
+          ? messageCounts.pending.toString()
+          : messageCounts.total > 0
+            ? messageCounts.total.toString()
+            : "",
+      description: `Open/Pending: ${messageCounts.pending}, Total: ${messageCounts.total}`,
     },
     {
       name: "Moderation",
@@ -727,9 +676,9 @@ export default function AdminSidebar({ isOpen, setIsOpen }: AdminSidebarProps) {
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-slate-400">Unread Messages</span>
+                  <span className="text-xs font-bold text-slate-400">Open Tickets</span>
                   <span className="text-sm font-black text-red-400">
-                    {loadingMessages ? "..." : messageCounts.unread}
+                    {loadingMessages ? "..." : messageCounts.pending}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
