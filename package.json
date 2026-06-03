@@ -6,8 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "setup-admin": "node scripts/setup-admin.js"
+    "lint": "next lint"
   },
   "dependencies": {
     "cors": "^2.8.5",
