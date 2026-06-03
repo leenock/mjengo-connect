@@ -49,12 +49,16 @@ export default function AddFundsPage() {
   const [paymentToast, setPaymentToast] = useState<{ show: boolean; message: string; type: "success" | "cancelled" }>({ show: false, message: "", type: "success" });
   const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isReconcilingRef = useRef(false);
-  const getAuthHeaders = useCallback(() => {
-    const headers: Record<string, string> = {};
-    const token = ClientAuthService.getToken();
-    if (token) headers.Authorization = `Bearer ${token}`;
-    return headers;
-  }, []);
+  const clientFetchInit = useCallback(
+    (init: RequestInit = {}): RequestInit => ({
+      credentials: "include",
+      ...init,
+      headers: {
+        ...(init.headers || {}),
+      },
+    }),
+    []
+  );
   const isPendingStkRequestMessage = (message: string) =>
     /pending for this phone number|pending request for the phone number/i.test(
       message
@@ -64,9 +68,7 @@ export default function AddFundsPage() {
   const fetchWalletBalance = useCallback(async () => {
     setIsRefreshingBalance(true);
     try {
-      const response = await fetch(`/api/client/wallet/balance`, {
-        headers: getAuthHeaders(),
-      });
+      const response = await fetch(`/api/client/wallet/balance`, clientFetchInit());
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
@@ -80,7 +82,7 @@ export default function AddFundsPage() {
     } finally {
       setIsRefreshingBalance(false);
     }
-  }, [getAuthHeaders]);
+  }, [clientFetchInit]);
 
   const reconcilePendingPayments = async (
     requestId: string,
@@ -90,10 +92,10 @@ export default function AddFundsPage() {
 
     isReconcilingRef.current = true;
     try {
-      const response = await fetch("/api/client/wallet/process-pending-payments", {
-        method: "POST",
-        headers: getAuthHeaders(),
-      });
+      const response = await fetch(
+        "/api/client/wallet/process-pending-payments",
+        clientFetchInit({ method: "POST" })
+      );
 
       if (!response.ok) {
         console.error("Failed to auto-reconcile pending payments");
@@ -137,9 +139,7 @@ export default function AddFundsPage() {
       try {
         const response = await fetch(
           `/api/client/wallet/payment-status/${requestId}`,
-          {
-            headers: getAuthHeaders(),
-          }
+          clientFetchInit()
         );
         if (!response.ok) return;
         const data = await response.json();
@@ -184,6 +184,10 @@ export default function AddFundsPage() {
       setIsLoadingPage(true);
       
       // Get user data from auth service
+      if (!ClientAuthService.isAuthenticated()) {
+        window.location.href = "/auth/job-posting";
+        return;
+      }
       const userData = ClientAuthService.getUserData();
       if (userData) {
         setCurrentUser(userData);
@@ -309,14 +313,14 @@ export default function AddFundsPage() {
       };
 
       // Make API call to backend
-      const response = await fetch(`/api/client/wallet/add-funds/kopokopo`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...getAuthHeaders(),
-        },
-        body: JSON.stringify(stkPushPayload),
-      });
+      const response = await fetch(
+        `/api/client/wallet/add-funds/kopokopo`,
+        clientFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(stkPushPayload),
+        })
+      );
 
       if (!response.ok) {
         const errorData = await response.json();

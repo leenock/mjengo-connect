@@ -40,15 +40,22 @@ function resolveAuthHeader(request: NextRequest, backendPath: string) {
   const visitorToken = request.cookies.get("visitorToken")?.value;
   let token: string | undefined;
 
-  if (visitorToken && /^\/api\/client\/updateClientUser\/[^/]+$/.test(backendPath)) {
-    token = visitorToken;
+  // Client API: prefer visitor session unless this is an admin-only client path
+  if (backendPath.startsWith("/api/client/")) {
+    if (isAdminScopedNonAdminPath(backendPath) && adminToken) {
+      token = adminToken;
+    } else {
+      token = visitorToken;
+    }
   } else if (adminToken && (backendPath.startsWith("/api/admin/") || isAdminScopedNonAdminPath(backendPath))) {
     token = adminToken;
+  } else if (backendPath.startsWith("/api/admin/")) {
+    token = adminToken;
+  } else if (backendPath.startsWith("/api/fundi/")) {
+    token = fundiToken;
+  } else {
+    token = adminToken || fundiToken || visitorToken;
   }
-  else if (backendPath.startsWith("/api/admin/")) token = adminToken;
-  else if (backendPath.startsWith("/api/fundi/")) token = fundiToken;
-  else if (backendPath.startsWith("/api/client/")) token = visitorToken;
-  else token = adminToken || fundiToken || visitorToken;
 
   return token ? `Bearer ${token}` : null;
 }

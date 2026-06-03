@@ -75,16 +75,13 @@ export default function JobDetailsPage() {
   const fetchJobDetails = useCallback(async () => {
     try {
       setIsLoading(true)
-      const token = ClientAuthService.getToken()
-      if (!token) {
+      if (!ClientAuthService.isAuthenticated()) {
         router.push("/auth/job-posting")
         return
       }
       const response = await fetch(`/api/client/jobs/${jobId}`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
       if (!response.ok) {
         throw new Error("Failed to fetch job details")
@@ -114,15 +111,12 @@ export default function JobDetailsPage() {
         message: "Deleting job...",
         type: "loading",
       })
-      const token = ClientAuthService.getToken()
-      if (!token) {
+      if (!ClientAuthService.isAuthenticated()) {
         throw new Error("Authentication required")
       }
       const response = await fetch(`/api/client/jobs/${jobId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
       if (!response.ok) {
         throw new Error("Failed to delete job")

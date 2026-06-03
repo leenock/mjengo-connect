@@ -23,6 +23,9 @@ import {
   Clock,
   User,
   Building2,
+  Copy,
+  Check,
+  Hash,
 } from "lucide-react";
 import AdminAuthService from "@/app/services/admin_auth";
 
@@ -104,6 +107,7 @@ export default function AdminManageClients() {
 
   // Refresh trigger for Apply button
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [copiedClientId, setCopiedClientId] = useState<string | null>(null);
 
   // Fetch current admin role
   useEffect(() => {
@@ -190,6 +194,7 @@ export default function AdminManageClients() {
         client.lastName.toLowerCase().includes(searchLower) ||
         client.email.toLowerCase().includes(searchLower) ||
         client.phone.toLowerCase().includes(searchLower) ||
+        client.id.toLowerCase().includes(searchLower) ||
         client.company.toLowerCase().includes(searchLower) ||
         client.location.toLowerCase().includes(searchLower)
       );
@@ -374,6 +379,41 @@ export default function AdminManageClients() {
       .toUpperCase();
   };
 
+  const copyClientId = async (id: string) => {
+    try {
+      await navigator.clipboard.writeText(id);
+      setCopiedClientId(id);
+      setTimeout(() => setCopiedClientId(null), 2000);
+    } catch {
+      setError("Could not copy client ID. Please copy it manually.");
+    }
+  };
+
+  const ClientIdCopy = ({ id, compact = false }: { id: string; compact?: boolean }) => (
+    <div className={`flex items-center gap-1.5 ${compact ? "max-w-full" : ""}`}>
+      <code
+        className={`font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded truncate ${
+          compact ? "text-[10px] max-w-[140px]" : "text-xs max-w-[200px]"
+        }`}
+        title={id}
+      >
+        {id}
+      </code>
+      <button
+        type="button"
+        onClick={() => copyClientId(id)}
+        className="flex-shrink-0 p-1 rounded-md text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"
+        title="Copy client ID for Post Job"
+      >
+        {copiedClientId === id ? (
+          <Check className="w-3.5 h-3.5 text-emerald-600" />
+        ) : (
+          <Copy className="w-3.5 h-3.5" />
+        )}
+      </button>
+    </div>
+  );
+
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       setViewClient(null);
@@ -476,7 +516,7 @@ export default function AdminManageClients() {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="Search clients by name, email, phone, company, or location..."
+                    placeholder="Search clients by name, email, phone, company, location, or client ID..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-medium"
@@ -607,6 +647,12 @@ export default function AdminManageClients() {
                             <span>Client</span>
                           </div>
                         </th>
+                        <th className="text-left py-5 px-4 font-black text-white text-sm uppercase tracking-wider w-1/6">
+                          <div className="flex items-center space-x-2">
+                            <Hash className="w-4 h-4" />
+                            <span>Client ID</span>
+                          </div>
+                        </th>
                         <th className="text-left py-5 px-4 font-black text-white text-sm uppercase tracking-wider w-1/5">
                           <div className="flex items-center space-x-2">
                             <Mail className="w-4 h-4" />
@@ -668,6 +714,11 @@ export default function AdminManageClients() {
                                 </p>
                               </div>
                             </div>
+                          </td>
+
+                          {/* Client ID — copy for admin Post Job */}
+                          <td className="py-5 px-4">
+                            <ClientIdCopy id={client.id} compact />
                           </td>
 
                           {/* Contact Info */}
@@ -822,6 +873,19 @@ export default function AdminManageClients() {
                   </div>
                 </div>
               </div>
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-4">
+                <p className="text-xs font-bold uppercase tracking-wide text-emerald-800 mb-2">
+                  Client ID (for Post Job)
+                </p>
+                <ClientIdCopy id={viewClient.id} />
+                <p className="text-xs text-emerald-700 mt-2">
+                  Copy this ID into the Client User ID field on{" "}
+                  <a href="/administrator/postJob" className="font-semibold underline hover:text-emerald-900">
+                    Post New Job
+                  </a>
+                  .
+                </p>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl">
                   <Mail className="w-5 h-5 text-slate-400" />
@@ -884,6 +948,10 @@ export default function AdminManageClients() {
               </button>
             </div>
             <div className="p-6 space-y-6">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-500 mb-1">Client ID</p>
+                <ClientIdCopy id={editClient.id} />
+              </div>
               {saveError && (
                 <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                   {saveError}

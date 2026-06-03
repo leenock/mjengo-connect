@@ -24,12 +24,17 @@ export default function EmployerProfileSettings() {
     phone: "",
     location: "",
     company: "",
+    currentPassword: "",
     password: "",
     confirmPassword: "",
   })
 
   // Load user data on component mount
   useEffect(() => {
+    if (!ClientAuthService.isAuthenticated()) {
+      window.location.href = "/auth/job-posting"
+      return
+    }
     const userData = ClientAuthService.getUserData()
     if (userData) {
       setCurrentUser(userData)
@@ -40,6 +45,7 @@ export default function EmployerProfileSettings() {
         phone: userData.phone || "",
         location: userData.location || "",
         company: userData.company || "",
+        currentPassword: "",
         password: "",
         confirmPassword: "",
       })
@@ -71,8 +77,11 @@ export default function EmployerProfileSettings() {
     return response.json()
   }
 
-  const updatePassword = async (passwordData: { identifier: string; newPassword: string }) => {
-    const response = await fetch(`/api/client/updatePassword`, {
+  const updatePassword = async (passwordData: {
+    currentPassword: string
+    newPassword: string
+  }) => {
+    const response = await fetch(`/api/client/changePassword`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -163,13 +172,10 @@ export default function EmployerProfileSettings() {
 
       // Update password if provided
       if (profileData.password && profileData.password.trim() !== "") {
-        const identifier = profileData.email || currentUser.email || currentUser.id
-
-        if (!identifier) {
-          throw new Error("No identifier found for password update")
+        if (!profileData.currentPassword.trim()) {
+          throw new Error("Current password is required to set a new password")
         }
 
-        // Update loading message for password change
         setToast({
           message: "Updating your password...",
           type: "loading",
@@ -178,11 +184,11 @@ export default function EmployerProfileSettings() {
         await withMinimumLoadingTime(
           () =>
             updatePassword({
-              identifier: identifier,
+              currentPassword: profileData.currentPassword,
               newPassword: profileData.password,
             }),
           2000,
-        ) // 2 seconds for password update
+        )
       }
 
       // Update local storage with new data
@@ -199,6 +205,7 @@ export default function EmployerProfileSettings() {
       // Clear password fields after successful update
       setProfileData((prev) => ({
         ...prev,
+        currentPassword: "",
         password: "",
         confirmPassword: "",
       }))
@@ -409,6 +416,23 @@ export default function EmployerProfileSettings() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
+                        Current Password
+                      </label>
+                      <div className="relative group">
+                        <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-red-500 transition-colors" />
+                        <input
+                          type="password"
+                          value={profileData.currentPassword}
+                          onChange={(e) => handleInputChange("currentPassword", e.target.value)}
+                          disabled={isLoading}
+                          className="w-full pl-12 pr-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 group-hover:border-slate-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          placeholder="Enter your current password"
+                          autoComplete="current-password"
+                        />
+                      </div>
+                    </div>
                     <div>
                       <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
                         New Password

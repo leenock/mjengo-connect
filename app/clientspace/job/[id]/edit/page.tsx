@@ -94,16 +94,13 @@ export default function EditJobPage() {
   const fetchJobDetails = useCallback(async () => {
     try {
       setIsLoading(true)
-      const token = ClientAuthService.getToken()
-      if (!token) {
+      if (!ClientAuthService.isAuthenticated()) {
         router.push("/auth/job-posting")
         return
       }
       const response = await fetch(`/api/client/jobs/${jobId}`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        credentials: "include",
       })
       if (!response.ok) {
         throw new Error("Failed to fetch job details")
@@ -308,16 +305,15 @@ export default function EditJobPage() {
     setIsSubmitting(true)
     setToast({ message: "Updating job...", type: "loading" })
     try {
-      const token = ClientAuthService.getToken()
-      if (!token) {
+      if (!ClientAuthService.isAuthenticated()) {
         throw new Error("Authentication required. Please log in again.")
       }
       await withMinimumLoadingTime(async () => {
         const response = await fetch(`/api/client/jobs/${jobId}`, {
           method: "PUT",
+          credentials: "include",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             title: jobDetails.title,

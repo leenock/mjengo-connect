@@ -499,7 +499,7 @@ export default function AdminPostJob() {
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
                       <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                         <UserCog className="w-5 h-5 text-blue-600" />
-                        Client Assignment (Optional)
+                        Client Assignment
                       </h3>
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wide">
@@ -515,8 +515,7 @@ export default function AdminPostJob() {
                           className="w-full px-4 py-4 bg-white/60 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-slate-900 font-medium placeholder-slate-400 hover:border-slate-300"
                         />
                         <p className="text-xs text-slate-500 mt-2 font-medium">
-                          Leave empty to assign to system client. Enter Client
-                          ID to assign this job to a specific client.
+                          Enter Client ID to assign this job to a specific client.
                         </p>
                       </div>
                     </div>
